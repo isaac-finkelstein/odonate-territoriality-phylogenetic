@@ -117,3 +117,57 @@ data.frame(model=c("ER", "ARD", "no -> yes", "yes->no"),
                          AIC=aic_model,delta.AIC=aic_model-min(aic_model))             
 #0kay, so it seems that the all-rates-different is the way to go   
 #ARD is quite strongly favoured with a differnce of 22 with the next lowest AIC. 
+
+
+#Next: Ancestral state reconstruction - plots are very busy so may want to rerun these for just anisoptera/zygoptera
+#I have to decide if I want to do joint or marginal acenstral state reconstruction
+#marginal is more popular in biology (Revell and Harmon, 2022)
+#marginal measures uncertainty about the specific values for ancestral states - so preferred
+#do both, then compare results (one can go in supplementary material)
+library(corHMM)
+#create a special data frame of species names and trait data
+#character data must be numerical interger (0,1,2)
+odonate_data<-data.frame(Genus_sp=names(terr_mode), terr_mode=as.numeric(terr_mode)-1)
+head(odonate_data, n=10)
+
+
+#fit the joint model
+fit_joint<-corHMM(odonate_tree, odonate_data, node.states="joint", rate.cat=1, model="ARD",rate.mat=NULL)
+fit_joint
+#now plot
+plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
+                    colors=list(cols), header=FALSE, fsize=0.45)
+legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
+nodelabels(pie=to.matrix(levels(terr_mode)[fit_joint$phy$node.label],
+                         levels(terr_mode)), piecol=cols, cex=0.1)
+#it's very small and hard to see -- adjust cex to make the pie charts larger
+
+#let's do marginal ancestral state reconstruction
+fit_marginal<- corHMM(odonate_tree, odonate_data, node.states = "marginal",
+                      rate.cat=1, rate.mat=NULL)
+fit_marginal
+head(fit_marginal$states)       
+#interpret this matrix as the posterior probabilities that each state is in each node
+
+#plot this
+plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
+                    colors=list(cols), header=FALSE, fsize=0.45)
+legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
+nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
+#likely ancestral state = territorial!
+
+#one more method using an MCMC approach: Stochasitic character mapping
+#so you take the whole distribution from many sample stochastic maps and sample
+#then you use Bayesian MCMC to sample q from its posterior distribution
+#this tells us the number of changes, the proportion of time spent in each state,
+#and the posterior probabilities of each node being a certain state
+#this tells us the same thing as the marginal ancestral states
+#but the transition rate between states (q) is the maximum likelihood value
+#we sampled q from it's posterior distribution
+#see Huelsenbeck et al., 2003
+
+
+#generate 1000 stochastic character maps in which the transition rate is sampled from its posterior distribution
+#this may work, but it took over an hour to run and didn't finished
+#mtrees<-make.simmap(odonate_tree, terr_mode, model="ARD", nsim=1000, Q="mcmc", vQ=0.01,
+#                    prior=list(use.empirical=TRUE), samplefreq=10)
