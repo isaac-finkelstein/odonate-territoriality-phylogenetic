@@ -69,7 +69,7 @@ cols<-setNames(c("lightblue", "red"), levels(terr_mode))
 plotTree.datamatrix(odonate_tree_factor, as.data.frame(terr_mode),
                     colours= list(cols), header=FALSE, fsize=0.45)
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
-#hmmmm not working. 
+#it's so crowded that I might want to remove names and then provide a large list so people can look up whatever species they want
 
 #I'm going to try for just Anisoptera
 #Plotting territoriality on Anisoptera tree
@@ -85,10 +85,35 @@ name.check(anis_tree, anis_terr_data_factor, data.names=as.character(anis_terr_d
 
 #plot anisoptera tree
 anis_terr_mode <- setNames(anis_terr_data_factor$prop_terr, anis_terr_data_factor$sn)
-cols<-setNames(c("lightblue", "red"), levels(anis_terr_mode))
+cols<-setNames(c("forestgreen", "goldenrod1"), levels(anis_terr_mode))
 plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
                     colours= list(cols), header=FALSE, fsize=0.45)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 
 #this may be working but the colours are wrong - plus I can't read the species names to check if it's right. 
 #the difference is in the setNames function line -- how I made my anis_terr_mode
+#it's so crowded that I might want to remove names and then provide a large list so people can look up whatever species they want
+
+
+
+#choose a character model
+#4 possible models for discreet repsonse
+#equal rates (ER)
+#all rates different (ARD)
+# irreversible modes (2) - going from 0->1 or from 1_>0 but not vice versa)
+
+fit_er<-fitMk(odonate_tree, terr_mode, model = "ER")
+fit_ard<-fitMk(odonate_tree, terr_mode, model = "ARD")
+#fit the no -> yes model (transition from non-territorial to territorial but not back)
+fit_01<-fitMk(odonate_tree, terr_mode, model=matrix(c(0,1,0,0),2,2,byrow=TRUE))
+#fit the yes to no model (transition from territorial to non-territorail but not back)
+fit_10<-fitMk(odonate_tree, terr_mode, model=matrix(c(0,0,1,0),2,2, byrow=TRUE))
+
+#extract AIC values from the models
+aic_model<-c(AIC(fit_er), AIC(fit_ard), AIC(fit_01), AIC(fit_10))
+data.frame(model=c("ER", "ARD", "no -> yes", "yes->no"),
+           logL=c(logLik(fit_er), logLik(fit_ard),
+                                         logLik(fit_01), logLik(fit_10)),
+                         AIC=aic_model,delta.AIC=aic_model-min(aic_model))             
+#0kay, so it seems that the all-rates-different is the way to go   
+#ARD is quite strongly favoured with a differnce of 22 with the next lowest AIC. 
