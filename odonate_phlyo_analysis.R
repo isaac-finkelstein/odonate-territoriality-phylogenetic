@@ -18,7 +18,7 @@ sn<- attr(terr_table,"row.vars")[[1]]
 terr_data_with_na<- data.frame(sn,prop_terr) #so this is a dataframe with the proporitons of territorial "yes" for each species
 terr_data<- terr_data_with_na[complete.cases(terr_data_with_na), ] #removed NA values 
 
-#to make the terriotrial variable binary (yes or no) make it a factor
+#to make the territorial variable binary (yes or no) make it a factor
 prop_terr_factor <- factor(ifelse(prop_terr == 1, "yes", "no"))
 terr_data_with_na_factor <- data.frame(sn, prop_terr_factor = prop_terr_factor)
 terr_data_factor <- terr_data_with_na_factor[complete.cases(terr_data_with_na_factor), ]
@@ -71,7 +71,7 @@ plotTree.datamatrix(odonate_tree_factor, as.data.frame(terr_mode),
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #it's so crowded that I might want to remove names and then provide a large list so people can look up whatever species they want
 
-#I'm going to try for just Anisoptera
+#Just Anisoptera
 #Plotting territoriality on Anisoptera tree
 #prune tree to match data
 chk_anis<-name.check(anisoptera_tree, terr_data_factor, data.names=as.character(terr_data_factor$sn))
@@ -90,8 +90,8 @@ plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
                     colours= list(cols), header=FALSE, fsize=0.45)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 
-#this may be working but the colours are wrong - plus I can't read the species names to check if it's right. 
-#the difference is in the setNames function line -- how I made my anis_terr_mode
+#this seems to be working but the colours are wrong
+#the solution to make it work was changing the setNames function line
 #it's so crowded that I might want to remove names and then provide a large list so people can look up whatever species they want
 
 
@@ -100,7 +100,7 @@ legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols
 #4 possible models for discreet repsonse
 #equal rates (ER)
 #all rates different (ARD)
-# irreversible modes (2) - going from 0->1 or from 1_>0 but not vice versa)
+# irreversible modes (2) - going from 0 -> 1 or from 1 -> 0 but not vice versa)
 
 fit_er<-fitMk(odonate_tree, terr_mode, model = "ER")
 fit_ard<-fitMk(odonate_tree, terr_mode, model = "ARD")
@@ -118,12 +118,25 @@ data.frame(model=c("ER", "ARD", "no -> yes", "yes->no"),
 #0kay, so it seems that the all-rates-different is the way to go   
 #ARD is quite strongly favoured with a differnce of 22 with the next lowest AIC. 
 
+#we can estimate q (the transition rate)
+#Q ia the expecrted number of transition given a particular amount of time 
+print(fit_er)
+print(fit_ard)
+print(fit_01)
+print(fit_10)
 
-#Next: Ancestral state reconstruction - plots are very busy so may want to rerun these for just anisoptera/zygoptera
+#graph it:
+plot(fit_ard, show.zeros=FALSE, mar=rep(0,4), signif=5)
+plot(fit_er)
+#the ARD (all rates different) model, which had the lowest AIC -- shows that it is
+#easier/more common to go No -> Yes than to go Yes -> No
+
+
+#Next: Ancestral state reconstruction - plots are very busy so may want to re-run these for just anisoptera/zygoptera
 #I have to decide if I want to do joint or marginal acenstral state reconstruction
 #marginal is more popular in biology (Revell and Harmon, 2022)
 #marginal measures uncertainty about the specific values for ancestral states - so preferred
-#do both, then compare results (one can go in supplementary material)
+#do both, then compare results (joint can go in supplementary material)
 library(corHMM)
 #create a special data frame of species names and trait data
 #character data must be numerical interger (0,1,2)
