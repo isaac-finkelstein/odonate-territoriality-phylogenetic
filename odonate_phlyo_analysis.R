@@ -65,7 +65,7 @@ name.check(odonate_tree, odonate_terr_data_factor, data.names=as.character(odona
 
 #let's plot territoriality on my tree
 terr_mode<-setNames(odonate_terr_data_factor$prop_terr, odonate_terr_data_factor$sn)
-cols<-setNames(c("lightblue", "red"), levels(terr_mode))
+cols<-setNames(c("forestgreen", "goldenrod1"), levels(terr_mode))
 plotTree.datamatrix(odonate_tree_factor, as.data.frame(terr_mode),
                     colours= list(cols), header=FALSE, fsize=0.45)
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
@@ -184,3 +184,4 @@ nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 #this may work, but it took over an hour to run and didn't finished
 #mtrees<-make.simmap(odonate_tree, terr_mode, model="ARD", nsim=1000, Q="mcmc", vQ=0.01,
 #                    prior=list(use.empirical=TRUE), samplefreq=10)
+
