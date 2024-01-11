@@ -189,7 +189,7 @@ nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 #calculating delta, a measure of phylogenetic signal
 #from Borges et al., 2019 github
 #https://github.com/mrborges23/delta_statistic
-source(code.R) ## This is taken from mrborges23's github https://github.com/mrborges23/delta_statistic/tree/master
+source("code.R") ## This is taken from mrborges23's github https://github.com/mrborges23/delta_statistic/tree/master
 
 #all branches must be positive
 #DONT UNDERSTAND THIS STEP BUT COPYING FROM THE README FILE.
@@ -202,7 +202,10 @@ odonate_terr_data_reordered <- odonate_terr_data[order_in_terr_data, ] #now tree
 trait<-odonate_terr_data_reordered$prop_terr #this is a vector of territoriality, with 1= yes, 0 = no.
 
 #now calculate delta
-deltaA<-delta(trait, odonate_tree, 0.1, 0.5, 10000, 10, 100)
-
-
+deltaA<-delta(trait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
+#in the example in the README, he uses 0.0589 for the SE, but in example.R file
+#he uses 0.5, unless I have misunderstood this.
+# WHICH TO USE? -- when I try both, I get basically the same result (but slightly different)
+print(deltaA)
+#I get 7.197. What does this mean?
 
