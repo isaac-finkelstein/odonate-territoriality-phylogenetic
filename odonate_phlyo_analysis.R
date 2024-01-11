@@ -184,4 +184,3 @@ nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 #this may work, but it took over an hour to run and didn't finished
 #mtrees<-make.simmap(odonate_tree, terr_mode, model="ARD", nsim=1000, Q="mcmc", vQ=0.01,
 #                    prior=list(use.empirical=TRUE), samplefreq=10)
-
