@@ -119,7 +119,7 @@ data.frame(model=c("ER", "ARD", "no -> yes", "yes->no"),
 #ARD is quite strongly favoured with a differnce of 22 with the next lowest AIC. 
 
 #we can estimate q (the transition rate)
-#Q ia the expecrted number of transition given a particular amount of time 
+#Q is the expected number of transition given a particular amount of time 
 print(fit_er)
 print(fit_ard)
 print(fit_01)
@@ -184,3 +184,25 @@ nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 #this may work, but it took over an hour to run and didn't finished
 #mtrees<-make.simmap(odonate_tree, terr_mode, model="ARD", nsim=1000, Q="mcmc", vQ=0.01,
 #                    prior=list(use.empirical=TRUE), samplefreq=10)
+
+
+#calculating delta, a measure of phylogenetic signal
+#from Borges et al., 2019 github
+#https://github.com/mrborges23/delta_statistic
+source(code.R) ## This is taken from mrborges23's github https://github.com/mrborges23/delta_statistic/tree/master
+
+#all branches must be positive
+#DONT UNDERSTAND THIS STEP BUT COPYING FROM THE README FILE.
+odonate_tree$edge.length[odonate_tree$edge.length==0] <-quantile(odonate_tree$edge.length, 0.1)*0.1
+
+#next define the trait vector
+#odonate_tree$tip.label #shows the species order, note it's alphabetical, split into Zygoptera and Anisoptera
+order_in_terr_data <- match(odonate_tree$tip.label, odonate_terr_data$sn) #must be same order as tree
+odonate_terr_data_reordered <- odonate_terr_data[order_in_terr_data, ] #now tree and data are in the same order
+trait<-odonate_terr_data_reordered$prop_terr #this is a vector of territoriality, with 1= yes, 0 = no.
+
+#now calculate delta
+deltaA<-delta(trait, odonate_tree, 0.1, 0.5, 10000, 10, 100)
+
+
+
