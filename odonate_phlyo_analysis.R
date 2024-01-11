@@ -207,7 +207,11 @@ deltaA<-delta(trait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
 #he uses 0.5, unless I have misunderstood this.
 # WHICH TO USE? -- when I try both, I get basically the same result (but slightly different)
 print(deltaA)
-#I get 7.197. What does this mean?
+#I get 7.197. What does this mean? 4.1 in Borges et al 2019: "delta can be any positive real number:
+#"the higher the delta-value, the higher the degree of phylogenetic signal between a given trait and the phylogeny"
+#so this means that 0 = no phylogenetic signal? in their example, they had 1 = no phylogenetic signal.
+
+#note that delta should be used with at least 20 species - i have way more so I am good here.
 
 #finally, we can calculate p-value for this
 #First, create a vector of random deltas that will be our null hypothesis
@@ -216,6 +220,9 @@ for (i in 1:100){
   rtrait <- sample(trait)
   random_delta[i] <- delta(rtrait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
 }
-p_value<-sum(random_delta>deltaA)/length(random_delta)
+p_value<-sum(random_delta>deltaA)/length(random_delta) #results in a p-value of 0.
+#random_delta>deltaA
+#this seems to have worked because there are no instances of random_delta>deltaA
+#so a p-value of 0 may be correct.
 boxplot(random_delta)
 abline(h=deltaA, col="red")
