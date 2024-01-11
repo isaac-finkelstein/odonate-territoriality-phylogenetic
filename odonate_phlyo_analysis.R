@@ -209,3 +209,13 @@ deltaA<-delta(trait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
 print(deltaA)
 #I get 7.197. What does this mean?
 
+#finally, we can calculate p-value for this
+#First, create a vector of random deltas that will be our null hypothesis
+random_delta<-rep(NA,100)
+for (i in 1:100){
+  rtrait <- sample(trait)
+  random_delta[i] <- delta(rtrait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
+}
+p_value<-sum(random_delta>deltaA)/length(random_delta)
+boxplot(random_delta)
+abline(h=deltaA, col="red")
