@@ -71,6 +71,8 @@ plotTree.datamatrix(odonate_tree_factor, as.data.frame(terr_mode),
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #it's so crowded that I might want to remove names and then provide a large list so people can look up whatever species they want
 
+#Do this for Anisoptera and Zygoptera separately:
+#___________________________________________________________________________________________________________
 #Just Anisoptera
 #Plotting territoriality on Anisoptera tree
 #prune tree to match data
@@ -94,9 +96,31 @@ legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols
 #it's so crowded that I might want to remove names and then provide a large list so people can look up whatever species they want
 #Can't figure out how to remove the species labels!
 
+#Just zygoptera
+#Plotting territoriality on Anisoptera tree
+#prune tree to match data
+chk_zygo<-name.check(zygoptera_tree, terr_data_factor, data.names=as.character(terr_data_factor$sn))
+summary(chk_zygo)
+zygo_tree<-drop.tip(zygoptera_tree, chk_zygo$tree_not_data) #dropped tree_not_data species
+zygo_tree
+# Identify species to drop from terr_data - using the factor "Yes or No"
+species_to_drop_zygo <- chk_zygo$data_not_tree
+zygo_terr_data_factor <- terr_data_factor[!(terr_data_factor$sn %in% species_to_drop_zygo), ] #dropped data_not_tree species from dataset
+name.check(zygo_tree, zygo_terr_data_factor, data.names=as.character(zygo_terr_data_factor$sn))
+
+#plot zygoptera tree
+zygo_terr_mode <- setNames(zygo_terr_data_factor$prop_terr, zygo_terr_data_factor$sn)
+cols<-setNames(c("forestgreen", "goldenrod1"), levels(zygo_terr_mode))
+plotTree.datamatrix(zygo_tree, as.data.frame(zygo_terr_mode),
+                    colours= list(cols), header=FALSE, fsize=0.45)
+legend("topright", legend=levels(zygo_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
+#Can't figure out how to remove the species labels!
+
+#done
+#_______________________________________________________________________________________________________________________________
 
 #choose a character model
-#4 possible models for discreet repsonse
+#4 possible models for discreet response
 #equal rates (ER)
 #all rates different (ARD)
 # irreversible modes (2) - going from 0 -> 1 or from 1 -> 0 but not vice versa)
@@ -130,6 +154,59 @@ plot(fit_er)
 #the ARD (all rates different) model, which had the lowest AIC -- shows that it is
 #easier/more common to go No -> Yes than to go Yes -> No
 
+#Do this for Anisoptera and zygoptera seperately:
+#___________________________________________________
+#Anisoptera
+fit_er_anis<-fitMk(anis_tree, terr_mode, model = "ER")
+fit_ard_anis<-fitMk(anis_tree, terr_mode, model = "ARD")
+#fit the no -> yes model (transition from non-territorial to territorial but not back)
+fit_01_anis<-fitMk(anis_tree, terr_mode, model=matrix(c(0,1,0,0),2,2,byrow=TRUE))
+#fit the yes to no model (transition from territorial to non-territorail but not back)
+fit_10_anis<-fitMk(anis_tree, terr_mode, model=matrix(c(0,0,1,0),2,2, byrow=TRUE))
+
+#extract AIC values from the models
+aic_model_anis<-c(AIC(fit_er_anis), AIC(fit_ard_anis), AIC(fit_01_anis), AIC(fit_10_anis))
+data.frame(model=c("ER", "ARD", "no -> yes", "yes->no"),
+           logL=c(logLik(fit_er_anis), logLik(fit_ard_anis),
+                  logLik(fit_01_anis), logLik(fit_10_anis)),
+           AIC=aic_model_anis,delta.AIC=aic_model_anis-min(aic_model_anis))             
+#0kay, so it seems that the all-rates-different is the way to go   
+#ARD is quite strongly favoured according to AIC values 
+
+#we can estimate q (the transition rate)
+#Q is the expected number of transition given a particular amount of time 
+print(fit_er_anis)
+print(fit_ard_anis)
+print(fit_01_anis)
+print(fit_10_anis)
+
+#zygoptera
+#Anisoptera
+fit_er_zygo<-fitMk(zygo_tree, terr_mode, model = "ER")
+fit_ard_zygo<-fitMk(zygo_tree, terr_mode, model = "ARD")
+#fit the no -> yes model (transition from non-territorial to territorial but not back)
+fit_01_zygo<-fitMk(zygo_tree, terr_mode, model=matrix(c(0,1,0,0),2,2,byrow=TRUE))
+#fit the yes to no model (transition from territorial to non-territorail but not back)
+fit_10_zygo<-fitMk(zygo_tree, terr_mode, model=matrix(c(0,0,1,0),2,2, byrow=TRUE))
+
+#extract AIC values from the models
+aic_model_zygo<-c(AIC(fit_er_zygo), AIC(fit_ard_zygo), AIC(fit_01_zygo), AIC(fit_10_zygo))
+data.frame(model=c("ER", "ARD", "no -> yes", "yes->no"),
+           logL=c(logLik(fit_er_zygo), logLik(fit_ard_zygo),
+                  logLik(fit_01_zygo), logLik(fit_10_zygo)),
+           AIC=aic_model_zygo,delta.AIC=aic_model_zygo-min(aic_model_zygo))             
+#0kay, so it seems that the all-rates-different is the way to go   
+#ARD is quite strongly favoured according to AIC values 
+
+#we can estimate q (the transition rate)
+#Q is the expected number of transition given a particular amount of time 
+print(fit_er_zygo)
+print(fit_ard_zygo)
+print(fit_01_zygo)
+print(fit_10_zygo)
+#done
+#_________________________________________________________________________________________________________________
+
 
 #Next: Ancestral state reconstruction - plots are very busy so may want to re-run these for just anisoptera/zygoptera
 #I have to decide if I want to do joint or marginal acenstral state reconstruction
@@ -138,7 +215,7 @@ plot(fit_er)
 #do both, then compare results (joint can go in supplementary material)
 library(corHMM)
 #create a special data frame of species names and trait data
-#character data must be numerical interger (0,1,2)
+#character data must be numerical interger (0,1)
 odonate_data<-data.frame(Genus_sp=names(terr_mode), terr_mode=as.numeric(terr_mode)-1)
 head(odonate_data, n=10)
 
@@ -167,6 +244,69 @@ plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 #likely ancestral state = territorial!
+
+#Do this for Anisoptera and zygoptera seperately:
+#_____________________________________________________________________________________________________
+#Anisoptera
+#joint ancestral state reconstruction
+#character data must be numerical interger (0,1)
+anis_data<-data.frame(Genus_sp=names(anis_terr_mode), anis_terr_mode=as.numeric(anis_terr_mode)-1)
+head(anis_data, n=10)
+#fit the joint model
+fit_joint_anis<-corHMM(anis_tree, anis_data, node.states="joint", rate.cat=1, model="ARD",rate.mat=NULL)
+fit_joint_anis
+#now plot
+plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
+                    colors=list(cols), header=FALSE, fsize=0.45)
+legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
+nodelabels(pie=to.matrix(levels(anis_terr_mode)[fit_joint_anis$phy$node.label],
+                         levels(anis_terr_mode)), piecol=cols, cex=0.3)
+
+#marginal ancestral state reconstruction
+fit_marginal_anis<- corHMM(anis_tree, anis_data, node.states = "marginal",
+                      rate.cat=1, rate.mat=NULL)
+fit_marginal_anis
+head(fit_marginal_anis$states)       
+#interpret this matrix as the posterior probabilities that each state is in each node
+
+#plot this
+plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
+                    colors=list(cols), header=FALSE, fsize=0.45)
+legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
+nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.3)
+#likely ancestral state = non-territorial! - that's interesting because it differs from odonates
+
+#Zygoptera
+#character data must be numerical interger (0,1)
+zygo_data<-data.frame(Genus_sp=names(zygo_terr_mode), zygo_terr_mode=as.numeric(zygo_terr_mode)-1)
+head(zygo_data, n=10)
+#fit the joint model
+fit_joint_zygo<-corHMM(zygo_tree, zygo_data, node.states="joint", rate.cat=1, model="ARD",rate.mat=NULL)
+fit_joint_zygo
+#now plot
+plotTree.datamatrix(zygo_tree, as.data.frame(zygo_terr_mode),
+                    colors=list(cols), header=FALSE, fsize=0.45)
+legend("topright", legend=levels(zygo_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
+nodelabels(pie=to.matrix(levels(zygo_terr_mode)[fit_joint_zygo$phy$node.label],
+                         levels(zygo_terr_mode)), piecol=cols, cex=0.3)
+
+#marginal ancestral state reconstruction
+fit_marginal_zygo<- corHMM(zygo_tree, zygo_data, node.states = "marginal",
+                           rate.cat=1, rate.mat=NULL)
+fit_marginal_zygo
+head(fit_marginal_zygo$states)       
+#interpret this matrix as the posterior probabilities that each state is in each node
+
+#plot this
+plotTree.datamatrix(zygo_tree, as.data.frame(zygo_terr_mode),
+                    colors=list(cols), header=FALSE, fsize=0.45)
+legend("topright", legend=levels(zygo_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
+nodelabels(pie=fit_marginal_zygo$states, piecol=cols, cex=0.3)
+#likely ancestral state = territorial! - that's interesting because it differs from Anisoptera
+
+#done
+#_________________________________________________________________________________________________________
+
 
 #one more method using an MCMC approach: Stochasitic character mapping
 #so you take the whole distribution from many sample stochastic maps and sample
