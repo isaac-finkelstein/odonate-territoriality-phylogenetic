@@ -89,11 +89,10 @@ cols<-setNames(c("forestgreen", "goldenrod1"), levels(anis_terr_mode))
 plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
                     colours= list(cols), header=FALSE, fsize=0.45)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
-
 #this seems to be working but the colours are wrong
 #the solution to make it work was changing the setNames function line
 #it's so crowded that I might want to remove names and then provide a large list so people can look up whatever species they want
-
+#Can't figure out how to remove the species labels!
 
 
 #choose a character model
@@ -213,7 +212,7 @@ print(deltaA)
 
 #note that delta should be used with at least 20 species - i have way more so I am good here.
 
-#finally, we can calculate p-value for this
+#finally, we can calculate a p-value for this
 #First, create a vector of random deltas that will be our null hypothesis
 random_delta<-rep(NA,100)
 for (i in 1:100){
