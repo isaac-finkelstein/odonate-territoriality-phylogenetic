@@ -67,7 +67,7 @@ name.check(odonate_tree, odonate_terr_data_factor, data.names=as.character(odona
 terr_mode<-setNames(odonate_terr_data_factor$prop_terr, odonate_terr_data_factor$sn)
 cols<-setNames(c("forestgreen", "goldenrod1"), levels(terr_mode))
 plotTree.datamatrix(odonate_tree_factor, as.data.frame(terr_mode),
-                    colours= list(cols), header=FALSE, fsize=0.45)
+                    colours= list(cols), header=FALSE)
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #it's so crowded that I might want to remove names and then provide a large list so people can look up whatever species they want
 
@@ -89,7 +89,7 @@ name.check(anis_tree, anis_terr_data_factor, data.names=as.character(anis_terr_d
 anis_terr_mode <- setNames(anis_terr_data_factor$prop_terr, anis_terr_data_factor$sn)
 cols<-setNames(c("forestgreen", "goldenrod1"), levels(anis_terr_mode))
 plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
-                    colours= list(cols), header=FALSE, fsize=0.45)
+                    colours= list(cols), header=FALSE)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #this seems to be working but the colours are wrong
 #the solution to make it work was changing the setNames function line
@@ -112,7 +112,7 @@ name.check(zygo_tree, zygo_terr_data_factor, data.names=as.character(zygo_terr_d
 zygo_terr_mode <- setNames(zygo_terr_data_factor$prop_terr, zygo_terr_data_factor$sn)
 cols<-setNames(c("forestgreen", "goldenrod1"), levels(zygo_terr_mode))
 plotTree.datamatrix(zygo_tree, as.data.frame(zygo_terr_mode),
-                    colours= list(cols), header=FALSE, fsize=0.45)
+                    colours= list(cols), header=FALSE)
 legend("topright", legend=levels(zygo_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #Can't figure out how to remove the species labels!
 
