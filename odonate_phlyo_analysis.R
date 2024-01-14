@@ -326,35 +326,8 @@ nodelabels(pie=fit_marginal_zygo$states, piecol=cols, cex=0.3)
 
 #I have to make a new dataframe, so I am reloading the data and starting from scratch:
 binary_trait_data<- read.csv("data/species_formatted_master.csv", stringsAsFactors = TRUE)
-
-#Put data into a readable dataframe -- one species per row
-binary_trait_table<- ftable(binary_trait_data$Formatted_species, binary_trait_data$Mate.guarding, binary_trait_data$Territorial) #this has 3 rows
-binary_prop_terr<- round(binary_trait_table[,3]/(binary_trait_table[,2]+ binary_trait_table[,3]),0) # so this calculates the percentage "yes" for territorial
-#note that I am rounding to 1 whole number- so 0.5-> 1. Figure out how to set this to a 66% threshold later
-sn<- attr(binary_trait_table,"row.vars")[[1]]
-binary_trait_with_na<- data.frame(sn,binary_prop_terr) #so this is a dataframe with the proporitons of territorial "yes" for each species
-binary_trait_data<- binary_trait_with_na[complete.cases(binary_trait_with_na), ] #removed NA values 
-
-#to make the territorial variable binary (yes or no) make it a factor
-binary_terr_factor <- factor(ifelse(binary_prop_terr == 1, "yes", "no"))
-binary_trait_with_na_factor <- data.frame(sn, binary_trait_factor = binary_terr_factor)
-binary_trait_data_factor <- binary_trait_with_na_factor[complete.cases(binary_trait_with_na_factor), ]
-
-# Create a data frame
-binary_trait_with_na_df <- data.frame(sn, binary_prop_terr = binary_terr_factor)
-
-# Remove NA values
-binary_trait_no_na <- binary_trait_with_na_df[complete.cases(binary_trait_with_na), ]
-
-#prune tree to match data
-chk<-name.check(tree, terr_data, data.names=as.character(terr_data$sn))
-summary(chk)
-odonate_tree<-drop.tip(tree, chk$tree_not_data) #dropped tree_not_data species
-odonate_tree
-# Identify species to drop from terr_data
-species_to_drop <- chk$data_not_tree
-odonate_terr_data <- terr_data[!(terr_data$sn %in% species_to_drop), ] #dropped data_not_tree species from dataset
-name.check(odonate_tree, odonate_terr_data, data.names=as.character(odonate_terr_data$sn))
+#... put it into a readable format that is only the two traits: e.g territorialty and mate guarding
+#then proceed. 
 
 
 
@@ -399,3 +372,4 @@ p_value<-sum(random_delta>deltaA)/length(random_delta) #results in a p-value of 
 #so a p-value of 0 may be correct.
 boxplot(random_delta)
 abline(h=deltaA, col="red")
+ # 
