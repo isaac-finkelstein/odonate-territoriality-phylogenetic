@@ -324,10 +324,39 @@ nodelabels(pie=fit_marginal_zygo$states, piecol=cols, cex=0.3)
 #this is to see if there are evolutionary relationships between traits. Are certain combinations of traits more likely to evolve? 
 #is there correlated evolution?
 
-#I have to make a new dataframe, so I am reloading the data and starting from scratch:
-binary_trait_data<- read.csv("data/species_formatted_master.csv", stringsAsFactors = TRUE)
-#... put it into a readable format that is only the two traits: e.g territorialty and mate guarding
-#then proceed. 
+#I have to make a new dataframe
+#so I make individual dataframes for each trait I want, then stitch them together
+#territoriality
+binary_terr<-ftable(my_data$Formatted_species, my_data$Territorial)
+prop_binary_terr<-round(binary_terr[,3]/(binary_terr[,2]+ binary_terr[,3]),0)
+sn<-attr(binary_terr, "row.vars")[[1]]
+binary_terr_df<-data.frame(sn,prop_binary_terr)
+
+#mate guarding - I'M NOT SURE THIS WORKED, CHECK IT OUT FIRST - why are there no 0s and 1s?
+#it probably has to do with the columns called in prop_mate_guard?
+binary_mate_guard<-ftable(my_data$Formatted_species, my_data$Mate.guarding)
+prop_mate_guard<-round(binary_mate_guard[,3]/binary_mate_guard[,2]+binary_mate_guard[,3],0)
+sn<-attr(binary_mate_guard, "row.vars")[[1]]
+binary_mate_guard_df<-data.frame(sn, prop_mate_guard)
+
+#Flier vs percher - NOT SURE IT WORKD. WHAT IS LNF?
+binary_fly_v_perch<-ftable(my_data$Formatted_species, my_data$Flier.vs.percher)
+prop_fly_v_perch<-round(binary_fly_v_perch[,3]/binary_fly_v_perch[,2]+binary_fly_v_perch[,3],0)
+sn<-attr(binary_fly_v_perch, "row.vars")[[1]]
+binary_fly_v_perch_df<-data.frame(sn, prop_fly_v_perch)
+
+#oviposition (endophytic vs exophytic) - MIGHT BE WRONG
+binary_ovi<-ftable(my_data$Formatted_species, my_data$Oviposition.type..endophytic.vs.exophytic.)
+prop_ovi<-round(binary_ovi[,3]/binary_ovi[,2]+binary_ovi[,3],0)
+sn<-attr(binary_ovi, "row.vars")[[1]]
+binary_ovi_df<-data.frame(sn, prop_ovi)
+
+#now I need to stitch these together in a single dataframe
+binary_data <- merge(binary_terr_df, binary_mate_guard_df, by = "sn", all = TRUE)
+binary_data <- merge(binary_data, binary_fly_v_perch_df, by = "sn", all = TRUE)
+binary_data <- merge(binary_data, binary_ovi_df, by = "sn", all = TRUE)
+
+colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Mate_Guard", "Prop_Flier_vs_Percher", "Prop_Oviposition")
 
 
 
