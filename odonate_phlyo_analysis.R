@@ -6,7 +6,9 @@ library(phytools)
 library(geiger)
 library(dplyr)
 
-my_data<- read.csv("data/species_formatted_master.csv")
+my_data<- read.csv("data/odo_data_v3.csv") #this dataset (3rd version) changes tandem -> contact in De Recende's data.
+#For some reason, they use both terms. But since they mean the same thing, I changed them all to "Contact"
+#I also emailed to ask, but did not get a response. 
 load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
 #str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label -- to check the structure of the tree
 
@@ -14,6 +16,8 @@ load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated fro
 terr_table<- ftable(my_data$Formatted_species, my_data$Territorial) #this has 3 rows
 prop_terr<- round(terr_table[,3]/(terr_table[,2]+ terr_table[,3]),0) # so this calculates the percentage "yes" for territorial
 #note that I am rounding to 1 whole number- so 0.5-> 1. Figure out how to set this to a 66% threshold later
+#the 0 at the end rounds to 0 decimal places
+#so I should round to 2 decimal places and then do a seperate line to only include >=0.66 for yes and <-=0.33 for no (or is it vice versa)
 sn<- attr(terr_table,"row.vars")[[1]]
 terr_data_with_na<- data.frame(sn,prop_terr) #so this is a dataframe with the proporitons of territorial "yes" for each species
 terr_data<- terr_data_with_na[complete.cases(terr_data_with_na), ] #removed NA values 
@@ -334,20 +338,24 @@ binary_terr_df<-data.frame(sn,prop_binary_terr)
 
 #mate guarding - I'M NOT SURE THIS WORKED, CHECK IT OUT FIRST - why are there no 0s and 1s?
 #it probably has to do with the columns called in prop_mate_guard?
-binary_mate_guard<-ftable(my_data$Formatted_species, my_data$Mate.guarding)
-prop_mate_guard<-round(binary_mate_guard[,3]/binary_mate_guard[,2]+binary_mate_guard[,3],0)
+#remove "No" and "Both". I am only interested in comparing the binary variable contact vs non-contact
+#there is only one instance of "both"
+#so note that this is variable is only for species that exhibit mate guarding 
+filtered_mate_guarding <- subset(my_data, Mate.guarding %in% c("Contact", "Non-contact"))
+mate_guard_var<-ftable(filtered_mate_guarding$Formatted_species, filtered_mate_guarding$Mate.guarding)
+prop_mate_guard<-round(binary_mate_guard[,3]/(binary_mate_guard[,2]+binary_mate_guard[,3]),0)
 sn<-attr(binary_mate_guard, "row.vars")[[1]]
 binary_mate_guard_df<-data.frame(sn, prop_mate_guard)
 
 #Flier vs percher - NOT SURE IT WORKD. WHAT IS LNF?
 binary_fly_v_perch<-ftable(my_data$Formatted_species, my_data$Flier.vs.percher)
-prop_fly_v_perch<-round(binary_fly_v_perch[,3]/binary_fly_v_perch[,2]+binary_fly_v_perch[,3],0)
+prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fly_v_perch[,3]),0)
 sn<-attr(binary_fly_v_perch, "row.vars")[[1]]
 binary_fly_v_perch_df<-data.frame(sn, prop_fly_v_perch)
 
 #oviposition (endophytic vs exophytic) - MIGHT BE WRONG
 binary_ovi<-ftable(my_data$Formatted_species, my_data$Oviposition.type..endophytic.vs.exophytic.)
-prop_ovi<-round(binary_ovi[,3]/binary_ovi[,2]+binary_ovi[,3],0)
+prop_ovi<-round(binary_ovi[,3]/(binary_ovi[,2]+binary_ovi[,3]),0)
 sn<-attr(binary_ovi, "row.vars")[[1]]
 binary_ovi_df<-data.frame(sn, prop_ovi)
 
