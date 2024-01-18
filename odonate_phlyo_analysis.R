@@ -357,7 +357,7 @@ binary_data <- merge(binary_data, binary_fly_v_perch_df, by = "sn", all = TRUE)
 binary_data <- merge(binary_data, binary_ovi_df, by = "sn", all = TRUE)
 
 colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Mate_Guard", "Prop_Flier_vs_Percher", "Prop_Oviposition")
-
+#This needs checking -- make sure it's good!
 
 
 
