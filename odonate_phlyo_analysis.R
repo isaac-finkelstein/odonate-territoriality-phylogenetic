@@ -334,30 +334,38 @@ nodelabels(pie=fit_marginal_zygo$states, piecol=cols, cex=0.3)
 binary_terr<-ftable(my_data$Formatted_species, my_data$Territorial)
 prop_binary_terr<-round(binary_terr[,3]/(binary_terr[,2]+ binary_terr[,3]),0)
 sn<-attr(binary_terr, "row.vars")[[1]]
-binary_terr_df<-data.frame(sn,prop_binary_terr)
+binary_terr_df<-data.frame(sn,prop_binary_terr, stringsAsFactors = TRUE)
 
-#mate guarding - I'M NOT SURE THIS WORKED, CHECK IT OUT FIRST - why are there no 0s and 1s?
-#it probably has to do with the columns called in prop_mate_guard?
+#mate guarding 
 #remove "No" and "Both". I am only interested in comparing the binary variable contact vs non-contact
 #there is only one instance of "both"
 #so note that this is variable is only for species that exhibit mate guarding 
 filtered_mate_guarding <- subset(my_data, Mate.guarding %in% c("Contact", "Non-contact"))
 mate_guard_var<-ftable(filtered_mate_guarding$Formatted_species, filtered_mate_guarding$Mate.guarding)
-prop_mate_guard<-round(binary_mate_guard[,3]/(binary_mate_guard[,2]+binary_mate_guard[,3]),0)
-sn<-attr(binary_mate_guard, "row.vars")[[1]]
-binary_mate_guard_df<-data.frame(sn, prop_mate_guard)
+prop_mate_guard<-round(mate_guard_var[,1]/(mate_guard_var[,1]+mate_guard_var[,2]),0) #this is the proportion that is contact
+#so 1 = contact, 0 = non-contact. 
+sn<-attr(mate_guard_var, "row.vars")[[1]]
+binary_mate_guard_df<-data.frame(sn, prop_mate_guard, stringsAsFactors = TRUE)
+#this worked, I checked manually.
 
-#Flier vs percher - NOT SURE IT WORKD. WHAT IS LNF?
+#Flier vs percher
 binary_fly_v_perch<-ftable(my_data$Formatted_species, my_data$Flier.vs.percher)
-prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fly_v_perch[,3]),0)
+prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fly_v_perch[,3]),0) #this is proportion Percher
+#so 1=percher, 0 = flier
 sn<-attr(binary_fly_v_perch, "row.vars")[[1]]
-binary_fly_v_perch_df<-data.frame(sn, prop_fly_v_perch)
+binary_fly_v_perch_df<-data.frame(sn, prop_fly_v_perch, stringsAsFactors=TRUE)
+#this worked, but it includes all species - so there are NAs. 
 
-#oviposition (endophytic vs exophytic) - MIGHT BE WRONG
-binary_ovi<-ftable(my_data$Formatted_species, my_data$Oviposition.type..endophytic.vs.exophytic.)
-prop_ovi<-round(binary_ovi[,3]/(binary_ovi[,2]+binary_ovi[,3]),0)
+#oviposition (endophytic vs exophytic)
+#I need to make all epiphytic = exophytic - to make it binary. 
+my_data_mutated <- my_data %>%
+  mutate(Oviposition.type..endophytic.vs.exophytic. = ifelse(Oviposition.type..endophytic.vs.exophytic. %in% c("Epiphytic", "Exophytic"), "Exophytic", Oviposition.type..endophytic.vs.exophytic.))
+binary_ovi<-ftable(my_data_mutated$Formatted_species, my_data_mutated$Oviposition.type..endophytic.vs.exophytic.)
+prop_ovi<-round(binary_ovi[,3]/(binary_ovi[,2]+binary_ovi[,3]),0) #This is proportion exophytic
+#so 1=exophytic, 0=endophytic
 sn<-attr(binary_ovi, "row.vars")[[1]]
-binary_ovi_df<-data.frame(sn, prop_ovi)
+binary_ovi_df<-data.frame(sn, prop_ovi, stringsAsFactors=TRUE)
+#this worked, but it includes all species - so there are NAs. 
 
 #now I need to stitch these together in a single dataframe
 binary_data <- merge(binary_terr_df, binary_mate_guard_df, by = "sn", all = TRUE)
@@ -365,8 +373,16 @@ binary_data <- merge(binary_data, binary_fly_v_perch_df, by = "sn", all = TRUE)
 binary_data <- merge(binary_data, binary_ovi_df, by = "sn", all = TRUE)
 
 colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Mate_Guard", "Prop_Flier_vs_Percher", "Prop_Oviposition")
-#This needs checking -- make sure it's good!
+#This worked! I checked manually. 
 
+#now we have the data, let's plot the tree
+#THIS OBVIOUSLY STILL NEEDS SOME WORK - IT SUCKS RN. 
+object<-plotTree.datamatrix(odonate_tree, binary_data, fsize=0.5, yexp=1, header=FALSE, xexp=1.45, palettes=c("YlOrRd", "PuBuGn"))
+leg<-legend(x="topright", names(object$colors$binary_terr_df), cex=0.7, pch=22, ppt.bg=object$colors$binary_terr_df, pt.cex=1.5, bty="n", title="territory mode")
+#second legend
+leg<- legend (x=leg$rect$left+4.7, y=leg$rect$top-leg$rect$h,
+              names(object$colors$Prop_Mate_Guard), cex=0.7, pch=22, pt.bg=object$colors$Prop_Mate_Guard, pt.cex=1.5, bty="n", title="mate guarding")
+#fitting the pagel (1994) model
 
 
 #calculating delta, a measure of phylogenetic signal
