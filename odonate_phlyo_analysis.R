@@ -335,6 +335,7 @@ binary_terr<-ftable(my_data$Formatted_species, my_data$Territorial)
 prop_binary_terr<-round(binary_terr[,3]/(binary_terr[,2]+ binary_terr[,3]),0)
 sn<-attr(binary_terr, "row.vars")[[1]]
 binary_terr_df<-data.frame(sn,prop_binary_terr, stringsAsFactors = TRUE)
+#so 1 = territorial, 0 = non-territorial. 
 
 #mate guarding 
 #remove "No" and "Both". I am only interested in comparing the binary variable contact vs non-contact
@@ -373,17 +374,51 @@ binary_data <- merge(binary_data, binary_fly_v_perch_df, by = "sn", all = TRUE)
 binary_data <- merge(binary_data, binary_ovi_df, by = "sn", all = TRUE)
 
 colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Mate_Guard", "Prop_Flier_vs_Percher", "Prop_Oviposition")
-#This worked! I checked manually. 
+#This worked! I checked manually.
 
-#now we have the data, let's plot the tree
+#one more step: I need to remove NA values, but if I do that to the entire dataframe, I will have no rows left
+#because almost no rows have no missing values
+
+#So I make dataframes of each pair of traits:
+mate_guard_terr_data_with_na<-merge(binary_terr_df, binary_mate_guard_df, by = "sn", all = TRUE)
+fly_v_perch_terr_data_with_na<-merge(binary_terr_df, binary_fly_v_perch_df, by = "sn", all = TRUE)
+ovi_terr_data_with_na<-merge(binary_terr_df, binary_ovi_df, by = "sn", all = TRUE)
+#now remove NAs
+mate_guard_terr_data_old<- mate_guard_terr_data_with_na[complete.cases(mate_guard_terr_data_with_na), ] 
+fly_v_perch_terr_data_old<-fly_v_perch_terr_data_with_na[complete.cases(fly_v_perch_terr_data_with_na), ] 
+ovi_terr_data_old<-ovi_terr_data_with_na[complete.cases(ovi_terr_data_with_na), ] 
+#these have to be in the right format
+row_names_mate_guard <- mate_guard_terr_data_old$sn
+mate_guard_terr_data<-data.frame(prop_binary_terr = ifelse(mate_guard_terr_data_old$prop_binary_terr == 1, "territorial", "non-territorial"),
+                                     prop_mate_guard = ifelse(mate_guard_terr_data_old$prop_mate_guard == 1, "contact", "non-contact"))
+rownames(mate_guard_terr_data) <- row_names_mate_guard
+
+row_names_fly_v_perch <- fly_v_perch_terr_data_old$sn
+fly_v_perch_terr_data<-data.frame(prop_binary_terr = ifelse(fly_v_perch_terr_data_old$prop_binary_terr == 1, "territorial", "non-territorial"),
+                                     prop_mate_guard = ifelse(fly_v_perch_terr_data_old$prop_fly_v_perch == 1, "percher", "flier"))
+rownames(fly_v_perch_terr_data) <- row_names_fly_v_perch
+
+row_names_ovi_terr <- ovi_terr_data_old$sn
+ovi_terr_data<-data.frame(prop_binary_terr = ifelse(ovi_terr_data_old$prop_binary_terr == 1, "territorial", "non-territorial"),
+                                  prop_ovi = ifelse(ovi_terr_data_old$prop_ovi == 1, "exophytic", "endophytic"))
+rownames(ovi_terr_data) <- row_names_ovi_terr
+
+#now we have the data, let's plot the trees
 #THIS OBVIOUSLY STILL NEEDS SOME WORK - IT SUCKS RN. 
-object<-plotTree.datamatrix(odonate_tree, binary_data, fsize=0.5, yexp=1, header=FALSE, xexp=1.45, palettes=c("YlOrRd", "PuBuGn"))
-leg<-legend(x="topright", names(object$colors$binary_terr_df), cex=0.7, pch=22, ppt.bg=object$colors$binary_terr_df, pt.cex=1.5, bty="n", title="territory mode")
+object<-plotTree.datamatrix(odonate_tree, mate_guard_terr_data, fsize=0.5, yexp=1, header=FALSE, xexp=1.45, palettes=c("YlOrRd", "PuBuGn"))
+leg<-legend(x="topright", names(object$colors$prop_binary_terr), cex=0.7, pch=22, pt.bg=object$colors$prop_binary_terr, pt.cex=1.5, bty="n", title="territory mode")
 #second legend
 leg<- legend (x=leg$rect$left+4.7, y=leg$rect$top-leg$rect$h,
-              names(object$colors$Prop_Mate_Guard), cex=0.7, pch=22, pt.bg=object$colors$Prop_Mate_Guard, pt.cex=1.5, bty="n", title="mate guarding")
-#fitting the pagel (1994) model
+              names(object$colors$prop_pate_guard), cex=0.7, pch=22, pt.bg=object$colors$prop_mate_guard, pt.cex=1.5, bty="n", title="mate guarding")
+#could make a tree for all of them
 
+#fitting the pagel (1994) model
+terr_mode_pagel_mate_guard<-setNames(mate_guard_terr_data[,1],
+                                     rownames(mate_guard_terr_data))
+mate_mode_pagel_mate_guard<-setNames(mate_guard_terr_data[,2],
+                                     rownames(mate_guard_terr_data))
+mate_guard_fit<-fitPagel(odonate_tree, terr_mode_pagel_mate_guard, mate_mode_pagel_mate_guard)
+#this didn't work because I have to trim my tree!
 
 #calculating delta, a measure of phylogenetic signal
 #from Borges et al., 2019 github
