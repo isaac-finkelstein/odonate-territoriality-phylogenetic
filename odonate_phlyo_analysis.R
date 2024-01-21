@@ -14,12 +14,14 @@ load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated fro
 
 #Put data into a readable dataframe -- one species per row
 terr_table<- ftable(my_data$Formatted_species, my_data$Territorial) #this has 3 rows
-prop_terr<- round(terr_table[,3]/(terr_table[,2]+ terr_table[,3]),0) # so this calculates the percentage "yes" for territorial
-#note that I am rounding to 1 whole number- so 0.5-> 1. Figure out how to set this to a 66% threshold later
-#the 0 at the end rounds to 0 decimal places
+prop_terr<- round(terr_table[,3]/(terr_table[,2]+ terr_table[,3]),2) # so this calculates the percentage "yes" for territorial
+#the 2 at the end rounds to 2 decimal 
+#set a 66% threshhold
+sp_terr <- ifelse(prop_terr > 0.66, 1, ifelse(prop_terr < 0.33, 0, NA))
+
 #so I should round to 2 decimal places and then do a seperate line to only include >=0.66 for yes and <-=0.33 for no (or is it vice versa)
 sn<- attr(terr_table,"row.vars")[[1]]
-terr_data_with_na<- data.frame(sn,prop_terr) #so this is a dataframe with the proporitons of territorial "yes" for each species
+terr_data_with_na<- data.frame(sn,sp_terr) #so this is a dataframe with the proporitons of territorial "yes" for each species
 terr_data<- terr_data_with_na[complete.cases(terr_data_with_na), ] #removed NA values 
 
 #to make the territorial variable binary (yes or no) make it a factor
@@ -64,7 +66,7 @@ name.check(odonate_tree, odonate_terr_data_factor, data.names=as.character(odona
 
 
 #let's plot territoriality on my tree
-terr_mode<-setNames(odonate_terr_data_factor$prop_terr, odonate_terr_data_factor$sn)
+terr_mode<-setNames(odonate_terr_data_factor$sp_terr, odonate_terr_data_factor$sn)
 cols<-setNames(c("forestgreen", "goldenrod1"), levels(terr_mode))
 plotTree.datamatrix(odonate_tree_factor, as.data.frame(terr_mode),
                     colours= list(cols), header=FALSE)
@@ -86,7 +88,7 @@ anis_terr_data_factor <- terr_data_factor[!(terr_data_factor$sn %in% species_to_
 name.check(anis_tree, anis_terr_data_factor, data.names=as.character(anis_terr_data_factor$sn))
 
 #plot anisoptera tree
-anis_terr_mode <- setNames(anis_terr_data_factor$prop_terr, anis_terr_data_factor$sn)
+anis_terr_mode <- setNames(anis_terr_data_factor$sp_terr, anis_terr_data_factor$sn)
 cols<-setNames(c("forestgreen", "goldenrod1"), levels(anis_terr_mode))
 plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
                     colours= list(cols), header=FALSE)
@@ -109,7 +111,7 @@ zygo_terr_data_factor <- terr_data_factor[!(terr_data_factor$sn %in% species_to_
 name.check(zygo_tree, zygo_terr_data_factor, data.names=as.character(zygo_terr_data_factor$sn))
 
 #plot zygoptera tree
-zygo_terr_mode <- setNames(zygo_terr_data_factor$prop_terr, zygo_terr_data_factor$sn)
+zygo_terr_mode <- setNames(zygo_terr_data_factor$sp_terr, zygo_terr_data_factor$sn)
 cols<-setNames(c("forestgreen", "goldenrod1"), levels(zygo_terr_mode))
 plotTree.datamatrix(zygo_tree, as.data.frame(zygo_terr_mode),
                     colours= list(cols), header=FALSE)
@@ -484,7 +486,8 @@ odonate_tree$edge.length[odonate_tree$edge.length==0] <-quantile(odonate_tree$ed
 #odonate_tree$tip.label #shows the species order, note it's alphabetical, split into Zygoptera and Anisoptera
 order_in_terr_data <- match(odonate_tree$tip.label, odonate_terr_data$sn) #must be same order as tree
 odonate_terr_data_reordered <- odonate_terr_data[order_in_terr_data, ] #now tree and data are in the same order
-trait<-odonate_terr_data_reordered$prop_terr #this is a vector of territoriality, with 1= yes, 0 = no.
+trait<-odonate_terr_data_reordered$sp_terr #this is a vector of territoriality, with 1= yes, 0 = no.
+#set at 66% threshold (66% concordance in the dataset)
 
 #now calculate delta
 deltaA<-delta(trait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
