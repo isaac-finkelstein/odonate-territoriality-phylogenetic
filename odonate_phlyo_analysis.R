@@ -327,6 +327,7 @@ nodelabels(pie=fit_marginal_zygo$states, piecol=cols, cex=0.3)
 #Pagel94 plot
 #this is to see if there are evolutionary relationships between traits. Are certain combinations of traits more likely to evolve? 
 #is there correlated evolution?
+#the traits I am interested in are: mate guarding ~territoriality, flier vs percher ~ territoriality, oviposition (endo vs exo) ~ territoriality
 
 #I have to make a new dataframe
 #so I make individual dataframes for each trait I want, then stitch them together
@@ -387,38 +388,88 @@ ovi_terr_data_with_na<-merge(binary_terr_df, binary_ovi_df, by = "sn", all = TRU
 mate_guard_terr_data_old<- mate_guard_terr_data_with_na[complete.cases(mate_guard_terr_data_with_na), ] 
 fly_v_perch_terr_data_old<-fly_v_perch_terr_data_with_na[complete.cases(fly_v_perch_terr_data_with_na), ] 
 ovi_terr_data_old<-ovi_terr_data_with_na[complete.cases(ovi_terr_data_with_na), ] 
+
+
+#fitting the pagel (1994) model
+
+#Mate guarding and territoriality
+# Identify species to drop from mate_guard_terr_data
+chk_mate_guard<-name.check(tree, mate_guard_terr_data_old, data.names=as.character(mate_guard_terr_data_old$sn))
+summary(chk_mate_guard)
+tree_mate_guard <- drop.tip(tree, chk_mate_guard$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+mate_guard_species_to_drop<-chk_mate_guard$data_not_tree
+mate_guard_terr_data_old_dropped<-mate_guard_terr_data_old[!(mate_guard_terr_data_old$sn %in% mate_guard_species_to_drop),] #dropped data_not_tree species from dataset
+name.check(tree_mate_guard, mate_guard_terr_data_old_dropped, data.names=as.character(mate_guard_terr_data_old_dropped$sn))
 #these have to be in the right format
-row_names_mate_guard <- mate_guard_terr_data_old$sn
-mate_guard_terr_data<-data.frame(prop_binary_terr = ifelse(mate_guard_terr_data_old$prop_binary_terr == 1, "territorial", "non-territorial"),
-                                     prop_mate_guard = ifelse(mate_guard_terr_data_old$prop_mate_guard == 1, "contact", "non-contact"))
+row_names_mate_guard <- mate_guard_terr_data_old_dropped$sn
+mate_guard_terr_data<-data.frame(prop_binary_terr = ifelse(mate_guard_terr_data_old_dropped$prop_binary_terr == 1, "territorial", "non-territorial"),
+                                 prop_mate_guard = ifelse(mate_guard_terr_data_old_dropped$prop_mate_guard == 1, "contact", "non-contact"))
 rownames(mate_guard_terr_data) <- row_names_mate_guard
 
-row_names_fly_v_perch <- fly_v_perch_terr_data_old$sn
-fly_v_perch_terr_data<-data.frame(prop_binary_terr = ifelse(fly_v_perch_terr_data_old$prop_binary_terr == 1, "territorial", "non-territorial"),
-                                     prop_mate_guard = ifelse(fly_v_perch_terr_data_old$prop_fly_v_perch == 1, "percher", "flier"))
+#run pagel 94 model
+terr_mode_pagel_mate_guard<-setNames(mate_guard_terr_data[,1],
+                                     rownames(mate_guard_terr_data))
+mate_mode_pagel_mate_guard<-setNames(mate_guard_terr_data[,2],
+                                     rownames(mate_guard_terr_data))
+mate_guard_fit<-fitPagel(tree_mate_guard, terr_mode_pagel_mate_guard, mate_mode_pagel_mate_guard)
+#the dependent model has lower AIC! And a very small p-value. 
+
+# Pagel 94 model for flier vs percher and territoriality
+# Identify species to drop from fly_v_perch_terr_data
+chk_fly_v_perch<-name.check(tree, fly_v_perch_terr_data_old, data.names=as.character(fly_v_perch_terr_data_old$sn))
+summary(chk_fly_v_perch)
+tree_fly_v_perch <- drop.tip(tree, chk_fly_v_perch$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+fly_v_perch_species_to_drop<-chk_fly_v_perch$data_not_tree
+fly_v_perch_terr_data_old_dropped<-fly_v_perch_terr_data_old[!(fly_v_perch_terr_data_old$sn %in% fly_v_perch_species_to_drop),] #dropped data_not_tree species from dataset
+name.check(tree_fly_v_perch, fly_v_perch_terr_data_old_dropped, data.names=as.character(fly_v_perch_terr_data_old_dropped$sn))
+#these have to be in the right format:
+row_names_fly_v_perch <- fly_v_perch_terr_data_old_dropped$sn
+fly_v_perch_terr_data<-data.frame(prop_binary_terr = ifelse(fly_v_perch_terr_data_old_dropped$prop_binary_terr == 1, "territorial", "non-territorial"),
+                                  prop_mate_guard = ifelse(fly_v_perch_terr_data_old_dropped$prop_fly_v_perch == 1, "percher", "flier"))
 rownames(fly_v_perch_terr_data) <- row_names_fly_v_perch
 
-row_names_ovi_terr <- ovi_terr_data_old$sn
-ovi_terr_data<-data.frame(prop_binary_terr = ifelse(ovi_terr_data_old$prop_binary_terr == 1, "territorial", "non-territorial"),
-                                  prop_ovi = ifelse(ovi_terr_data_old$prop_ovi == 1, "exophytic", "endophytic"))
+#run pagel 94 model
+terr_mode_pagel_fly_v_perch<-setNames(fly_v_perch_terr_data[,1],
+                                     rownames(fly_v_perch_terr_data))
+fly_mode_pagel_fly_v_perch<-setNames(fly_v_perch_terr_data[,2],
+                                     rownames(fly_v_perch_terr_data))
+fly_v_perch_fit<-fitPagel(tree_fly_v_perch, terr_mode_pagel_fly_v_perch, fly_mode_pagel_fly_v_perch)
+#dependent model has lower AIC and p-value is very small. 
+
+# Pagel 94 model for oviposition (endophytic vs exophytic) and territoriality
+# Identify species to drop from ovi_terr_data
+chk_ovi<-name.check(tree, ovi_terr_data_old, data.names=as.character(ovi_terr_data_old$sn))
+summary(chk_ovi)
+tree_ovi <- drop.tip(tree, chk_ovi$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+ovi_species_to_drop<-chk_ovi$data_not_tree
+ovi_terr_data_old_dropped<-ovi_terr_data_old[!(ovi_terr_data_old$sn %in% ovi_species_to_drop),] #dropped data_not_tree species from dataset
+name.check(tree_ovi,ovi_terr_data_old_dropped, data.names=as.character(ovi_terr_data_old_dropped$sn))
+#these have to be in the right format:
+row_names_ovi_terr <- ovi_terr_data_old_dropped$sn
+ovi_terr_data<-data.frame(prop_binary_terr = ifelse(ovi_terr_data_old_dropped$prop_binary_terr == 1, "territorial", "non-territorial"),
+                          prop_ovi = ifelse(ovi_terr_data_old_dropped$prop_ovi == 1, "exophytic", "endophytic"))
 rownames(ovi_terr_data) <- row_names_ovi_terr
 
-#now we have the data, let's plot the trees
+#run pagel 94 model
+terr_mode_pagel_ovi<-setNames(ovi_terr_data[,1],
+                                      rownames(ovi_terr_data))
+ovi_mode_pagel_ovi<-setNames(ovi_terr_data[,2],
+                                     rownames(ovi_terr_data))
+ovi_fit<-fitPagel(tree_ovi, terr_mode_pagel_ovi, ovi_mode_pagel_ovi)
+#in this case the lower AIC is the independent model
+#p-value is 0.2 so high. 
+
+#we can also plot the trees to visually display the data:
 #THIS OBVIOUSLY STILL NEEDS SOME WORK - IT SUCKS RN. 
-object<-plotTree.datamatrix(odonate_tree, mate_guard_terr_data, fsize=0.5, yexp=1, header=FALSE, xexp=1.45, palettes=c("YlOrRd", "PuBuGn"))
+object<-plotTree.datamatrix(tree_mate_guard, mate_guard_terr_data, fsize=0.5, yexp=1, header=FALSE, xexp=1.45, palettes=c("YlOrRd", "PuBuGn"))
 leg<-legend(x="topright", names(object$colors$prop_binary_terr), cex=0.7, pch=22, pt.bg=object$colors$prop_binary_terr, pt.cex=1.5, bty="n", title="territory mode")
 #second legend
 leg<- legend (x=leg$rect$left+4.7, y=leg$rect$top-leg$rect$h,
               names(object$colors$prop_pate_guard), cex=0.7, pch=22, pt.bg=object$colors$prop_mate_guard, pt.cex=1.5, bty="n", title="mate guarding")
 #could make a tree for all of them
-
-#fitting the pagel (1994) model
-terr_mode_pagel_mate_guard<-setNames(mate_guard_terr_data[,1],
-                                     rownames(mate_guard_terr_data))
-mate_mode_pagel_mate_guard<-setNames(mate_guard_terr_data[,2],
-                                     rownames(mate_guard_terr_data))
-mate_guard_fit<-fitPagel(odonate_tree, terr_mode_pagel_mate_guard, mate_mode_pagel_mate_guard)
-#this didn't work because I have to trim my tree!
 
 #calculating delta, a measure of phylogenetic signal
 #from Borges et al., 2019 github
