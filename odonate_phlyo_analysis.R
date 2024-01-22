@@ -20,11 +20,11 @@ prop_terr<- round(terr_table[,3]/(terr_table[,2]+ terr_table[,3]),2) # so this c
 sp_terr <- ifelse(prop_terr >= 0.75, 1, ifelse(prop_terr <= 0.25, 0, NA))
 
 sn<- attr(terr_table,"row.vars")[[1]]
-terr_data_with_na<- data.frame(sn,sp_terr) #so this is a dataframe with the proporitons of territorial "yes" for each species
+terr_data_with_na<- data.frame(sn,sp_terr) #so this is a dataframe with territorial (1/0) for each species
 terr_data<- terr_data_with_na[complete.cases(terr_data_with_na), ] #removed NA values 
 
 #to make the territorial variable binary (yes or no) make it a factor
-prop_terr_factor <- factor(ifelse(prop_terr == 1, "yes", "no"))
+prop_terr_factor <- factor(ifelse(sp_terr == 1, "yes", "no"))
 terr_data_with_na_factor <- data.frame(sn, prop_terr_factor = prop_terr_factor)
 terr_data_factor <- terr_data_with_na_factor[complete.cases(terr_data_with_na_factor), ]
 terr_data_with_na <- data.frame(sn, prop_terr = prop_terr_factor) # Create a data frame
@@ -65,7 +65,7 @@ name.check(odonate_tree, odonate_terr_data_factor, data.names=as.character(odona
 
 
 #let's plot territoriality on my tree
-terr_mode<-setNames(odonate_terr_data_factor$sp_terr, odonate_terr_data_factor$sn)
+terr_mode<-setNames(odonate_terr_data_factor$prop_terr, odonate_terr_data_factor$sn)
 cols<-setNames(c("forestgreen", "goldenrod1"), levels(terr_mode))
 plotTree.datamatrix(odonate_tree_factor, as.data.frame(terr_mode),
                     colours= list(cols), header=FALSE)
@@ -87,7 +87,7 @@ anis_terr_data_factor <- terr_data_factor[!(terr_data_factor$sn %in% species_to_
 name.check(anis_tree, anis_terr_data_factor, data.names=as.character(anis_terr_data_factor$sn))
 
 #plot anisoptera tree
-anis_terr_mode <- setNames(anis_terr_data_factor$sp_terr, anis_terr_data_factor$sn)
+anis_terr_mode <- setNames(anis_terr_data_factor$prop_terr, anis_terr_data_factor$sn)
 cols<-setNames(c("forestgreen", "goldenrod1"), levels(anis_terr_mode))
 plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
                     colours= list(cols), header=FALSE)
@@ -110,7 +110,7 @@ zygo_terr_data_factor <- terr_data_factor[!(terr_data_factor$sn %in% species_to_
 name.check(zygo_tree, zygo_terr_data_factor, data.names=as.character(zygo_terr_data_factor$sn))
 
 #plot zygoptera tree
-zygo_terr_mode <- setNames(zygo_terr_data_factor$sp_terr, zygo_terr_data_factor$sn)
+zygo_terr_mode <- setNames(zygo_terr_data_factor$prop_terr, zygo_terr_data_factor$sn)
 cols<-setNames(c("forestgreen", "goldenrod1"), levels(zygo_terr_mode))
 plotTree.datamatrix(zygo_tree, as.data.frame(zygo_terr_mode),
                     colours= list(cols), header=FALSE)
@@ -182,7 +182,6 @@ print(fit_01_anis)
 print(fit_10_anis)
 
 #zygoptera
-#Anisoptera
 fit_er_zygo<-fitMk(zygo_tree, terr_mode, model = "ER")
 fit_ard_zygo<-fitMk(zygo_tree, terr_mode, model = "ARD")
 #fit the no -> yes model (transition from non-territorial to territorial but not back)
@@ -229,7 +228,7 @@ plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
                     colors=list(cols), header=FALSE, fsize=0.45)
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=to.matrix(levels(terr_mode)[fit_joint$phy$node.label],
-                         levels(terr_mode)), piecol=cols, cex=0.1)
+                         levels(terr_mode)), piecol=cols, cex=0.3)
 #it's very small and hard to see -- adjust cex to make the pie charts larger
 
 #let's do marginal ancestral state reconstruction
@@ -276,6 +275,8 @@ plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.3)
 #likely ancestral state = non-territorial! - that's interesting because it differs from odonates
+#seems I get a different result now that I do the 3:1 threshold... likely ancestral state = territoriality.
+#double check -- I might be plotting the same thing as the zygoptera plot. 
 
 #Zygoptera
 #character data must be numerical interger (0,1)
@@ -427,6 +428,8 @@ mate_mode_pagel_mate_guard<-setNames(mate_guard_terr_data[,2],
                                      rownames(mate_guard_terr_data))
 mate_guard_fit<-fitPagel(tree_mate_guard, terr_mode_pagel_mate_guard, mate_mode_pagel_mate_guard)
 #the dependent model has lower AIC! And a very small p-value. 
+#plot this
+plot(mate_guard_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
 
 # Pagel 94 model for flier vs percher and territoriality
 # Identify species to drop from fly_v_perch_terr_data
@@ -450,6 +453,8 @@ fly_mode_pagel_fly_v_perch<-setNames(fly_v_perch_terr_data[,2],
                                      rownames(fly_v_perch_terr_data))
 fly_v_perch_fit<-fitPagel(tree_fly_v_perch, terr_mode_pagel_fly_v_perch, fly_mode_pagel_fly_v_perch)
 #independent model has lower AIC and p-value is insignificant. 
+#plot this
+plot(fly_v_perch_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
 
 # Pagel 94 model for oviposition (endophytic vs exophytic) and territoriality
 # Identify species to drop from ovi_terr_data
@@ -474,14 +479,16 @@ ovi_mode_pagel_ovi<-setNames(ovi_terr_data[,2],
 ovi_fit<-fitPagel(tree_ovi, terr_mode_pagel_ovi, ovi_mode_pagel_ovi)
 #lower AIC is the independent model
 #p-value is insignificant
+#plot this
+plot(ovi_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
 
 #we can also plot the trees to visually display the data:
-#THIS OBVIOUSLY STILL NEEDS SOME WORK - IT SUCKS RN. 
-object<-plotTree.datamatrix(tree_mate_guard, mate_guard_terr_data, fsize=0.5, yexp=1, header=FALSE, xexp=1.45, palettes=c("YlOrRd", "PuBuGn"))
-leg<-legend(x="topright", names(object$colors$prop_binary_terr), cex=0.7, pch=22, pt.bg=object$colors$prop_binary_terr, pt.cex=1.5, bty="n", title="territory mode")
+#not really working
+#object<-plotTree.datamatrix(tree_mate_guard, mate_guard_terr_data, fsize=0.5, yexp=1, header=FALSE, xexp=1.45, palettes=c("YlOrRd", "PuBuGn"))
+#leg<-legend(x="topright", names(object$colors$prop_binary_terr), cex=0.7, pch=22, pt.bg=object$colors$prop_binary_terr, pt.cex=1.5, bty="n", title="territory mode")
 #second legend
-leg<- legend (x=leg$rect$left+4.7, y=leg$rect$top-leg$rect$h,
-              names(object$colors$prop_pate_guard), cex=0.7, pch=22, pt.bg=object$colors$prop_mate_guard, pt.cex=1.5, bty="n", title="mate guarding")
+#leg<- legend (x=leg$rect$left+4.7, y=leg$rect$top-leg$rect$h,
+ #             names(object$colors$prop_pate_guard), cex=0.7, pch=22, pt.bg=object$colors$prop_mate_guard, pt.cex=1.5, bty="n", title="mate guarding")
 #could make a tree for all of them
 
 #calculating delta, a measure of phylogenetic signal
@@ -497,8 +504,9 @@ odonate_tree$edge.length[odonate_tree$edge.length==0] <-quantile(odonate_tree$ed
 #odonate_tree$tip.label #shows the species order, note it's alphabetical, split into Zygoptera and Anisoptera
 order_in_terr_data <- match(odonate_tree$tip.label, odonate_terr_data$sn) #must be same order as tree
 odonate_terr_data_reordered <- odonate_terr_data[order_in_terr_data, ] #now tree and data are in the same order
-trait<-odonate_terr_data_reordered$sp_terr #this is a vector of territoriality, with 1= yes, 0 = no.
-#set at 66% threshold (66% concordance in the dataset)
+trait_with_na<-odonate_terr_data_reordered$sp_terr #this is a vector of territoriality, with 1= yes, 0 = no, at a 3:1 threshold in my dataset
+trait<- trait_with_na[!is.na(trait_with_na)] #removed NA values 
+#set at 3:1 threshold (75% concordance in the dataset)
 
 #now calculate delta
 deltaA<-delta(trait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
@@ -506,7 +514,7 @@ deltaA<-delta(trait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
 #he uses 0.5, unless I have misunderstood this.
 # WHICH TO USE? -- when I try both, I get basically the same result (but slightly different)
 print(deltaA)
-#I get 7.197. What does this mean?
+#I get 8.2995. What does this mean?
 #Borges et al 2019: "delta can be any positive real number:
 #"the higher the delta-value, the higher the degree of phylogenetic signal between a given trait and the phylogeny"
 #so this means that 0 = no phylogenetic signal? in their example, they had 1 = no phylogenetic signal.
