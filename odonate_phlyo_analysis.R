@@ -6,14 +6,14 @@ library(phytools)
 library(geiger)
 library(dplyr)
 
-my_data<- read.csv("data/odo_data_v3.csv") #this dataset (3rd version) changes tandem -> contact in De Recende's data.
+my_data<- read.csv("data/odo_data_v3.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
 #For some reason, they use both terms. But since they mean the same thing, I changed them all to "Contact"
 #I also emailed to ask, but did not get a response. 
 load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
 #str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label -- to check the structure of the tree
 
 #Put data into a readable dataframe -- one species per row
-terr_table<- ftable(my_data$Formatted_species, my_data$Territorial) #this has 3 rows
+terr_table<- ftable(my_data$Formatted_species, my_data$Territorial) #this has 3 columns, the first column is for NAs
 prop_terr<- round(terr_table[,3]/(terr_table[,2]+ terr_table[,3]),2) # so this calculates the percentage "yes" for territorial
 #the 2 at the end rounds to 2 decimal 
 #set a 3:1 threshhold = 75% threshold
@@ -25,10 +25,9 @@ terr_data<- terr_data_with_na[complete.cases(terr_data_with_na), ] #removed NA v
 
 #to make the territorial variable binary (yes or no) make it a factor
 prop_terr_factor <- factor(ifelse(sp_terr == 1, "yes", "no"))
-terr_data_with_na_factor <- data.frame(sn, prop_terr_factor = prop_terr_factor)
-terr_data_factor <- terr_data_with_na_factor[complete.cases(terr_data_with_na_factor), ]
-terr_data_with_na <- data.frame(sn, prop_terr = prop_terr_factor) # Create a data frame
-terr_data_factor <- terr_data_with_na[complete.cases(terr_data_with_na), ] #Removes NA values
+terr_data_with_na_factor <- data.frame(sn, prop_terr_factor = prop_terr_factor) # Create a data frame
+terr_data_factor <- terr_data_with_na_factor[complete.cases(terr_data_with_na_factor), ] #Removes NA values
+
 
 #prune tree to match data
 chk<-name.check(tree, terr_data, data.names=as.character(terr_data$sn))
@@ -43,15 +42,17 @@ name.check(odonate_tree, odonate_terr_data, data.names=as.character(odonate_terr
 #let's plot the tree
 plot(odonate_tree, type="fan", cex=0.5, fsize=0.6, ftype="i") #it's very busy because it has 384 tips
 
-#just anisoptera -- node 386 
-#collapseTree(odonate_tree)  -- use this to find the node numbers
 
-anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 386)$tip.label)
+#EVERYTIME I UPDATE THE DATASET, THE NODE NUMBER WILL CHANGE!! SO HAVE TO UPDATE THESE EVERYTIME!
+collapseTree(odonate_tree)  #-- use this to find the node numbers
+
+#just anisoptera -- node 551 
+anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 551)$tip.label)
 anisoptera_tree<-drop.tip(odonate_tree, anisoptera_tree_extract)
-plot(anisoptera_tree, type="fan", cex=0.5, ftype="i")
+plot(anisoptera_tree, type="fan", cex=0.5, ftype="i") 
 
-#just zygoptera -- node 584
-zygoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 584)$tip.label)
+#just zygoptera -- node 366
+zygoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 366)$tip.label)
 zygoptera_tree<-drop.tip(odonate_tree, zygoptera_tree_extract)
 plot(zygoptera_tree, type="fan", cex=0.5, ftype="i")
 
@@ -92,13 +93,12 @@ cols<-setNames(c("forestgreen", "goldenrod1"), levels(anis_terr_mode))
 plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
                     colours= list(cols), header=FALSE)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
-#this seems to be working but the colours are wrong
+#this works
 #the solution to make it work was changing the setNames function line
 #it's so crowded that I might want to remove names and then provide a large list so people can look up whatever species they want
 #Can't figure out how to remove the species labels!
 
 #Just zygoptera
-#Plotting territoriality on Anisoptera tree
 #prune tree to match data
 chk_zygo<-name.check(zygoptera_tree, terr_data_factor, data.names=as.character(terr_data_factor$sn))
 summary(chk_zygo)
@@ -229,7 +229,9 @@ plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=to.matrix(levels(terr_mode)[fit_joint$phy$node.label],
                          levels(terr_mode)), piecol=cols, cex=0.3)
-#it's very small and hard to see -- adjust cex to make the pie charts larger
+#adjust cex to make the pie charts larger
+#if I can figure out how to remove species labels, it might be interesting to present the whole odonate tree for ASR
+#because you can see that zygoptera and Anisoptera have different ancestral states!
 
 #let's do marginal ancestral state reconstruction
 fit_marginal<- corHMM(odonate_tree, odonate_data, node.states = "marginal",
@@ -244,6 +246,8 @@ plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 #likely ancestral state = territorial!
+#if I can figure out how to remove species labels, it might be interesting to present the whole odonate tree for ASR
+#becuase you can see that zygoptera and Anisoptera have different ancestral states!
 
 #Do this for Anisoptera and zygoptera seperately:
 #_____________________________________________________________________________________________________
@@ -257,7 +261,7 @@ fit_joint_anis<-corHMM(anis_tree, anis_data, node.states="joint", rate.cat=1, mo
 fit_joint_anis
 #now plot
 plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
-                    colors=list(cols), header=FALSE, fsize=0.45)
+                    colors=list(cols), header=FALSE)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=to.matrix(levels(anis_terr_mode)[fit_joint_anis$phy$node.label],
                          levels(anis_terr_mode)), piecol=cols, cex=0.3)
@@ -271,7 +275,7 @@ head(fit_marginal_anis$states)
 
 #plot this
 plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
-                    colors=list(cols), header=FALSE, fsize=0.45)
+                    colors=list(cols), header=FALSE)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.3)
 #likely ancestral state = non-territorial! - that's interesting because it differs from odonates
@@ -287,7 +291,7 @@ fit_joint_zygo<-corHMM(zygo_tree, zygo_data, node.states="joint", rate.cat=1, mo
 fit_joint_zygo
 #now plot
 plotTree.datamatrix(zygo_tree, as.data.frame(zygo_terr_mode),
-                    colors=list(cols), header=FALSE, fsize=0.45)
+                    colors=list(cols), header=FALSE)
 legend("topright", legend=levels(zygo_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=to.matrix(levels(zygo_terr_mode)[fit_joint_zygo$phy$node.label],
                          levels(zygo_terr_mode)), piecol=cols, cex=0.3)
@@ -301,7 +305,7 @@ head(fit_marginal_zygo$states)
 
 #plot this
 plotTree.datamatrix(zygo_tree, as.data.frame(zygo_terr_mode),
-                    colors=list(cols), header=FALSE, fsize=0.45)
+                    colors=list(cols), header=FALSE)
 legend("topright", legend=levels(zygo_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal_zygo$states, piecol=cols, cex=0.3)
 #likely ancestral state = territorial! - that's interesting because it differs from Anisoptera
