@@ -16,10 +16,9 @@ load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated fro
 terr_table<- ftable(my_data$Formatted_species, my_data$Territorial) #this has 3 rows
 prop_terr<- round(terr_table[,3]/(terr_table[,2]+ terr_table[,3]),2) # so this calculates the percentage "yes" for territorial
 #the 2 at the end rounds to 2 decimal 
-#set a 66% threshhold
-sp_terr <- ifelse(prop_terr > 0.66, 1, ifelse(prop_terr < 0.33, 0, NA))
+#set a 3:1 threshhold = 75% threshold
+sp_terr <- ifelse(prop_terr >= 0.75, 1, ifelse(prop_terr <= 0.25, 0, NA))
 
-#so I should round to 2 decimal places and then do a seperate line to only include >=0.66 for yes and <-=0.33 for no (or is it vice versa)
 sn<- attr(terr_table,"row.vars")[[1]]
 terr_data_with_na<- data.frame(sn,sp_terr) #so this is a dataframe with the proporitons of territorial "yes" for each species
 terr_data<- terr_data_with_na[complete.cases(terr_data_with_na), ] #removed NA values 
@@ -335,9 +334,12 @@ nodelabels(pie=fit_marginal_zygo$states, piecol=cols, cex=0.3)
 #so I make individual dataframes for each trait I want, then stitch them together
 #territoriality
 binary_terr<-ftable(my_data$Formatted_species, my_data$Territorial)
-prop_binary_terr<-round(binary_terr[,3]/(binary_terr[,2]+ binary_terr[,3]),0)
+prop_binary_terr<-round(binary_terr[,3]/(binary_terr[,2]+ binary_terr[,3]),2)
+#the 2 at the end rounds to 2 decimal 
+#set a 75% threshold = 3:1 threshold
+sp_binary_terr<-ifelse(prop_binary_terr >= 0.75, 1, ifelse(prop_binary_terr <=0.25, 0, NA))
 sn<-attr(binary_terr, "row.vars")[[1]]
-binary_terr_df<-data.frame(sn,prop_binary_terr, stringsAsFactors = TRUE)
+binary_terr_df<-data.frame(sn,sp_binary_terr, stringsAsFactors = TRUE)
 #so 1 = territorial, 0 = non-territorial. 
 
 #mate guarding 
@@ -346,18 +348,24 @@ binary_terr_df<-data.frame(sn,prop_binary_terr, stringsAsFactors = TRUE)
 #so note that this is variable is only for species that exhibit mate guarding 
 filtered_mate_guarding <- subset(my_data, Mate.guarding %in% c("Contact", "Non-contact"))
 mate_guard_var<-ftable(filtered_mate_guarding$Formatted_species, filtered_mate_guarding$Mate.guarding)
-prop_mate_guard<-round(mate_guard_var[,1]/(mate_guard_var[,1]+mate_guard_var[,2]),0) #this is the proportion that is contact
+prop_mate_guard<-round(mate_guard_var[,1]/(mate_guard_var[,1]+mate_guard_var[,2]),2) #this is the proportion that is contact
 #so 1 = contact, 0 = non-contact. 
+#the 2 at the end rounds to 2 decimal 
+#set a 75% threshold = 3:1 threshold
+sp_binary_mate_guard<-ifelse(prop_mate_guard >= 0.75, 1, ifelse(prop_mate_guard <=0.25, 0, NA))
 sn<-attr(mate_guard_var, "row.vars")[[1]]
-binary_mate_guard_df<-data.frame(sn, prop_mate_guard, stringsAsFactors = TRUE)
+binary_mate_guard_df<-data.frame(sn, sp_binary_mate_guard, stringsAsFactors = TRUE)
 #this worked, I checked manually.
 
 #Flier vs percher
 binary_fly_v_perch<-ftable(my_data$Formatted_species, my_data$Flier.vs.percher)
-prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fly_v_perch[,3]),0) #this is proportion Percher
+prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fly_v_perch[,3]),2) #this is proportion Percher
 #so 1=percher, 0 = flier
+#the 2 at the end rounds to 2 decimal 
+#set a 75% threshold = 3:1 threshold
+sp_fly_v_perch<-ifelse(prop_fly_v_perch >= 0.75, 1, ifelse(prop_fly_v_perch <=0.25, 0, NA))
 sn<-attr(binary_fly_v_perch, "row.vars")[[1]]
-binary_fly_v_perch_df<-data.frame(sn, prop_fly_v_perch, stringsAsFactors=TRUE)
+binary_fly_v_perch_df<-data.frame(sn, sp_fly_v_perch, stringsAsFactors=TRUE)
 #this worked, but it includes all species - so there are NAs. 
 
 #oviposition (endophytic vs exophytic)
@@ -365,10 +373,13 @@ binary_fly_v_perch_df<-data.frame(sn, prop_fly_v_perch, stringsAsFactors=TRUE)
 my_data_mutated <- my_data %>%
   mutate(Oviposition.type..endophytic.vs.exophytic. = ifelse(Oviposition.type..endophytic.vs.exophytic. %in% c("Epiphytic", "Exophytic"), "Exophytic", Oviposition.type..endophytic.vs.exophytic.))
 binary_ovi<-ftable(my_data_mutated$Formatted_species, my_data_mutated$Oviposition.type..endophytic.vs.exophytic.)
-prop_ovi<-round(binary_ovi[,3]/(binary_ovi[,2]+binary_ovi[,3]),0) #This is proportion exophytic
+prop_ovi<-round(binary_ovi[,3]/(binary_ovi[,2]+binary_ovi[,3]),2) #This is proportion exophytic
 #so 1=exophytic, 0=endophytic
+#the 2 at the end rounds to 2 decimal 
+#set a 75% threshold = 3:1 threshold
+sp_ovi<-ifelse(prop_ovi >= 0.75, 1, ifelse(prop_ovi <=0.25, 0, NA))
 sn<-attr(binary_ovi, "row.vars")[[1]]
-binary_ovi_df<-data.frame(sn, prop_ovi, stringsAsFactors=TRUE)
+binary_ovi_df<-data.frame(sn, sp_ovi, stringsAsFactors=TRUE)
 #this worked, but it includes all species - so there are NAs. 
 
 #now I need to stitch these together in a single dataframe
@@ -405,8 +416,8 @@ mate_guard_terr_data_old_dropped<-mate_guard_terr_data_old[!(mate_guard_terr_dat
 name.check(tree_mate_guard, mate_guard_terr_data_old_dropped, data.names=as.character(mate_guard_terr_data_old_dropped$sn))
 #these have to be in the right format
 row_names_mate_guard <- mate_guard_terr_data_old_dropped$sn
-mate_guard_terr_data<-data.frame(prop_binary_terr = ifelse(mate_guard_terr_data_old_dropped$prop_binary_terr == 1, "territorial", "non-territorial"),
-                                 prop_mate_guard = ifelse(mate_guard_terr_data_old_dropped$prop_mate_guard == 1, "contact", "non-contact"))
+mate_guard_terr_data<-data.frame(sp_binary_terr = ifelse(mate_guard_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
+                                 sp_binary_mate_guard = ifelse(mate_guard_terr_data_old_dropped$sp_binary_mate_guard == 1, "contact", "non-contact"))
 rownames(mate_guard_terr_data) <- row_names_mate_guard
 
 #run pagel 94 model
@@ -428,8 +439,8 @@ fly_v_perch_terr_data_old_dropped<-fly_v_perch_terr_data_old[!(fly_v_perch_terr_
 name.check(tree_fly_v_perch, fly_v_perch_terr_data_old_dropped, data.names=as.character(fly_v_perch_terr_data_old_dropped$sn))
 #these have to be in the right format:
 row_names_fly_v_perch <- fly_v_perch_terr_data_old_dropped$sn
-fly_v_perch_terr_data<-data.frame(prop_binary_terr = ifelse(fly_v_perch_terr_data_old_dropped$prop_binary_terr == 1, "territorial", "non-territorial"),
-                                  prop_mate_guard = ifelse(fly_v_perch_terr_data_old_dropped$prop_fly_v_perch == 1, "percher", "flier"))
+fly_v_perch_terr_data<-data.frame(sp_binary_terr = ifelse(fly_v_perch_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
+                                  sp_fly_v_perch = ifelse(fly_v_perch_terr_data_old_dropped$sp_fly_v_perch == 1, "percher", "flier"))
 rownames(fly_v_perch_terr_data) <- row_names_fly_v_perch
 
 #run pagel 94 model
@@ -438,7 +449,7 @@ terr_mode_pagel_fly_v_perch<-setNames(fly_v_perch_terr_data[,1],
 fly_mode_pagel_fly_v_perch<-setNames(fly_v_perch_terr_data[,2],
                                      rownames(fly_v_perch_terr_data))
 fly_v_perch_fit<-fitPagel(tree_fly_v_perch, terr_mode_pagel_fly_v_perch, fly_mode_pagel_fly_v_perch)
-#dependent model has lower AIC and p-value is very small. 
+#independent model has lower AIC and p-value is insignificant. 
 
 # Pagel 94 model for oviposition (endophytic vs exophytic) and territoriality
 # Identify species to drop from ovi_terr_data
@@ -451,8 +462,8 @@ ovi_terr_data_old_dropped<-ovi_terr_data_old[!(ovi_terr_data_old$sn %in% ovi_spe
 name.check(tree_ovi,ovi_terr_data_old_dropped, data.names=as.character(ovi_terr_data_old_dropped$sn))
 #these have to be in the right format:
 row_names_ovi_terr <- ovi_terr_data_old_dropped$sn
-ovi_terr_data<-data.frame(prop_binary_terr = ifelse(ovi_terr_data_old_dropped$prop_binary_terr == 1, "territorial", "non-territorial"),
-                          prop_ovi = ifelse(ovi_terr_data_old_dropped$prop_ovi == 1, "exophytic", "endophytic"))
+ovi_terr_data<-data.frame(sp_binary_terr = ifelse(ovi_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
+                          sp_ovi = ifelse(ovi_terr_data_old_dropped$sp_ovi == 1, "exophytic", "endophytic"))
 rownames(ovi_terr_data) <- row_names_ovi_terr
 
 #run pagel 94 model
@@ -461,8 +472,8 @@ terr_mode_pagel_ovi<-setNames(ovi_terr_data[,1],
 ovi_mode_pagel_ovi<-setNames(ovi_terr_data[,2],
                                      rownames(ovi_terr_data))
 ovi_fit<-fitPagel(tree_ovi, terr_mode_pagel_ovi, ovi_mode_pagel_ovi)
-#in this case the lower AIC is the independent model
-#p-value is 0.2 so high. 
+#lower AIC is the independent model
+#p-value is insignificant
 
 #we can also plot the trees to visually display the data:
 #THIS OBVIOUSLY STILL NEEDS SOME WORK - IT SUCKS RN. 
