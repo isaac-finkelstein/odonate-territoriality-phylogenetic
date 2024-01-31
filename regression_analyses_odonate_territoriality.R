@@ -1,4 +1,5 @@
 library("geiger")
+library("phylolm")
 #regression analyses for odonate territoriailtiy
 wing_data<- read.csv("data/odo_data_wing_pigment.csv") #same dataset as old one (V3) but added wing pigment and climate data
 
@@ -83,3 +84,19 @@ odonate_tree
 species_to_drop <- chk$data_not_tree
 odonate_reg_data <- reg_data[!(reg_data$sn %in% species_to_drop), ] #dropped data_not_tree species from dataset
 name.check(odonate_tree, odonate_reg_data, data.names=as.character(odonate_reg_data$sn))
+
+
+#first regression
+#note that right now, the climate data is only for the Moore et al., 2021 data
+#also Waller et al., 2019 may have some more wing pigment data i could add. 
+#prune tree to the data for this regression only
+data_for_male_wing_reg<-merge(male_wing_pig_df, climate_var_df, by="sn", all=TRUE)
+data_for_male_wing_reg <- na.omit(data_for_male_wing_reg)
+chk_first_reg<-name.check(odonate_tree, data_for_male_wing_reg, data.names = as.character(data_for_male_wing_reg$sn))
+summary(chk_first_reg)
+odonate_tree_first_reg<-drop.tip(odonate_tree, chk_first_reg$tree_not_data)
+species_to_drop_first_reg<-chk_first_reg$data_not_tree
+odonate_data_for_male_wing_reg<-data_for_male_wing_reg[!(data_for_male_wing_reg$sn %in% species_to_drop_first_reg), ]
+name.check(odonate_tree_first_reg, odonate_data_for_male_wing_reg, data.names=as.character(odonate_data_for_male_wing_reg$sn))
+
+mod_male_wing_pig<-phyloglm(male_wing_pigment~mean_annual_temperature, data = odonate_data_for_male_wing_reg, phy=odonate_tree_first_reg, boot=1000)
