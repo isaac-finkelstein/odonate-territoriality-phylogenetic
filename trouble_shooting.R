@@ -13,7 +13,7 @@ library("geiger")
 library("phylolm")
 
 
-#the tree from Moore et al., 2021 - I can't find any code for this tree. But in methods they say "taken from Svensson et al., 2017"
+#the tree from Moore et al., 2021 - I can't find any code for this tree. But in methods they say "taken from Waller and Svensson, 2017"
 drags <- read.newick('drag.phylo.for.sub.tre')
 #str(drags$tip.label)
 
