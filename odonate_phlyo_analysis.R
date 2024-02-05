@@ -44,7 +44,7 @@ plot(odonate_tree, type="fan", cex=0.5, fsize=0.6, ftype="i") #it's very busy be
 
 
 #EVERYTIME I UPDATE THE DATASET, THE NODE NUMBER WILL CHANGE!! SO HAVE TO UPDATE THESE EVERYTIME!
-collapseTree(odonate_tree)  #-- use this to find the node numbers
+#collapseTree(odonate_tree)  #-- use this to find the node numbers
 
 #just anisoptera -- node 551 
 anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 551)$tip.label)
@@ -277,7 +277,7 @@ head(fit_marginal_anis$states)
 plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
                     colors=list(cols), header=FALSE)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
-nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.3)
+nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.5)
 #likely ancestral state = non-territorial! - that's interesting because it differs from odonates
 #seems I get a different result now that I do the 3:1 threshold... likely ancestral state = territoriality.
 #double check -- I might be plotting the same thing as the zygoptera plot. 
