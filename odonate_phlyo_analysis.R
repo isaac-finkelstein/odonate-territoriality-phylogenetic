@@ -6,7 +6,7 @@ library(phytools)
 library(geiger)
 library(dplyr)
 
-my_data<- read.csv("data/odo_data_v3.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
+my_data<- read.csv("data/data_v4.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
 #For some reason, they use both terms. But since they mean the same thing, I changed them all to "Contact"
 #I also emailed to ask, but did not get a response. 
 load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
