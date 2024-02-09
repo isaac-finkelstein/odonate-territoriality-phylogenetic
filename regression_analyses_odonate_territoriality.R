@@ -37,8 +37,8 @@ conflicts_male <- conflicting_df_male[conflicting_df_male$con == 2, ]
 conflicts_male <- na.omit(conflicts_male)
 #so there is a few conflicts -- so I should deal with these. It could be because of the different definitions?
 
-#for now, I am just removing any disagreements in the data
-sp_male_wing_pig<-ifelse(prop_wing_pig_var == 1 | prop_wing_pig_var == 0, prop_wing_pig_var, NA)
+#for now, I am just rounding up - so deferring to Moore et al., 2021
+sp_male_wing_pig<-ifelse(prop_wing_pig_var >= 0.5, 1, 0)
 male_wing_sn<-attr(male_wing_pig_var, "row.vars")[[1]]
 male_wing_pig_df<-data.frame(male_wing_sn, sp_male_wing_pig)
 male_wing_pig_df<- male_wing_pig_df[complete.cases(male_wing_pig_df), ]#remove NAs (conflicting values)
@@ -148,15 +148,19 @@ plot(terr_wing_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates
 
 #sample regression
 #note that right now, the climate data is only for the Moore et al., 2021 data
-#also Waller et al., 2019 may have some more wing pigment data i could add. 
 #prune tree to the data for this regression only
 data_for_male_wing_reg<-merge(male_wing_pig_df, climate_var_df, by="sn", all=TRUE)
 data_for_male_wing_reg <- na.omit(data_for_male_wing_reg)
-chk_first_reg<-name.check(odonate_tree, data_for_male_wing_reg, data.names = as.character(data_for_male_wing_reg$sn))
+chk_first_reg<-name.check(tree, data_for_male_wing_reg, data.names = as.character(data_for_male_wing_reg$sn))
 summary(chk_first_reg)
-odonate_tree_first_reg<-drop.tip(odonate_tree, chk_first_reg$tree_not_data)
+odonate_tree_first_reg<-drop.tip(tree, chk_first_reg$tree_not_data)
 species_to_drop_first_reg<-chk_first_reg$data_not_tree
 odonate_data_for_male_wing_reg<-data_for_male_wing_reg[!(data_for_male_wing_reg$sn %in% species_to_drop_first_reg), ]
 name.check(odonate_tree_first_reg, odonate_data_for_male_wing_reg, data.names=as.character(odonate_data_for_male_wing_reg$sn))
-
+str(odonate_data_for_male_wing_reg)
 mod_male_wing_pig<-phyloglm(male_wing_pigment~mean_annual_temperature, data = odonate_data_for_male_wing_reg, phy=odonate_tree_first_reg, boot=1000)
+
+#let's do this while controlling for territoriality
+
+#then do the interactions
+
