@@ -1,3 +1,7 @@
+#the reason I have been having trouble is that when I include the Padilla-Morales et al.,m 2022 data
+# I get bad results (even though I should have pruned it out before running the regression)
+# Figure this out because it really messed up my results and I want to include the Padilla-Morales data
+
 library("geiger")
 library("phylolm")
 #wing pigmentation analyses for odonate territoriailtiy
@@ -46,7 +50,7 @@ colnames(male_wing_pig_df) <- c("sn", "male_wing_pigment")
 #This worked, I checked. 1=pigmented wings, 0 = non-pigmented wings. 
 
 #female wing pigment
-#no conflicts becuase only one entry per species 
+#no conflicts because only one entry per species 
 filtered_female_wing_pig<-subset(wing_data, Female.wing.pigment %in% c("Yes", "No"))
 female_wing_pig_var<-ftable(filtered_female_wing_pig$Formatted_species, filtered_female_wing_pig$Female.wing.pigment)
 prop_female_wing_pig_var<-round(female_wing_pig_var[,2]/(female_wing_pig_var[,1]+female_wing_pig_var[,2]),0)
