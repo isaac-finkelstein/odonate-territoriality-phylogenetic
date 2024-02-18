@@ -47,12 +47,12 @@ plot(odonate_tree, type="fan", cex=0.5, fsize=0.6, ftype="i") #it's very busy be
 #collapseTree(odonate_tree)  #-- use this to find the node numbers
 
 #just anisoptera -- node 551 
-anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 551)$tip.label)
+anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 411)$tip.label)
 anisoptera_tree<-drop.tip(odonate_tree, anisoptera_tree_extract)
 plot(anisoptera_tree, type="fan", cex=0.5, ftype="i") 
 
 #just zygoptera -- node 366
-zygoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 366)$tip.label)
+zygoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 287)$tip.label)
 zygoptera_tree<-drop.tip(odonate_tree, zygoptera_tree_extract)
 plot(zygoptera_tree, type="fan", cex=0.5, ftype="i")
 
