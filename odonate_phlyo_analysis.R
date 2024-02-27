@@ -47,12 +47,12 @@ plot(odonate_tree, type="fan", cex=0.5, fsize=0.6, ftype="i") #it's very busy be
 #collapseTree(odonate_tree)  #-- use this to find the node numbers
 
 #just anisoptera -- node 411 
-anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 411)$tip.label)
+anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 560)$tip.label)
 anisoptera_tree<-drop.tip(odonate_tree, anisoptera_tree_extract)
 plot(anisoptera_tree, type="fan", cex=0.5, ftype="i") 
 
 #just zygoptera -- node 366
-zygoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 287)$tip.label)
+zygoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 371)$tip.label)
 zygoptera_tree<-drop.tip(odonate_tree, zygoptera_tree_extract)
 plot(zygoptera_tree, type="fan", cex=0.5, ftype="i")
 
@@ -110,6 +110,49 @@ plot(fit_er)
 #the ARD (all rates different) model, which had the lowest AIC -- shows that it is
 #easier/more common to go No -> Yes than to go Yes -> No
 
+#One more model:
+#ordered evolution model
+#the evolution of territoriality should be ordered: strong->weak->no territoraility (or no->weak->strong)
+#my data set for this delineation between strong and weak territoriality is more limited
+
+#make a single column depicting territorial: no, weak, strong = ordered categorical variable
+#strength of territoriality
+strength_terr<-ftable(my_data$Formatted_species, my_data$Strength.of.territoriality..strong.vs.weak.)
+prop_strength<-round(strength_terr[,3]/(strength_terr[,2]+strength_terr[,3]),2) #this is proportion weak
+#so 1=strong, 2 = weak??? FIGURE THIS OUT
+#the 2 at the end rounds to 2 decimal 
+#set a 75% threshold = 3:1 threshold
+sp_strength_terr<-ifelse(prop_strength >= 0.75, 2, ifelse(prop_strength <=0.25, 3, NA)) # so 2 = weak, 3 = strong
+sn<-attr(strength_terr, "row.vars")[[1]]
+strength_data_with_na<-data.frame(sn, sp_strength_terr, stringsAsFactors=TRUE)
+strength_data<- strength_data_with_na[complete.cases(strength_data_with_na), ] #removed NA values 
+#this worked. 
+
+
+#next combine into a new column so I have three levels: "no, weak, strong"
+
+strength_of_terr_data<- merge(terr_data, strength_data, by="sn", all= TRUE)
+strength_of_terr_data$combined_strength<-with(strength_of_terr_data, ifelse(sp_terr=="0", "0", sp_strength_terr))
+strength_of_terr_data <- strength_of_terr_data[, !(names(strength_of_terr_data) %in% c("sp_terr", "sp_strength_terr"))]
+strength_of_terr_data <- na.omit(strength_of_terr_data)
+#to not get confused with territorial? No = 0, yes = 1, for strength I set weak = 2, strong = 3
+#let's turn it back to 0,1,2 because that just makes sense
+strength_of_terr_data <- strength_of_terr_data %>%
+  mutate(
+    combined_strength = as.numeric(combined_strength),
+    combined_strength = case_when(
+      combined_strength == 2 ~ 1,
+      combined_strength == 3 ~ 2,
+      TRUE ~ combined_strength
+    )
+  )
+#check this
+
+#then run the ordered model with this column,
+#could also plot it.
+
+
+
 
 
 #Next: Ancestral state reconstruction - plots are very busy so may want to re-run these for just anisoptera/zygoptera
@@ -151,7 +194,7 @@ legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty
 nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 #likely ancestral state = territorial!
 #if I can figure out how to remove species labels, it might be interesting to present the whole odonate tree for ASR
-#becuase you can see that zygoptera and Anisoptera have different ancestral states!
+#because you can see that zygoptera and Anisoptera have different ancestral states!
 
 
 
