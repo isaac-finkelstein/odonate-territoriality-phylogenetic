@@ -146,9 +146,29 @@ strength_of_terr_data <- strength_of_terr_data %>%
       TRUE ~ combined_strength
     )
   )
-#check this
+#note that there is more "no" here because it was easier to find binary data - yes/no, than it was to find data with strong/weak territoriality
+#so "no" is over-represented in the data.
 
-#then run the ordered model with this column,
+#I need to prune a tree to the data.
+chk_strength<-name.check(tree, strength_of_terr_data, data.names=as.character(strength_of_terr_data$sn))
+summary(chk_strength)
+strength_tree<-drop.tip(tree, chk_strength$tree_not_data) #dropped tree_not_data species
+strength_tree
+# Identify species to drop from terr_data
+species_to_drop_strength <- chk_strength$data_not_tree
+strength_terr_data <- strength_of_terr_data[!(strength_of_terr_data$sn %in% species_to_drop_strength), ] #dropped data_not_tree species from dataset
+name.check(strength_tree, strength_terr_data, data.names=as.character(strength_terr_data$sn))
+
+#ordered model
+ordered_model<-matrix(c(0,1,0,
+                        2,0,3,
+                        0,4,0), 3,3, byrow=TRUE,
+                      dimnames=list(0:2, 0:2))
+ordered_model
+
+fit_ordered<-fitDiscrete(strength_tree, strength_terr_data, model=ordered_model, suppressWarnings=TRUE)
+#not working -- could be the dimnames line- 166
+#could be the model? I'm not sure. 
 #could also plot it.
 
 
