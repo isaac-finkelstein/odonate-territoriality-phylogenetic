@@ -43,7 +43,7 @@ binary_terr_df<-data.frame(sn,sp_binary_terr, stringsAsFactors = TRUE)
 #mate guarding 
 #remove "No" and "Both". I am only interested in comparing the binary variable contact vs non-contact
 #there is only one instance of "both"
-#so note that this is variable is only for species that exhibit mate guarding 
+#note that this variable is only for species that exhibit mate guarding 
 filtered_mate_guarding <- subset(my_data, Mate.guarding %in% c("Contact", "Non-contact"))
 mate_guard_var<-ftable(filtered_mate_guarding$Formatted_species, filtered_mate_guarding$Mate.guarding)
 prop_mate_guard<-round(mate_guard_var[,1]/(mate_guard_var[,1]+mate_guard_var[,2]),2) #this is the proportion that is contact
@@ -109,7 +109,7 @@ ovi_terr_data_old<-ovi_terr_data_with_na[complete.cases(ovi_terr_data_with_na), 
 #fitting the pagel (1994) model
 
 #Mate guarding and territoriality
-# Identify species to drop from mate_guard_terr_data
+# Identify species to drop from mate_guard_terr_data_old
 chk_mate_guard<-name.check(tree, mate_guard_terr_data_old, data.names=as.character(mate_guard_terr_data_old$sn))
 summary(chk_mate_guard)
 tree_mate_guard <- drop.tip(tree, chk_mate_guard$tree_not_data)#dropped tree_not_data species
@@ -195,3 +195,92 @@ plot(ovi_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, 
 #leg<- legend (x=leg$rect$left+4.7, y=leg$rect$top-leg$rect$h,
 #             names(object$colors$prop_pate_guard), cex=0.7, pch=22, pt.bg=object$colors$prop_mate_guard, pt.cex=1.5, bty="n", title="mate guarding")
 #could make a tree for all of them
+
+
+#Testing variables that I expect will have a causal relationship: Lotic vs lentic breeding sites, size of breeding site (pond, lake, puddle), temporary vs permanent oviposition site
+#lotic vs lentic and temporary vs permanent are binary variables, so do like above. For the size of breeding site, I probably have to do a logistic regression.
+
+
+#lotic vs lentic
+filtered_lo_len <- subset(my_data, Lotic.vs.lentic..breeding.habitat. %in% c("Lotic", "Lentic"))
+lo_len_var<-ftable(filtered_lo_len$Formatted_species, filtered_lo_len$Lotic.vs.lentic..breeding.habitat.)
+prop_lo_len<-round(lo_len_var[,2]/(lo_len_var[,1]+lo_len_var[,2]),2) #this is the proportion that is lotic
+#the 2 at the end rounds to 2 decimal 
+#set a 75% threshold = 3:1 threshold
+sp_lo_len<-ifelse(prop_lo_len >= 0.75, 1, ifelse(prop_lo_len <=0.25, 0, NA))
+sn<-attr(lo_len_var, "row.vars")[[1]]
+binary_lo_len<-data.frame(sn, sp_lo_len, stringsAsFactors = TRUE)
+#so, 1 = lotic, 0 = lentic
+
+
+lo_len_terr_data_with_na<-merge(binary_terr_df, binary_lo_len, by = "sn", all = TRUE)
+#now remove NAs
+lo_len_terr_data_old<- lo_len_terr_data_with_na[complete.cases(lo_len_terr_data_with_na), ] 
+
+
+#fitting the pagel (1994) model
+#Lotic vs Lentic and territoriality
+# Identify species to drop from lo_len_terr_data_old
+chk_lo_len<-name.check(tree, lo_len_terr_data_old, data.names=as.character(lo_len_terr_data_old$sn))
+summary(chk_lo_len)
+tree_lo_len <- drop.tip(tree, chk_lo_len$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+lo_len_species_to_drop<-chk_lo_len$data_not_tree
+lo_len_terr_data_old_dropped<-lo_len_terr_data_old[!(lo_len_terr_data_old$sn %in% lo_len_species_to_drop),] #dropped data_not_tree species from dataset
+name.check(tree_lo_len, lo_len_terr_data_old_dropped, data.names=as.character(lo_len_terr_data_old_dropped$sn))
+#these have to be in the right format
+row_names_lo_len <- lo_len_terr_data_old_dropped$sn
+lo_len_terr_data<-data.frame(sp_binary_terr = ifelse(lo_len_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
+                                 sp_lo_len = ifelse(lo_len_terr_data_old_dropped$sp_lo_len == 1, "lotic", "lentic"))
+rownames(lo_len_terr_data) <- row_names_lo_len
+
+#run pagel 94 model
+terr_mode_pagel_lo_len<-setNames(lo_len_terr_data[,1],
+                                     rownames(lo_len_terr_data))
+lo_len_pagel_lo_len<-setNames(lo_len_terr_data[,2],
+                                     rownames(lo_len_terr_data))
+lo_len_fit<-fitPagel(tree_lo_len, terr_mode_pagel_lo_len, lo_len_pagel_lo_len)
+lo_len_fit
+#the independent model has lower AIC. And insignificant p-value. 
+#plot this
+plot(lo_len_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
+
+
+#temporary vs permanent oviposition sites
+filtered_temp_perm <- subset(my_data, Temporary.vs.permanent.oviposition.site %in% c("Temporary", "Permanent"))
+temp_perm_var<-ftable(filtered_temp_perm$Formatted_species, filtered_temp_perm$Temporary.vs.permanent.oviposition.site)
+prop_temp_perm<-round(temp_perm_var[,2]/(temp_perm_var[,1]+temp_perm_var[,2]),2) #this is the proportion that is lotic
+#the 2 at the end rounds to 2 decimal 
+#set a 75% threshold = 3:1 threshold
+sp_temp_perm<-ifelse(prop_temp_perm >= 0.75, 1, ifelse(prop_temp_perm <=0.25, 0, NA))
+sn<-attr(temp_perm_var, "row.vars")[[1]]
+binary_temp_perm<-data.frame(sn, sp_temp_perm, stringsAsFactors = TRUE)
+#Yikes - only 9 species 
+#so, 1 = temporary, 0 = permanent
+
+
+temp_perm_terr_data_with_na<-merge(binary_terr_df, binary_temp_perm, by = "sn", all = TRUE)
+#now remove NAs
+temp_perm_terr_data_old<- temp_perm_terr_data_with_na[complete.cases(temp_perm_terr_data_with_na), ] 
+
+#fitting the pagel (1994) model
+#temporary vs permanent and territoriality
+# Identify species to drop from temp_perm_terr_data_old
+chk_temp_perm<-name.check(tree, temp_perm_terr_data_old, data.names=as.character(temp_perm_terr_data_old$sn))
+summary(chk_temp_perm)
+tree_temp_perm <- drop.tip(tree, chk_temp_perm$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+temp_perm_species_to_drop<-chk_temp_perm$data_not_tree
+temp_perm_terr_data_old_dropped<-temp_perm_terr_data_old[!(temp_perm_terr_data_old$sn %in% temp_perm_species_to_drop),] #dropped data_not_tree species from dataset
+name.check(tree_temp_perm, temp_perm_terr_data_old_dropped, data.names=as.character(temp_perm_terr_data_old_dropped$sn))
+#these have to be in the right format
+row_names_temp_perm <- temp_perm_terr_data_old_dropped$sn
+temp_perm_terr_data<-data.frame(sp_binary_terr = ifelse(temp_perm_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
+                             sp_temp_perm = ifelse(temp_perm_terr_data_old_dropped$sp_temp_perm == 1, "temporary", "permanent"))
+rownames(temp_perm_terr_data) <- row_names_temp_perm
+#only 3 species are covered! - not worth running this. 
+
+
+#Finally, we can test the size of the water body used as breeding habitat
+
+
