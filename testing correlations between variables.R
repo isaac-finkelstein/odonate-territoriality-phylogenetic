@@ -5,6 +5,7 @@ library(phangorn)
 library(phytools)
 library(geiger)
 library(dplyr)
+library("phylolm")
 
 my_data<- read.csv("data/data_v4.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
 #For some reason, they use both terms. But since they mean the same thing, I changed them all to "Contact"
@@ -282,5 +283,31 @@ rownames(temp_perm_terr_data) <- row_names_temp_perm
 
 
 #Finally, we can test the size of the water body used as breeding habitat
+#first Lentic:
+
+#create an ordered categorical variable
+#3 categories: small, medium, large
+#specify that these are ordinal
+factor_lentic_size<- factor(my_data$Lentic.size, order=TRUE, levels=c("Small", "Medium", "Large"))
+factor_lentic_size <- data.frame(sn = my_data$Formatted_species, factor_lentic_size)
+factor_lentic_size <- na.omit(factor_lentic_size)
+
+#make dataset
+data_lentic_size_territoriality_old <- merge(binary_terr_df, factor_lentic_size, by = "sn", all = TRUE)
+colnames(data_lentic_size_territoriality_old) <- c("Species", "Prop_Territorial", "Lentic_size")
+data_lentic_size_territoriality_old<- data_lentic_size_territoriality_old[complete.cases(data_lentic_size_territoriality_old), ] 
+
+# Identify species to drop
+chk_lentic_size<-name.check(tree, data_lentic_size_territoriality_old, data.names=as.character(data_lentic_size_territoriality_old$Species))
+summary(chk_lentic_size)
+tree_lentic_size <- drop.tip(tree, chk_lentic_size$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+lentic_size_species_to_drop<-chk_lentic_size$data_not_tree
+data_lentic_size_territoriality<-data_lentic_size_territoriality_old[!(data_lentic_size_territoriality_old$Species %in% lentic_size_species_to_drop),] #dropped data_not_tree species from dataset
+rownames(data_lentic_size_territoriality)<-data_lentic_size_territoriality$Species
+name.check(tree_lentic_size, data_lentic_size_territoriality_old_dropped, data.names=as.character(data_lentic_size_territoriality_old_dropped$Species))
 
 
+#test if lentic size predicts territoriality
+mod_lentic_size<-phyloglm(Prop_Territorial~Lentic_size, data = data_lentic_size_territoriality, phy=tree_lentic_size, boot=1000, method = 'logistic_MPLE', btol = 10)
+summary(mod_lentic_size)
