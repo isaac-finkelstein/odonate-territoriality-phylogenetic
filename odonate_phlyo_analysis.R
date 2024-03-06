@@ -201,7 +201,7 @@ plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
                     colors=list(cols), header=FALSE, fsize=0.45)
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=to.matrix(levels(terr_mode)[fit_joint$phy$node.label],
-                         levels(terr_mode)), piecol=cols, cex=0.3)
+                         levels(terr_mode)), piecol=cols, cex=0.2)
 #adjust cex to make the pie charts larger
 #if I can figure out how to remove species labels, it might be interesting to present the whole odonate tree for ASR
 #because you can see that zygoptera and Anisoptera have different ancestral states!
