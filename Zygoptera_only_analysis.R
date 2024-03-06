@@ -49,8 +49,10 @@ name.check(odonate_tree, odonate_terr_data_factor, data.names=as.character(odona
 
 terr_mode<-setNames(odonate_terr_data_factor$prop_terr, odonate_terr_data_factor$sn)
 
-#just zygoptera -- node 366
-zygoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 287)$tip.label)
+#just zygoptera -- node 372
+#EVERYTIME I UPDATE THE DATASET, THE NODE NUMBER WILL CHANGE!! SO HAVE TO UPDATE THESE EVERYTIME!
+#collapseTree(odonate_tree)  #-- use this to find the node numbers
+zygoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 372)$tip.label)
 zygoptera_tree<-drop.tip(odonate_tree, zygoptera_tree_extract)
 plot(zygoptera_tree, type="fan", cex=0.5, ftype="i")
 
