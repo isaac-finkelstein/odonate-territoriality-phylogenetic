@@ -288,12 +288,37 @@ rownames(temp_perm_terr_data) <- row_names_temp_perm
 #create an ordered categorical variable
 #3 categories: small, medium, large
 #specify that these are ordinal
-factor_lentic_size<- factor(my_data$Lentic.size, order=TRUE, levels=c("Small", "Medium", "Large"))
-factor_lentic_size <- data.frame(sn = my_data$Formatted_species, factor_lentic_size)
-factor_lentic_size <- na.omit(factor_lentic_size)
+lentic_size_table<- ftable(my_data$Formatted_species, my_data$Lentic.size)
+prop_large<-round(lentic_size_table[,2]/(lentic_size_table[,3]+ lentic_size_table[,4]+ lentic_size_table[,2]),2)
+prop_medium<-round(lentic_size_table[,3]/(lentic_size_table[,2]+ lentic_size_table[,3]+ lentic_size_table[,4]),2)
+prop_small<-round(lentic_size_table[,4]/(lentic_size_table[,2]+ lentic_size_table[,3]+ lentic_size_table[,4]),2)
+prop_data<-data.frame(prop_large=prop_large,
+                      prop_medium=prop_medium,
+                      prop_small=prop_small)
+prop_data <- data.frame(
+  prop_large = ifelse(prop_large > 0.75, 1, NA),
+  prop_medium = ifelse(prop_medium > 0.75, 1, NA),
+  prop_small = ifelse(prop_small > 0.75, 1, NA)
+) #this makes a 3:1 cutoff - so if my data disagrees, I only include it if there is at least 3:1 sources saying the size - this is rarely met so basically I exclude species where there is disagreement
+sn<- attr(lentic_size_table,"row.vars")[[1]]
+size_data_with_na<-data.frame(sn,prop_data)
+size_data <- size_data_with_na %>%
+  filter(!is.na(prop_large) | !is.na(prop_medium) | !is.na(prop_small))
+
+size_data_ordered <- size_data %>%
+  mutate(lentic_size = case_when(
+    prop_large == 1 ~ "large",
+    prop_medium == 1 ~ "medium",
+    TRUE ~ "small"  # Default to "small" if neither prop_large nor prop_medium is 1
+  ))
+size_data_ordered <- size_data_ordered %>%
+  select(sn, lentic_size)
+size_data_ordered$lentic_size <- factor(size_data_ordered$lentic_size, ordered = TRUE, levels = c("small", "medium", "large")) # make it an ordered categorical variable
+
+
 
 #make dataset
-data_lentic_size_territoriality_old <- merge(binary_terr_df, factor_lentic_size, by = "sn", all = TRUE)
+data_lentic_size_territoriality_old <- merge(binary_terr_df, size_data_ordered, by = "sn", all = TRUE)
 colnames(data_lentic_size_territoriality_old) <- c("Species", "Prop_Territorial", "Lentic_size")
 data_lentic_size_territoriality_old<- data_lentic_size_territoriality_old[complete.cases(data_lentic_size_territoriality_old), ] 
 
@@ -305,7 +330,7 @@ tree_lentic_size <- drop.tip(tree, chk_lentic_size$tree_not_data)#dropped tree_n
 lentic_size_species_to_drop<-chk_lentic_size$data_not_tree
 data_lentic_size_territoriality<-data_lentic_size_territoriality_old[!(data_lentic_size_territoriality_old$Species %in% lentic_size_species_to_drop),] #dropped data_not_tree species from dataset
 rownames(data_lentic_size_territoriality)<-data_lentic_size_territoriality$Species
-name.check(tree_lentic_size, data_lentic_size_territoriality_old_dropped, data.names=as.character(data_lentic_size_territoriality_old_dropped$Species))
+name.check(tree_lentic_size, data_lentic_size_territoriality, data.names=as.character(data_lentic_size_territoriality$Species))
 
 
 #test if lentic size predicts territoriality
