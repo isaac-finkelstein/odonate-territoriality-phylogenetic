@@ -382,6 +382,10 @@ summary(chk_lotic_size)
 tree_lotic_size<-drop.tip(tree, chk_lotic_size$tree_not_data) #dropped tree_not_data species
 #identify species to drop from data
 lotic_size_species_to_drop<-chk_lotic_size$data_not_tree
-data_lotic_size_territoriality <- na.omit(data_lotic_size_territoriality_old[!(data_lentic_size_territoriality_old$Species %in% lotic_size_species_to_drop),]) #dropped data_not_tree species
+data_lotic_size_territoriality <- na.omit(data_lotic_size_territoriality_old[!(data_lotic_size_territoriality_old$Species %in% lotic_size_species_to_drop),]) #dropped data_not_tree species
 rownames(data_lotic_size_territoriality)<-data_lotic_size_territoriality$Species
 name.check(tree_lotic_size, data_lotic_size_territoriality, data.names = as.character(data_lotic_size_territoriality$Species))
+
+#test if lotic size predicts territoriality
+mod_lotic_size<-phyloglm(Prop_territorial~lotic_size, data = data_lotic_size_territoriality, phy=tree_lotic_size, boot=1000, method = 'logistic_MPLE', btol = 10)
+summary(mod_lotic_size)
