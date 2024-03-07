@@ -1,4 +1,5 @@
 #finding conflicts in the data
+library(tidyverse)
 
 
 my_data<- read.csv("data/data_v4.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
@@ -6,6 +7,21 @@ my_data<- read.csv("data/data_v4.csv") #this dataset (3rd version) switches "tan
 #I also emailed to ask, but did not get a response. 
 load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
 #str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label -- to check the structure of the tree
+
+#total number of species in dataset
+total_species <- length(unique(my_data$Formatted_species))
+#total species = 1276
+
+#total number of species with territorial data in dataset
+terr_table<- ftable(my_data$Formatted_species, my_data$Territorial) #this has 3 columns, the first column is for NAs
+prop_terr<- round(terr_table[,3]/(terr_table[,2]+ terr_table[,3]),2) # so this calculates the percentage "yes" for territorial
+sn<- attr(terr_table,"row.vars")[[1]]
+terr_data_with_na<- data.frame(sn,sp_terr) #so this is a dataframe with territorial (1/0) for each species
+terr_data<- terr_data_with_na[complete.cases(terr_data_with_na), ] #removed NA values 
+str(terr_data)
+#total number of species = 643
+
+
 
 #Put data into a readable dataframe -- one species per row
 terr_table<- ftable(my_data$Formatted_species, my_data$Territorial) #this has 3 columns, the first column is for NAs
