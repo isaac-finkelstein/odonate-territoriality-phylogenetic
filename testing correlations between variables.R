@@ -336,3 +336,52 @@ name.check(tree_lentic_size, data_lentic_size_territoriality, data.names=as.char
 #test if lentic size predicts territoriality
 mod_lentic_size<-phyloglm(Prop_Territorial~Lentic_size, data = data_lentic_size_territoriality, phy=tree_lentic_size, boot=1000, method = 'logistic_MPLE', btol = 10)
 summary(mod_lentic_size)
+
+
+
+#test if lotic size predicts territoriality
+my_data$Description.of.lotic.oviposition..river..stream. <- gsub("Stream, River", "River, Stream", my_data$Description.of.lotic.oviposition..river..stream.)
+#3 categories: Stream, Both (River,Stream), and River
+#also this is ordinal
+lotic_size_table<-ftable(my_data$Formatted_species, my_data$Description.of.lotic.oviposition..river..stream.)
+
+prop_stream<-round(lotic_size_table[,4]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_both<-round(lotic_size_table[,3]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_river<-round(lotic_size_table[,2]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_lotic_data<-data.frame(prop_stream=prop_stream,
+                            prop_both=prop_both,
+                            prop_river=prop_river)
+prop_lotic_data<-data.frame(
+  prop_stream=ifelse(prop_stream>0.75,1,NA),
+  prop_both=ifelse(prop_both>0.75,1, NA),
+  prop_river=ifelse(prop_river>0.75,1, NA)
+)#this makes a 3:1 cutoff - so if my data disagrees, I only include it if there is at least 3:1 sources saying the size - this is rarely met so basically I exclude species where there is disagreement
+sn<- attr(lotic_size_table,"row.vars")[[1]]
+lotic_data_with_na<-data.frame(sn,prop_lotic_data)
+lotic_size_data <- lotic_data_with_na %>%
+  filter(!is.na(prop_stream) | !is.na(prop_both) | !is.na(prop_river))
+
+lotic_size_ordered<-lotic_size_data %>%
+  mutate(lotic_size = case_when(
+    prop_stream == 1 ~"stream",
+    prop_both == 1 ~ "both",
+    TRUE ~ "river" #default to river if neither prop_stream or prop_both
+  ))
+lotic_size_ordered<-lotic_size_ordered %>%
+  select(sn, lotic_size)
+lotic_size_ordered$lotic_size<- factor(lotic_size_ordered$lotic_size, ordered = TRUE, levels = c("stream", "both", "river")) #make it ordered categorical
+
+#make dataset
+data_lotic_size_territoriality_old<-merge(binary_terr_df, lotic_size_ordered, by= "sn", all=TRUE)
+colnames(data_lotic_size_territoriality_old)<-c("Species", "Prop_territorial", "lotic_size")
+data_lotic_size_territoriality_old<-data_lotic_size_territoriality_old[complete.cases(data_lotic_size_territoriality_old), ]
+
+#identify species to drop
+chk_lotic_size<-name.check(tree, data_lotic_size_territoriality_old, data.names=as.character(data_lotic_size_territoriality_old$Species))
+summary(chk_lotic_size)
+tree_lotic_size<-drop.tip(tree, chk_lotic_size$tree_not_data) #dropped tree_not_data species
+#identify species to drop from data
+lotic_size_species_to_drop<-chk_lotic_size$data_not_tree
+data_lotic_size_territoriality <- na.omit(data_lotic_size_territoriality_old[!(data_lentic_size_territoriality_old$Species %in% lotic_size_species_to_drop),]) #dropped data_not_tree species
+rownames(data_lotic_size_territoriality)<-data_lotic_size_territoriality$Species
+name.check(tree_lotic_size, data_lotic_size_territoriality, data.names = as.character(data_lotic_size_territoriality$Species))
