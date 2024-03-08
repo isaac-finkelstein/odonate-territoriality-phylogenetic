@@ -5,6 +5,7 @@ library(phangorn)
 library(phytools)
 library(geiger)
 library(dplyr)
+library(corHMM)
 
 my_data<- read.csv("data/data_v4.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
 #For some reason, they use both terms. But since they mean the same thing, I changed them all to "Contact"
@@ -186,7 +187,7 @@ fit_ordered<-fitDiscrete(strength_tree, strength_terr_data_pruned, model=ordered
 #marginal is more popular in biology (Revell and Harmon, 2022)
 #marginal measures uncertainty about the specific values for ancestral states - so preferred
 #do both, then compare results (joint can go in supplementary material)
-library(corHMM)
+
 #create a special data frame of species names and trait data
 #character data must be numerical interger (0,1)
 odonate_data<-data.frame(Genus_sp=names(terr_mode), terr_mode=as.numeric(terr_mode)-1)
