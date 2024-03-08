@@ -10,8 +10,15 @@ library("phylolm")
 my_data<- read.csv("data/data_v4.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
 #For some reason, they use both terms. But since they mean the same thing, I changed them all to "Contact"
 #I also emailed to ask, but did not get a response. 
-load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
+
+
+#load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
 #str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label -- to check the structure of the tree
+
+#I can also try the tree from Rocha-Ortega et al., 2020 in proceedings
+#it uses the same structure as Waller and Svensson 2017 but has different species coverage.
+tree<-read.nexus(file="data/Rocha_ortega_tree.nex")
+
 
 #Put data into a readable dataframe -- one species per row
 terr_table<- ftable(my_data$Formatted_species, my_data$Territorial) #this has 3 columns, the first column is for NAs
@@ -86,7 +93,7 @@ sn<-attr(binary_ovi, "row.vars")[[1]]
 binary_ovi_df<-data.frame(sn, sp_ovi, stringsAsFactors=TRUE)
 #this worked, but it includes all species - so there are NAs. 
 
-#now I need to stitch these together in a single dataframe
+#now I stitch these together in a single dataframe
 binary_data <- merge(binary_terr_df, binary_mate_guard_df, by = "sn", all = TRUE)
 binary_data <- merge(binary_data, binary_fly_v_perch_df, by = "sn", all = TRUE)
 binary_data <- merge(binary_data, binary_ovi_df, by = "sn", all = TRUE)
@@ -279,7 +286,7 @@ row_names_temp_perm <- temp_perm_terr_data_old_dropped$sn
 temp_perm_terr_data<-data.frame(sp_binary_terr = ifelse(temp_perm_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
                              sp_temp_perm = ifelse(temp_perm_terr_data_old_dropped$sp_temp_perm == 1, "temporary", "permanent"))
 rownames(temp_perm_terr_data) <- row_names_temp_perm
-#only 3 species are covered! - not worth running this. 
+#only 10 species are covered! - not worth running this. 
 
 
 #Finally, we can test the size of the water body used as breeding habitat
