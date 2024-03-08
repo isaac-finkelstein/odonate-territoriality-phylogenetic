@@ -279,9 +279,9 @@ for (i in 1:100){
   rtrait <- sample(trait)
   random_delta[i] <- delta(rtrait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
 }
-p_value<-sum(random_delta>deltaA)/length(random_delta) #results in a p-value of 0.
+p_value<-sum(random_delta>deltaA)/length(random_delta) #results in a p-value of 0...did I do something wrong?
 #random_delta>deltaA
 #there are no instances of random_delta>deltaA
-#so a p-value of 0 may be correct. But I feel like 0 is too strong...did I do something wrong?
 boxplot(random_delta)
 abline(h=deltaA, col="red")
+
