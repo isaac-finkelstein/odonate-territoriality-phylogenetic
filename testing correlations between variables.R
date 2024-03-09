@@ -15,7 +15,7 @@ my_data<- read.csv("data/data_v4.csv") #this dataset (3rd version) switches "tan
 #load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
 #str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label -- to check the structure of the tree
 
-#I can also try the tree from Rocha-Ortega et al., 2020 in proceedings
+#I can also try the tree from Rocha-Ortega et al., 2020 in Proceedings
 #it uses the same structure as Waller and Svensson 2017 but has different species coverage.
 tree<-read.nexus(file="data/Rocha_ortega_tree.nex")
 
