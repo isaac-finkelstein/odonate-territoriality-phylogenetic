@@ -10,8 +10,13 @@ library(corHMM)
 my_data<- read.csv("data/data_v4.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
 #For some reason, they use both terms. But since they mean the same thing, I changed them all to "Contact"
 #I also emailed to ask, but did not get a response. 
+
 load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
 #str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label -- to check the structure of the tree
+
+#I can also try the tree from Rocha-Ortega et al., 2020 in Proceedings
+#it uses the same structure as Waller and Svensson 2017 but has different species coverage.
+#tree<-read.nexus(file="data/Rocha_ortega_tree.nex")
 
 #Put data into a readable dataframe -- one species per row
 terr_table<- ftable(my_data$Formatted_species, my_data$Territorial) #this has 3 columns, the first column is for NAs
