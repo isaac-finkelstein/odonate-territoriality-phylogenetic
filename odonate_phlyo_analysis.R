@@ -243,6 +243,7 @@ fit_ARD_again<-ace(terr_mode, odonate_tree, model="ARD", type="discrete")
 plotTree(odonate_tree, type="fan", fsize=0.5, ftype="i")
 nodelabels(node=1:tree$Nnode+Ntip(tree),
            pie=fit_marginal$lik.anc, piecol = cols, cex=0.3)
+#not working but should be able to figure it out -http://www.phytools.org/eqg2015/asr.html
 
 
 #one more method using an MCMC approach: Stochasitic character mapping
