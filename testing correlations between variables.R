@@ -6,6 +6,7 @@ library(phytools)
 library(geiger)
 library(dplyr)
 library("phylolm")
+library(ggplot2)
 
 my_data<- read.csv("data/data_v4.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
 #For some reason, they use both terms. But since they mean the same thing, I changed them all to "Contact"
@@ -142,6 +143,22 @@ mate_guard_fit
 #plot this
 plot(mate_guard_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
 
+#plot this -- how many instances of territorial/contect, territorial/non-contect etc. 
+ggplot(mate_guard_terr_data, aes(x = sp_binary_terr, fill = sp_binary_mate_guard)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  labs(x = "Territorial", y = "Count", fill = "Mate guarding") +
+  scale_fill_manual(values = c("contact" = "lightblue", "non-contact" = "darkorange")) +
+  theme_minimal() +
+  theme(panel.grid=element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12))
+#let's check to make sure that's correct:
+count_non_contact_territorial <- sum(mate_guard_terr_data$sp_binary_mate_guard == "non-contact" & mate_guard_terr_data$sp_binary_terr == "territorial")
+#looks good
+
+
 # Pagel 94 model for flier vs percher and territoriality
 # Identify species to drop from fly_v_perch_terr_data
 chk_fly_v_perch<-name.check(tree, fly_v_perch_terr_data_old, data.names=as.character(fly_v_perch_terr_data_old$sn))
@@ -167,6 +184,18 @@ fly_v_perch_fit
 #independent model has lower AIC and p-value is insignificant. 
 #plot this
 plot(fly_v_perch_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
+
+#plot this
+ggplot(fly_v_perch_terr_data, aes(x = sp_binary_terr, fill = sp_fly_v_perch)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  labs(x = "Territorial", y = "Count", fill = "Flier or percher") +
+  scale_fill_manual(values = c("flier" = "lightblue", "percher" = "darkorange")) +
+  theme_minimal() +
+  theme(panel.grid=element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12))
 
 # Pagel 94 model for oviposition (endophytic vs exophytic) and territoriality
 # Identify species to drop from ovi_terr_data
@@ -195,6 +224,17 @@ ovi_fit
 #plot this
 plot(ovi_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
 
+#plot this:
+ggplot(ovi_terr_data, aes(x = sp_binary_terr, fill = sp_ovi)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  labs(x = "Territorial", y = "Count", fill = "Oviposition") +
+  scale_fill_manual(values = c("endophytic" = "lightblue", "exophytic" = "darkorange")) +
+  theme_minimal() +
+  theme(panel.grid=element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12))
 #we can also plot the trees to visually display the data:
 #not really working
 #object<-plotTree.datamatrix(tree_mate_guard, mate_guard_terr_data, fsize=0.5, yexp=1, header=FALSE, xexp=1.45, palettes=c("YlOrRd", "PuBuGn"))
@@ -253,6 +293,17 @@ lo_len_fit
 #plot this
 plot(lo_len_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
 
+#plot this
+ggplot(lo_len_terr_data, aes(x = sp_binary_terr, fill = sp_lo_len)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  labs(x = "Territorial", y = "Count", fill = "Lotic vs lentic") +
+  scale_fill_manual(values = c("lotic" = "lightblue", "lentic" = "darkorange")) +
+  theme_minimal() +
+  theme(panel.grid=element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12))
 
 #temporary vs permanent oviposition sites
 filtered_temp_perm <- subset(my_data, Temporary.vs.permanent.oviposition.site %in% c("Temporary", "Permanent"))
@@ -344,7 +395,17 @@ name.check(tree_lentic_size, data_lentic_size_territoriality, data.names=as.char
 mod_lentic_size<-phyloglm(Prop_Territorial~Lentic_size, data = data_lentic_size_territoriality, phy=tree_lentic_size, boot=1000, method = 'logistic_MPLE', btol = 10)
 summary(mod_lentic_size)
 
-
+#plot this
+ggplot(data_lentic_size_territoriality, aes(x = Prop_Territorial, fill = Lentic_size)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  labs(x = "Territorial", y = "Count", fill = "Lentic size") +
+  scale_fill_manual(values = c("small" ="dark blue", "medium" = "darkorange", "large" = "darkred")) +
+  theme_minimal() +
+  theme(panel.grid=element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12))
 
 #test if lotic size predicts territoriality
 my_data$Description.of.lotic.oviposition..river..stream. <- gsub("Stream, River", "River, Stream", my_data$Description.of.lotic.oviposition..river..stream.)
@@ -396,3 +457,16 @@ name.check(tree_lotic_size, data_lotic_size_territoriality, data.names = as.char
 #test if lotic size predicts territoriality
 mod_lotic_size<-phyloglm(Prop_territorial~lotic_size, data = data_lotic_size_territoriality, phy=tree_lotic_size, boot=1000, method = 'logistic_MPLE', btol = 10)
 summary(mod_lotic_size)
+
+#plot this
+ggplot(data_lotic_size_territoriality, aes(x = factor(Prop_territorial), fill = lotic_size)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  labs(x = "Territorial", y = "Count", fill = "Lotic size") +
+  scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
+  scale_fill_manual(values = c("stream" ="dark blue", "both" = "darkorange", "river" = "darkred")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12))
