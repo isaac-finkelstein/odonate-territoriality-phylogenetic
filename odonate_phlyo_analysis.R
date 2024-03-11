@@ -46,7 +46,7 @@ odonate_terr_data <- terr_data[!(terr_data$sn %in% species_to_drop), ] #dropped 
 name.check(odonate_tree, odonate_terr_data, data.names=as.character(odonate_terr_data$sn))
 
 #let's plot the tree
-plot(odonate_tree, type="fan", cex=0.5, fsize=0.6, ftype="i") #it's very busy because it has 384 tips
+plot(odonate_tree, type="fan", cex=0.5, fsize=0.6, ftype="i") #it's very busy because it has 372 tips
 
 
 #EVERYTIME I UPDATE THE DATASET, THE NODE NUMBER WILL CHANGE!! SO HAVE TO UPDATE THESE EVERYTIME!
@@ -78,7 +78,16 @@ plotTree.datamatrix(odonate_tree_factor, as.data.frame(terr_mode),
                     colours= list(cols), header=FALSE)
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #it's so crowded that I might want to remove names and then provide a large list so people can look up whatever species they want
-
+terr_mode
+#Plot this in a fan tree format
+plotTree(odonate_tree_factor, type="fan", fsie=0.8, ftype="i")
+cols<-setNames(palette()[1:length(unique(terr_mode))],sort(unique(terr_mode)))
+tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.2)
+add.simmap.legend(colors=cols, prompt=FALSE, terr_mode=0.9*par()$usr[1],
+                  x=min(nodeHeights(odonate_tree_factor)) -0.8,
+                  y=-max(nodeHeights(odonate_tree_factor)), fsize=0.8)
+#this looks okay, but you can't read the species names. I tried adding  label.offset = -0.5, label.cex = 0.8 but didn't work
+#also the legend needs to be moved. 
 
 
 #choose a character model
@@ -219,6 +228,7 @@ fit_marginal
 head(fit_marginal$states)       
 #interpret this matrix as the posterior probabilities that each state is in each node
 
+cols<-setNames(c("blue", "orange"), levels(terr_mode))
 #plot this
 plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
                     colors=list(cols), header=FALSE, fsize=0.45)
@@ -228,6 +238,11 @@ nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 #if I can figure out how to remove species labels, it might be interesting to present the whole odonate tree for ASR
 #because you can see that zygoptera and Anisoptera have different ancestral states!
 
+#plot this with a fan shape
+fit_ARD_again<-ace(terr_mode, odonate_tree, model="ARD", type="discrete")
+plotTree(odonate_tree, type="fan", fsize=0.5, ftype="i")
+nodelabels(node=1:tree$Nnode+Ntip(tree),
+           pie=fit_marginal$lik.anc, piecol = cols, cex=0.3)
 
 
 #one more method using an MCMC approach: Stochasitic character mapping
