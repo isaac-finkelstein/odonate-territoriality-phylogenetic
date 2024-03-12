@@ -13,12 +13,12 @@ my_data<- read.csv("data/data_v4.csv") #this dataset (3rd version) switches "tan
 #I also emailed to ask, but did not get a response. 
 
 
-#load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
+load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
 #str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label -- to check the structure of the tree
 
 #I can also try the tree from Rocha-Ortega et al., 2020 in Proceedings
 #it uses the same structure as Waller and Svensson 2017 but has different species coverage.
-tree<-read.nexus(file="data/Rocha_ortega_tree.nex")
+#tree<-read.nexus(file="data/Rocha_ortega_tree.nex")
 
 
 #Put data into a readable dataframe -- one species per row
@@ -422,8 +422,8 @@ prop_lotic_data<-data.frame(prop_stream=prop_stream,
 prop_lotic_data<-data.frame(
   prop_stream=ifelse(prop_stream>0.75,1,NA),
   prop_both=ifelse(prop_both>0.75,1, NA),
-  prop_river=ifelse(prop_river>0.75,1, NA)
-)#this makes a 3:1 cutoff - so if my data disagrees, I only include it if there is at least 3:1 sources saying the size - this is rarely met so basically I exclude species where there is disagreement
+  prop_river=ifelse(prop_river>0.75,1, NA))
+#this makes a 3:1 cutoff - so if my data disagrees, I only include it if there is at least 3:1 sources saying the size - this is rarely met so basically I exclude species where there is disagreement
 sn<- attr(lotic_size_table,"row.vars")[[1]]
 lotic_data_with_na<-data.frame(sn,prop_lotic_data)
 lotic_size_data <- lotic_data_with_na %>%
@@ -465,6 +465,67 @@ ggplot(data_lotic_size_territoriality, aes(x = factor(Prop_territorial), fill = 
   labs(x = "Territorial", y = "Count", fill = "Lotic size") +
   scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
   scale_fill_manual(values = c("stream" ="dark blue", "both" = "darkorange", "river" = "darkred")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12))
+
+
+#Including a "no" category for mate guarding
+my_data_filtered <- my_data[!(my_data$Mate.guarding == "Both"), ] #There's only 1 "Both" so I'm removing it.
+mate_guarding_no_table<-ftable(my_data_filtered$Formatted_species, my_data_filtered$Mate.guarding)
+
+prop_no<-round(mate_guarding_no_table[,3]/(mate_guarding_no_table[,3]+mate_guarding_no_table[,4]+mate_guarding_no_table[,2]), 2)
+prop_contact_no<-round(mate_guarding_no_table[,2]/(mate_guarding_no_table[,3]+mate_guarding_no_table[,4]+mate_guarding_no_table[,2]), 2)
+prop_non_contact_no<-round(mate_guarding_no_table[,4]/(mate_guarding_no_table[,3]+mate_guarding_no_table[,4]+mate_guarding_no_table[,2]), 2)
+prop_mate_guard_no_df<-data.frame(prop_no=prop_no,
+                                  prop_contact_no=prop_contact_no,
+                                  prop_non_contact_no=prop_non_contact_no)
+prop_mate_guard_no_df<-data.frame(
+  prop_no=ifelse(prop_no>0.75,1,NA),
+  prop_contact_no=ifelse(prop_contact_no>0.75,1,NA),
+  prop_non_contact_no=ifelse(prop_non_contact_no>0.75, 1, NA))
+#this makes a 3:1 cutoff - so if my data disagrees, I only include it if there is at least 3:1 sources saying the size - this is rarely met so basically I exclude species where there is disagreement
+
+sn<-attr(mate_guarding_no_table, "row.vars")[[1]]
+mate_guard_no_data_na<-data.frame(sn, prop_mate_guard_no_df)
+mate_guard_no_data<-mate_guard_no_data_na %>%
+  filter(!is.na(prop_no) | !is.na(prop_contact_no) | !is.na(prop_non_contact_no))
+mate_guarding_three_cat<-mate_guard_no_data %>%
+  mutate(Mate_guarding_cat = case_when(
+    prop_no==1 ~"no",
+  prop_contact_no == 1 ~"contact",
+  TRUE ~"non-contact" #default to non-contact if neither contact or no
+  ))
+mate_guarding_three_cat<-mate_guarding_three_cat %>%
+  select(sn, Mate_guarding_cat)
+#make dataset
+data_mate_guard_no_terr_old<-merge(binary_terr_df, mate_guarding_three_cat, by="sn", all=TRUE)
+colnames(data_mate_guard_no_terr_old)<-c("Species", "Prop_territorial", "Mate_guarding_cat")
+data_mate_guard_no_terr_old<-data_mate_guard_no_terr_old[complete.cases(data_mate_guard_no_terr_old), ]
+
+#identify species to drop
+chk_mate_guard_no<-name.check(tree, data_mate_guard_no_terr_old, data.names=as.character(data_mate_guard_no_terr_old$Species))
+summary(chk_mate_guard_no)
+tree_mate_guard_no<-drop.tip(tree, chk_mate_guard_no$tree_not_data) #dropped tree_not_data species
+#identify species to drop from data
+guard_no_species_to_drop<-chk_mate_guard_no$data_not_tree
+data_mate_guard_no_terr<-na.omit(data_mate_guard_no_terr_old[!(data_mate_guard_no_terr_old$Species %in% guard_no_species_to_drop),]) #dropped data_not_tree species
+rownames(data_mate_guard_no_terr)<-data_mate_guard_no_terr$Species
+name.check(tree_mate_guard_no, data_mate_guard_no_terr, data.names = as.character(data_mate_guard_no_terr$Species))
+
+#test if mate guarding with 3 categoreis (includes "no") predicts territoriality
+mod_mate_guard<-phyloglm(Prop_territorial~Mate_guarding_cat, data=data_mate_guard_no_terr, phy=tree_mate_guard_no, boot=1000, method='logistic_MPLE', btol=10)
+summary(mod_mate_guard)
+
+#plot this
+ggplot(data_mate_guard_no_terr, aes(x = factor(Prop_territorial), fill = Mate_guarding_cat)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  labs(x = "Territorial", y = "Count", fill = "Mate_guarding_cat") +
+  scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
+  scale_fill_manual(values = c("no" ="dark blue", "contact" = "darkorange", "non-contact" = "darkred")) +
   theme_minimal() +
   theme(panel.grid = element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
