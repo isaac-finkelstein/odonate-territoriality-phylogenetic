@@ -531,3 +531,71 @@ ggplot(data_mate_guard_no_terr, aes(x = factor(Prop_territorial), fill = Mate_gu
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12))
+
+#Doing a regression of all my variables
+#Make a single dataframe
+big_data <- merge(binary_terr_df, mate_guarding_three_cat, by = "sn", all = TRUE)
+big_data <- merge(big_data, binary_fly_v_perch_df, by = "sn", all = TRUE)
+big_data <- merge(big_data, binary_ovi_df, by = "sn", all = TRUE)
+
+colnames(big_data) <- c("Species", "territorial", "mate_guard", "flier_vs_percher", "oviposition")
+big_data<-big_data[complete.cases(big_data), ]
+#identify species to drop
+chk_big_data<-name.check(tree, big_data, data.names=as.character(big_data$Species))
+summary(chk_big_data)
+tree_big_data<-drop.tip(tree, chk_big_data$tree_not_data) #dropped tree_not_data species
+#identify species to drop from data
+big_data_species_to_drop<-chk_big_data$data_not_tree
+data_big_new<-na.omit(big_data[!(big_data$Species %in% big_data_species_to_drop),]) #dropped data_not_tree species
+rownames(data_big_new)<-data_big_new$Species
+name.check(tree_big_data, data_big_new, data.names = as.character(data_big_new$Species))
+
+mod_all_var<-phyloglm(territorial~mate_guard + flier_vs_percher + oviposition, data=data_big_new, phy=tree_big_data, boot=1000, method='logistic_MPLE', btol=10)
+summary(mod_all_var)
+#but small sample sizes:
+View(data_big_new)
+
+#Plot each variable:
+#mate guard
+ggplot(data_big_new, aes(x = territorial, fill = mate_guard)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  labs(x = "Territorial", y = "Count", fill = "Mate guarding") +
+  scale_fill_manual(values = c("no" = "gray", "contact" = "lightblue", "non-contact" = "darkorange")) +
+  theme_minimal() +
+  theme(panel.grid=element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12))
+#not sure why the territorial/non-territorial labels on the x-axis are not showing
+
+data_big_new$flier_vs_percher <- factor(data_big_new$flier_vs_percher, levels = c(0, 1), labels = c("flier", "percher"))
+
+# Plot fly_v_perch
+ggplot(data_big_new, aes(x = factor(territorial), fill = flier_vs_percher)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  labs(x = "Territorial", y = "Count", fill = "Flier or percher") +
+  scale_fill_manual(values = c("flier" = "lightblue", "percher" = "darkorange")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12))
+
+#oviposition
+data_big_new$oviposition <- factor(data_big_new$oviposition, levels = c(0, 1), labels = c("endophytic", "exophytic"))
+
+# Plot fly_v_perch
+ggplot(data_big_new, aes(x = factor(territorial), fill = oviposition)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  labs(x = "Territorial", y = "Count", fill = "oviposition") +
+  scale_fill_manual(values = c("endophytic" = "lightblue", "exophytic" = "darkorange")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12))
+
+
