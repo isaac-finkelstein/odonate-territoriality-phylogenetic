@@ -1,4 +1,4 @@
-#evolutionary models, ancestral state reconstructuion, phylogenetic signal
+#evolutionary models, ancestral state reconstruction, phylogenetic signal
 
 library(ape)
 library(phangorn)
