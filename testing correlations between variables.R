@@ -395,17 +395,43 @@ name.check(tree_lentic_size, data_lentic_size_territoriality, data.names=as.char
 mod_lentic_size<-phyloglm(Prop_Territorial~Lentic_size, data = data_lentic_size_territoriality, phy=tree_lentic_size, boot=1000, method = 'logistic_MPLE', btol = 10)
 summary(mod_lentic_size)
 
+
+
 #plot this
-ggplot(data_lentic_size_territoriality, aes(x = Prop_Territorial, fill = Lentic_size)) +
+#unfortunately I have to rework the dataset so that territoriality is coded as "territorial"/"non-territorial", instead of 0/1.
+#there is probably a faster way to do this but I just make the dataset again. 
+terr_df_len<-data.frame(
+  sn=binary_terr_df$sn,
+  binary_terr_df = ifelse(binary_terr_df$sp_binary_terr == 1, "territorial", "non-territorial"),
+  stringsAsFactors = TRUE)
+#make dataset
+data_lentic_size_territoriality_old <- merge(terr_df_len, size_data_ordered, by = "sn", all = TRUE)
+colnames(data_lentic_size_territoriality_old) <- c("Species", "Prop_territorial", "Lentic_size")
+data_lentic_size_territoriality_old<- data_lentic_size_territoriality_old[complete.cases(data_lentic_size_territoriality_old), ] 
+#identify species to drop
+chk_lentic_size<-name.check(tree, data_lentic_size_territoriality_old, data.names=as.character(data_lentic_size_territoriality_old$Species))
+summary(chk_lentic_size)
+tree_lentic_size<-drop.tip(tree, chk_lentic_size$tree_not_data) #dropped tree_not_data species
+#identify species to drop from data
+lentic_size_species_to_drop<-chk_lentic_size$data_not_tree
+data_lentic_size_territoriality <- na.omit(data_lentic_size_territoriality_old[!(data_lentic_size_territoriality_old$Species %in% lentic_size_species_to_drop),]) #dropped data_not_tree species
+rownames(data_lentic_size_territoriality)<-data_lentic_size_territoriality$Species
+name.check(tree_lentic_size, data_lentic_size_territoriality, data.names = as.character(data_lentic_size_territoriality$Species))
+
+
+ggplot(data_lentic_size_territoriality, aes(x = Prop_territorial, fill = Lentic_size)) +
   geom_bar(position = "dodge") +
-  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  geom_text(stat = "count", aes(label = after_stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Count", fill = "Lentic size") +
   scale_fill_manual(values = c("small" ="dark blue", "medium" = "darkorange", "large" = "darkred")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
-        axis.text = element_text(size = 10),
+        axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
+
+
+
 
 #test if lotic size predicts territoriality
 my_data$Description.of.lotic.oviposition..river..stream. <- gsub("Stream, River", "River, Stream", my_data$Description.of.lotic.oviposition..river..stream.)
@@ -459,17 +485,42 @@ mod_lotic_size<-phyloglm(Prop_territorial~lotic_size, data = data_lotic_size_ter
 summary(mod_lotic_size)
 
 #plot this
+#unfortunately I have to rework the dataset so that territoriality is coded as "territorial"/"non-territorial", instead of 0/1.
+#there is probably a faster way to do this but I just make the dataset again. 
+
+terr_df_lot<-data.frame(
+  sn=binary_terr_df$sn,
+  binary_terr_df = ifelse(binary_terr_df$sp_binary_terr == 1, "territorial", "non-territorial"),
+  stringsAsFactors = TRUE)
+#make dataset
+data_lotic_size_territoriality_old <- merge(terr_df_len, size_data_ordered, by = "sn", all = TRUE)
+colnames(data_lotic_size_territoriality_old) <- c("Species", "Prop_territorial", "lotic_size")
+data_lotic_size_territoriality_old<- data_lotic_size_territoriality_old[complete.cases(data_lotic_size_territoriality_old), ] 
+#identify species to drop
+chk_lotic_size<-name.check(tree, data_lotic_size_territoriality_old, data.names=as.character(data_lotic_size_territoriality_old$Species))
+summary(chk_lotic_size)
+tree_lotic_size<-drop.tip(tree, chk_lotic_size$tree_not_data) #dropped tree_not_data species
+#identify species to drop from data
+lotic_size_species_to_drop<-chk_lotic_size$data_not_tree
+data_lotic_size_territoriality <- na.omit(data_lotic_size_territoriality_old[!(data_lotic_size_territoriality_old$Species %in% lotic_size_species_to_drop),]) #dropped data_not_tree species
+rownames(data_lotic_size_territoriality)<-data_lotic_size_territoriality$Species
+name.check(tree_lotic_size, data_lotic_size_territoriality, data.names = as.character(data_lotic_size_territoriality$Species))
+
+
+
 ggplot(data_lotic_size_territoriality, aes(x = factor(Prop_territorial), fill = lotic_size)) +
   geom_bar(position = "dodge") +
-  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Count", fill = "Lotic size") +
   scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
-  scale_fill_manual(values = c("stream" ="dark blue", "both" = "darkorange", "river" = "darkred")) +
+  scale_fill_manual(values = c("stream" ="darkblue", "both" = "darkorange", "river" = "darkred")) +
   theme_minimal() +
   theme(panel.grid = element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
-        axis.text = element_text(size = 10),
+        axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
+
+
 
 
 #Including a "no" category for mate guarding
