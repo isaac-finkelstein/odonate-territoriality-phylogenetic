@@ -494,7 +494,7 @@ terr_df_lot<-data.frame(
   binary_terr_df = ifelse(binary_terr_df$sp_binary_terr == 1, "territorial", "non-territorial"),
   stringsAsFactors = TRUE)
 #make dataset
-data_lotic_size_territoriality_old <- merge(terr_df_len, lotic_size_ordered, by = "sn", all = TRUE)
+data_lotic_size_territoriality_old <- merge(terr_df_lot, lotic_size_ordered, by = "sn", all = TRUE)
 colnames(data_lotic_size_territoriality_old) <- c("Species", "Prop_territorial", "lotic_size")
 data_lotic_size_territoriality_old<- data_lotic_size_territoriality_old[complete.cases(data_lotic_size_territoriality_old), ] 
 #identify species to drop
