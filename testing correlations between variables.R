@@ -53,6 +53,7 @@ binary_terr_df<-data.frame(sn,sp_binary_terr, stringsAsFactors = TRUE)
 #remove "No" and "Both". I am only interested in comparing the binary variable contact vs non-contact
 #there is only one instance of "both"
 #note that this variable is only for species that exhibit mate guarding 
+my_data$Mate.guarding <- trimws(my_data$Mate.guarding)
 filtered_mate_guarding <- subset(my_data, Mate.guarding %in% c("Contact", "Non-contact"))
 mate_guard_var<-ftable(filtered_mate_guarding$Formatted_species, filtered_mate_guarding$Mate.guarding)
 prop_mate_guard<-round(mate_guard_var[,1]/(mate_guard_var[,1]+mate_guard_var[,2]),2) #this is the proportion that is contact
@@ -493,7 +494,7 @@ terr_df_lot<-data.frame(
   binary_terr_df = ifelse(binary_terr_df$sp_binary_terr == 1, "territorial", "non-territorial"),
   stringsAsFactors = TRUE)
 #make dataset
-data_lotic_size_territoriality_old <- merge(terr_df_len, size_data_ordered, by = "sn", all = TRUE)
+data_lotic_size_territoriality_old <- merge(terr_df_len, lotic_size_ordered, by = "sn", all = TRUE)
 colnames(data_lotic_size_territoriality_old) <- c("Species", "Prop_territorial", "lotic_size")
 data_lotic_size_territoriality_old<- data_lotic_size_territoriality_old[complete.cases(data_lotic_size_territoriality_old), ] 
 #identify species to drop
@@ -524,6 +525,12 @@ ggplot(data_lotic_size_territoriality, aes(x = factor(Prop_territorial), fill = 
 
 
 #Including a "no" category for mate guarding
+
+#this results in 52 non-contact data instead of 54 when it was binary -- the difference is in the binary variable
+#I had a line similar to this:
+#my_data_filtered<-subset(my_data, Mate.guarding %in% c("No", "Contact", "Non-contact"))
+#however, when I run that line instead, I get an error and I can't figure out why. 
+my_data$Mate.guarding <- trimws(my_data$Mate.guarding)
 my_data_filtered <- my_data[!(my_data$Mate.guarding == "Both"), ] #There's only 1 "Both" so I'm removing it.
 mate_guarding_no_table<-ftable(my_data_filtered$Formatted_species, my_data_filtered$Mate.guarding)
 
@@ -573,14 +580,14 @@ summary(mod_mate_guard)
 #plot this
 ggplot(data_mate_guard_no_terr, aes(x = factor(Prop_territorial), fill = Mate_guarding_cat)) +
   geom_bar(position = "dodge") +
-  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Count", fill = "Mate_guarding_cat") +
   scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
-  scale_fill_manual(values = c("no" ="dark blue", "contact" = "darkorange", "non-contact" = "darkred")) +
+  scale_fill_manual(values = c("no" ="darkblue", "contact" = "darkorange", "non-contact" = "darkred")) +
   theme_minimal() +
   theme(panel.grid = element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
-        axis.text = element_text(size = 10),
+        axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
 
 #Doing a regression of all my variables
