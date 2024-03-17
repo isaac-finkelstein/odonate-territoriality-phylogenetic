@@ -49,10 +49,10 @@ name.check(odonate_tree, odonate_terr_data_factor, data.names=as.character(odona
 
 terr_mode<-setNames(odonate_terr_data_factor$prop_terr, odonate_terr_data_factor$sn)
 
-#just zygoptera -- node 372
+#just zygoptera -- node 374
 #EVERYTIME I UPDATE THE DATASET, THE NODE NUMBER WILL CHANGE!! SO HAVE TO UPDATE THESE EVERYTIME!
 #collapseTree(odonate_tree)  #-- use this to find the node numbers
-zygoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 372)$tip.label)
+zygoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 374)$tip.label)
 zygoptera_tree<-drop.tip(odonate_tree, zygoptera_tree_extract)
 plot(zygoptera_tree, type="fan", cex=0.5, ftype="i")
 
@@ -136,3 +136,14 @@ plotTree.datamatrix(zygo_tree, as.data.frame(zygo_terr_mode),
 legend("topright", legend=levels(zygo_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal_zygo$states, piecol=cols, cex=0.3)
 #likely ancestral state = non-territorial! - that's interesting because it differs from Anisoptera
+
+
+
+#plot this with a fan shape
+cols<-setNames(c("turquoise", "brown"), levels(zygo_terr_mode))
+fit_ARD_again<-ace(zygo_terr_mode, zygo_tree, model="ARD", type="discrete")
+round(fit_ARD_again$lik.anc, 3)
+plotTree(zygo_tree, type="fan", fsize=0.6, ftype="i")
+nodelabels(node=1:zygo_tree$Nnode+Ntip(zygo_tree),
+           pie=fit_ARD_again$lik.anc, piecol = cols, cex=0.3)
+tiplabels(pie=to.matrix(zygo_terr_mode, sort(unique(zygo_terr_mode))), piecol=cols, cex=0.3)
