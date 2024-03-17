@@ -147,13 +147,13 @@ plot(mate_guard_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rate
 #plot this -- how many instances of territorial/contect, territorial/non-contect etc. 
 ggplot(mate_guard_terr_data, aes(x = sp_binary_terr, fill = sp_binary_mate_guard)) +
   geom_bar(position = "dodge") +
-  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Count", fill = "Mate guarding") +
   scale_fill_manual(values = c("contact" = "lightblue", "non-contact" = "darkorange")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
-        axis.text = element_text(size = 10),
+        axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
 #let's check to make sure that's correct:
 count_non_contact_territorial <- sum(mate_guard_terr_data$sp_binary_mate_guard == "non-contact" & mate_guard_terr_data$sp_binary_terr == "territorial")
@@ -189,13 +189,13 @@ plot(fly_v_perch_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rat
 #plot this
 ggplot(fly_v_perch_terr_data, aes(x = sp_binary_terr, fill = sp_fly_v_perch)) +
   geom_bar(position = "dodge") +
-  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Count", fill = "Flier or percher") +
   scale_fill_manual(values = c("flier" = "lightblue", "percher" = "darkorange")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
-        axis.text = element_text(size = 10),
+        axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
 
 # Pagel 94 model for oviposition (endophytic vs exophytic) and territoriality
@@ -228,13 +228,13 @@ plot(ovi_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, 
 #plot this:
 ggplot(ovi_terr_data, aes(x = sp_binary_terr, fill = sp_ovi)) +
   geom_bar(position = "dodge") +
-  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Count", fill = "Oviposition") +
   scale_fill_manual(values = c("endophytic" = "lightblue", "exophytic" = "darkorange")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
-        axis.text = element_text(size = 10),
+        axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
 #we can also plot the trees to visually display the data:
 #not really working
@@ -297,13 +297,13 @@ plot(lo_len_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.
 #plot this
 ggplot(lo_len_terr_data, aes(x = sp_binary_terr, fill = sp_lo_len)) +
   geom_bar(position = "dodge") +
-  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 2) +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Count", fill = "Lotic vs lentic") +
   scale_fill_manual(values = c("lotic" = "lightblue", "lentic" = "darkorange")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
-        axis.text = element_text(size = 10),
+        axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
 
 #temporary vs permanent oviposition sites
@@ -526,8 +526,8 @@ ggplot(data_lotic_size_territoriality, aes(x = factor(Prop_territorial), fill = 
 
 #Including a "no" category for mate guarding
 
-#this results in 52 non-contact data instead of 54 when it was binary -- the difference is in the binary variable
-#I had a line similar to this:
+#this results in 52 non-contact data instead of 54 when it was binary
+#when I coded the binary variable, I had a line similar to this:
 #my_data_filtered<-subset(my_data, Mate.guarding %in% c("No", "Contact", "Non-contact"))
 #however, when I run that line instead, I get an error and I can't figure out why. 
 my_data$Mate.guarding <- trimws(my_data$Mate.guarding)
