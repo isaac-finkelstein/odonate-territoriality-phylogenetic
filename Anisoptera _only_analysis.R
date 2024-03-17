@@ -50,7 +50,9 @@ name.check(odonate_tree, odonate_terr_data_factor, data.names=as.character(odona
 terr_mode<-setNames(odonate_terr_data_factor$prop_terr, odonate_terr_data_factor$sn)
 
 #just anisoptera -- node 411 
-anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 411)$tip.label)
+#EVERYTIME I UPDATE THE DATASET, THE NODE NUMBER WILL CHANGE!! SO HAVE TO UPDATE THESE EVERYTIME!
+#collapseTree(odonate_tree)  #-- use this to find the node numbers
+anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 566)$tip.label)
 anisoptera_tree<-drop.tip(odonate_tree, anisoptera_tree_extract)
 plot(anisoptera_tree, type="fan", cex=0.5, ftype="i") 
 
@@ -68,9 +70,9 @@ name.check(anis_tree, anis_terr_data_factor, data.names=as.character(anis_terr_d
 
 #plot anisoptera tree
 anis_terr_mode <- setNames(anis_terr_data_factor$prop_terr, anis_terr_data_factor$sn)
-cols<-setNames(c("forestgreen", "goldenrod1"), levels(anis_terr_mode))
+cols<-setNames(c("blue", "goldenrod1"), levels(anis_terr_mode))
 plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
-                    colours= list(cols), header=FALSE)
+                    colors= list(cols), header=FALSE)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #this works
 #the solution to make it work was changing the setNames function line
@@ -124,15 +126,33 @@ nodelabels(pie=to.matrix(levels(anis_terr_mode)[fit_joint_anis$phy$node.label],
 
 #marginal ancestral state reconstruction
 fit_marginal_anis<- corHMM(anis_tree, anis_data, node.states = "marginal",
-                           rate.cat=1, rate.mat=NULL)
+                           rate.cat=1, rate.mat=NULL, model="ARD")
 fit_marginal_anis
 head(fit_marginal_anis$states)       
 #interpret this matrix as the posterior probabilities that each state is in each node
 
 #plot this
-plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
+cols<-setNames(c("turquoise", "brown"), levels(anis_terr_mode)) #brown =yes territorail, turquoise = not territorial
+plotTree(anis_tree, fsize=0.5, ftype="i")
                     colors=list(cols), header=FALSE)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
-nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.5)
+nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.3)
+tiplabels(pie = to.matrix(anis_terr_mode, sort(unique(anis_terr_mode))), piecol=cols, cex=0.3)
 #likely ancestral state = non-territorial! - that's interesting because it differs from odonates
 #seems I get a different result now that I do the 3:1 threshold... likely ancestral state = territoriality.
+
+#plot this with a fan shape
+cols<-setNames(c("turquoise", "brown"), levels(anis_terr_mode)) #brown =yes territorail, turquoise = not territorial
+anis_fit_ARD_again<-ace(anis_terr_mode, anis_tree, model="ARD", type="discrete") #this gives us the marginal ancestral state - also called "empirical Bayesian posterior probabilities"
+round(anis_fit_ARD_again$lik.anc, 3)
+plotTree(anis_tree, type="fan", fsize=0.6, ftype="i")
+nodelabels(node=1:anis_tree$Nnode+Ntip(anis_tree),
+           pie=anis_fit_ARD_again$lik.anc, piecol = cols, cex=0.3)
+tiplabels(pie=to.matrix(anis_terr_mode, sort(unique(anis_terr_mode))), piecol=cols, cex=0.3)
+#why does it look differnet from when I plotted marginal ancestral state reconstruction?
+#I think it's because I used Ancestral Character Estimation using the function ace from package Ape
+#whereas before I estimate ancestral state using corHMM
+#the corHMM uses a markov model
+#Idk why these would be different ugghhh
+#have a look because I think I made a mistake - if you look at the full odonate tree, the anisoptera estimation looks different
+#or maybe it's just because there's less data when I only use anisoptera?
