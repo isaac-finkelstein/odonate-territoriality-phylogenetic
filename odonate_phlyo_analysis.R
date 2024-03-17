@@ -228,7 +228,7 @@ fit_marginal
 head(fit_marginal$states)       
 #interpret this matrix as the posterior probabilities that each state is in each node
 
-cols<-setNames(c("blue", "orange"), levels(terr_mode))
+cols<-setNames(c("turquoise", "brown"), levels(terr_mode))
 #plot this
 plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
                     colors=list(cols), header=FALSE, fsize=0.45)
@@ -240,11 +240,18 @@ nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 
 #plot this with a fan shape
 fit_ARD_again<-ace(terr_mode, odonate_tree, model="ARD", type="discrete")
+round(fit_ARD_again$lik.anc, 3)
 plotTree(odonate_tree, type="fan", fsize=0.5, ftype="i")
-nodelabels(node=1:tree$Nnode+Ntip(tree),
-           pie=fit_marginal$lik.anc, piecol = cols, cex=0.3)
-#not working but should be able to figure it out -http://www.phytools.org/eqg2015/asr.html
+nodelabels(node=1:odonate_tree$Nnode+Ntip(odonate_tree),
+           pie=fit_ARD_again$lik.anc, piecol = cols, cex=0.3)
+tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.3)
+#this is great! still too busy but if I remove the species names it looks okay
+#Also the legend is not positioned properly
+#add.simmap.legend(colors=cols, prompt = FALSE, terr_mode=0.1*par()$usr[1],
+                  #y=-max(nodeHeights(odonate_tree)),fsize=0.8)
 
+#http://www.phytools.org/eqg2015/asr.html
+#NOTICE that the results differ a bit. The estimate ancestral state changes between ace and corHMM.
 
 #one more method using an MCMC approach: Stochasitic character mapping
 #so you take the whole distribution from many sample stochastic maps and sample
