@@ -133,7 +133,7 @@ head(fit_marginal_anis$states)
 
 #plot this
 cols<-setNames(c("turquoise", "brown"), levels(anis_terr_mode)) #brown =yes territorail, turquoise = not territorial
-plotTree(anis_tree, fsize=0.5, ftype="i")
+plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
                     colors=list(cols), header=FALSE)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.3)
@@ -149,6 +149,7 @@ plotTree(anis_tree, type="fan", fsize=0.6, ftype="i")
 nodelabels(node=1:anis_tree$Nnode+Ntip(anis_tree),
            pie=anis_fit_ARD_again$lik.anc, piecol = cols, cex=0.3)
 tiplabels(pie=to.matrix(anis_terr_mode, sort(unique(anis_terr_mode))), piecol=cols, cex=0.3)
+legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #why does it look differnet from when I plotted marginal ancestral state reconstruction?
 #I think it's because I used Ancestral Character Estimation using the function ace from package Ape
 #whereas before I estimate ancestral state using corHMM
