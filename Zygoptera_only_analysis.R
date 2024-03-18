@@ -135,6 +135,7 @@ plotTree.datamatrix(zygo_tree, as.data.frame(zygo_terr_mode),
                     colors=list(cols), header=FALSE)
 legend("topright", legend=levels(zygo_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal_zygo$states, piecol=cols, cex=0.3)
+tiplabels(pie = to.matrix(zygo_terr_mode, sort(unique(zygo_terr_mode))), piecol=cols, cex=0.3)
 #likely ancestral state = non-territorial! - that's interesting because it differs from Anisoptera
 
 
