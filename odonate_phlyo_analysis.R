@@ -83,11 +83,8 @@ terr_mode
 plotTree(odonate_tree_factor, type="fan", fsie=0.8, ftype="i")
 cols<-setNames(palette()[1:length(unique(terr_mode))],sort(unique(terr_mode)))
 tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.2)
-add.simmap.legend(colors=cols, prompt=FALSE, terr_mode=0.9*par()$usr[1],
-                  x=min(nodeHeights(odonate_tree_factor)) -0.8,
-                  y=-max(nodeHeights(odonate_tree_factor)), fsize=0.8)
+legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #this looks okay, but you can't read the species names. I tried adding  label.offset = -0.5, label.cex = 0.8 but didn't work
-#also the legend needs to be moved. 
 
 
 #choose a character model
@@ -245,28 +242,12 @@ plotTree(odonate_tree, type="fan", fsize=0.5, ftype="i")
 nodelabels(node=1:odonate_tree$Nnode+Ntip(odonate_tree),
            pie=fit_ARD_again$lik.anc, piecol = cols, cex=0.3)
 tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.3)
+legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #this is great! still too busy but if I remove the species names it looks okay
-#Also the legend is not positioned properly
-#add.simmap.legend(colors=cols, prompt = FALSE, terr_mode=0.1*par()$usr[1],
-                  #y=-max(nodeHeights(odonate_tree)),fsize=0.8)
+
 
 #http://www.phytools.org/eqg2015/asr.html
 #NOTICE that the results differ a bit. The estimate ancestral state changes between ace and corHMM.
-
-#one more method using an MCMC approach: Stochasitic character mapping
-#so you take the whole distribution from many sample stochastic maps and sample
-#then you use Bayesian MCMC to sample q from its posterior distribution
-#this tells us the number of changes, the proportion of time spent in each state,
-#and the posterior probabilities of each node being a certain state
-#this tells us the same thing as the marginal ancestral states
-#but the transition rate between states (q) is the maximum likelihood value
-#we sampled q from it's posterior distribution
-#see Huelsenbeck et al., 2003
-
-#generate 1000 stochastic character maps in which the transition rate is sampled from its posterior distribution
-#this may work, but it took over an hour to run and didn't finished
-#mtrees<-make.simmap(odonate_tree, terr_mode, model="ARD", nsim=1000, Q="mcmc", vQ=0.01,
-#                    prior=list(use.empirical=TRUE), samplefreq=10)
 
 
 
