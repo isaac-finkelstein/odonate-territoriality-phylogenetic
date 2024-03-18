@@ -84,7 +84,7 @@ plotTree(odonate_tree_factor, type="fan", fsie=0.8, ftype="i")
 cols<-setNames(palette()[1:length(unique(terr_mode))],sort(unique(terr_mode)))
 tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.2)
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
-#this looks okay, but you can't read the species names. I tried adding  label.offset = -0.5, label.cex = 0.8 but didn't work
+#garbage - just delete this
 
 
 #choose a character model
@@ -231,6 +231,7 @@ plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
                     colors=list(cols), header=FALSE, fsize=0.45)
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
+tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.3)
 #likely ancestral state = territorial!
 #if I can figure out how to remove species labels, it might be interesting to present the whole odonate tree for ASR
 #because you can see that zygoptera and Anisoptera have different ancestral states!
