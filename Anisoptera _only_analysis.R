@@ -139,7 +139,6 @@ legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols
 nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.3)
 tiplabels(pie = to.matrix(anis_terr_mode, sort(unique(anis_terr_mode))), piecol=cols, cex=0.3)
 #likely ancestral state = non-territorial! - that's interesting because it differs from odonates
-#seems I get a different result now that I do the 3:1 threshold... likely ancestral state = territoriality.
 
 #plot this with a fan shape
 cols<-setNames(c("turquoise", "brown"), levels(anis_terr_mode)) #brown =yes territorail, turquoise = not territorial
@@ -155,5 +154,4 @@ legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols
 #whereas before I estimate ancestral state using corHMM
 #the corHMM uses a markov model
 #Idk why these would be different ugghhh
-#have a look because I think I made a mistake - if you look at the full odonate tree, the anisoptera estimation looks different
 #or maybe it's just because there's less data when I only use anisoptera?
