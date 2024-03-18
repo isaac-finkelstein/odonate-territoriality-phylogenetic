@@ -147,3 +147,4 @@ plotTree(zygo_tree, type="fan", fsize=0.6, ftype="i")
 nodelabels(node=1:zygo_tree$Nnode+Ntip(zygo_tree),
            pie=fit_ARD_again$lik.anc, piecol = cols, cex=0.3)
 tiplabels(pie=to.matrix(zygo_terr_mode, sort(unique(zygo_terr_mode))), piecol=cols, cex=0.3)
+legend("topright", legend=levels(zygo_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
