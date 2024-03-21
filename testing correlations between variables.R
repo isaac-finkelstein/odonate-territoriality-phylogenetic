@@ -145,16 +145,19 @@ mate_guard_fit
 plot(mate_guard_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
 
 #plot this -- how many instances of territorial/contect, territorial/non-contect etc. 
+max_obs <- nrow(mate_guard_terr_data)
+breaks <- seq(0, max_obs, by = 10)
 ggplot(mate_guard_terr_data, aes(x = sp_binary_terr, fill = sp_binary_mate_guard)) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
-  labs(x = "Territorial", y = "Count", fill = "Mate guarding") +
+  labs(x = "Territorial", y = "Number of species", fill = "Mate guarding") +
   scale_fill_manual(values = c("contact" = "lightblue", "non-contact" = "darkorange")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 12),
-        axis.title = element_text(size = 12))
+        axis.title = element_text(size = 12)) +
+  scale_y_continuous(breaks = breaks)
 #let's check to make sure that's correct:
 count_non_contact_territorial <- sum(mate_guard_terr_data$sp_binary_mate_guard == "non-contact" & mate_guard_terr_data$sp_binary_terr == "territorial")
 #looks good
@@ -187,16 +190,19 @@ fly_v_perch_fit
 plot(fly_v_perch_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
 
 #plot this
+max_obs_fly <- nrow(fly_v_perch_terr_data)
+breaks_fly <- seq(0, max_obs_fly, by = 10)
 ggplot(fly_v_perch_terr_data, aes(x = sp_binary_terr, fill = sp_fly_v_perch)) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
-  labs(x = "Territorial", y = "Count", fill = "Flier or percher") +
+  labs(x = "Territorial", y = "Number of species", fill = "Flier or percher") +
   scale_fill_manual(values = c("flier" = "lightblue", "percher" = "darkorange")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 12),
-        axis.title = element_text(size = 12))
+        axis.title = element_text(size = 12)) +
+  scale_y_continuous(breaks = breaks_fly)
 
 # Pagel 94 model for oviposition (endophytic vs exophytic) and territoriality
 # Identify species to drop from ovi_terr_data
@@ -226,16 +232,19 @@ ovi_fit
 plot(ovi_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
 
 #plot this:
+max_obs_ovi <- nrow(ovi_terr_data)
+breaks_ovi <- seq(0, max_obs_ovi, by = 10)
 ggplot(ovi_terr_data, aes(x = sp_binary_terr, fill = sp_ovi)) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
-  labs(x = "Territorial", y = "Count", fill = "Oviposition") +
+  labs(x = "Territorial", y = "Number of species", fill = "Oviposition") +
   scale_fill_manual(values = c("endophytic" = "lightblue", "exophytic" = "darkorange")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 12),
-        axis.title = element_text(size = 12))
+        axis.title = element_text(size = 12)) +
+  scale_y_continuous(breaks = breaks_ovi)
 #we can also plot the trees to visually display the data:
 #not really working
 #object<-plotTree.datamatrix(tree_mate_guard, mate_guard_terr_data, fsize=0.5, yexp=1, header=FALSE, xexp=1.45, palettes=c("YlOrRd", "PuBuGn"))
@@ -578,10 +587,12 @@ mod_mate_guard<-phyloglm(Prop_territorial~Mate_guarding_cat, data=data_mate_guar
 summary(mod_mate_guard)
 
 #plot this
+data_mate_guard_no_terr$Mate_guarding_cat <- factor(data_mate_guard_no_terr$Mate_guarding_cat, 
+                                                    levels = c("no", "contact", "non-contact"))
 ggplot(data_mate_guard_no_terr, aes(x = factor(Prop_territorial), fill = Mate_guarding_cat)) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
-  labs(x = "Territorial", y = "Count", fill = "Mate_guarding_cat") +
+  labs(x = "Territorial", y = "Number of species", fill = "Mate guarding") +
   scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
   scale_fill_manual(values = c("no" ="darkblue", "contact" = "darkorange", "non-contact" = "darkred")) +
   theme_minimal() +
