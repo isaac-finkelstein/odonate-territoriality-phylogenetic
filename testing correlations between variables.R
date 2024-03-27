@@ -76,6 +76,15 @@ sn<-attr(binary_fly_v_perch, "row.vars")[[1]]
 binary_fly_v_perch_df<-data.frame(sn, sp_fly_v_perch, stringsAsFactors=TRUE)
 #this worked, but it includes all species - so there are NAs. 
 
+#courtship
+binary_courtship<-ftable(my_data$Formatted_species, my_data$Courtship)
+prop_court<-round(binary_courtship[,3]/(binary_courtship[,2]+binary_courtship[,3]),2) #this is proportion "Yes"
+#so 1=yes, 0 = no
+#set a 75% threshold = 3:1 threshold
+sp_courtship<-ifelse(prop_court>=0.75,1, ifelse(prop_court<=0.25, 0, NA))
+sn<-attr(binary_courtship, "row.vars")[[1]]
+binary_court_df<-data.frame(sn, sp_courtship, stringsAsFactors=TRUE) #includes NAs
+
 #oviposition (endophytic vs exophytic)
 #I need to make all epiphytic = exophytic - to make it binary. 
 my_data_mutated <- my_data %>%
@@ -95,12 +104,15 @@ sn<-attr(binary_ovi, "row.vars")[[1]]
 binary_ovi_df<-data.frame(sn, sp_ovi, stringsAsFactors=TRUE)
 #this worked, but it includes all species - so there are NAs. 
 
+
 #now I stitch these together in a single dataframe
 binary_data <- merge(binary_terr_df, binary_mate_guard_df, by = "sn", all = TRUE)
 binary_data <- merge(binary_data, binary_fly_v_perch_df, by = "sn", all = TRUE)
+binary_data<-merge(binary_data, binary_court_df, by="sn", all=TRUE)
 binary_data <- merge(binary_data, binary_ovi_df, by = "sn", all = TRUE)
 
-colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Mate_Guard", "Prop_Flier_vs_Percher", "Prop_Oviposition")
+
+colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Mate_Guard", "Prop_Flier_vs_Percher", "Prop_Oviposition", "Prop_Courtship")
 #This worked! I checked manually.
 
 #one more step: I need to remove NA values, but if I do that to the entire dataframe, I will have no rows left
@@ -110,10 +122,13 @@ colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Mate_Guard", "Pr
 mate_guard_terr_data_with_na<-merge(binary_terr_df, binary_mate_guard_df, by = "sn", all = TRUE)
 fly_v_perch_terr_data_with_na<-merge(binary_terr_df, binary_fly_v_perch_df, by = "sn", all = TRUE)
 ovi_terr_data_with_na<-merge(binary_terr_df, binary_ovi_df, by = "sn", all = TRUE)
+court_terr_data_with_na<-merge(binary_terr_df, binary_court_df, by="sn", all=TRUE)
 #now remove NAs
 mate_guard_terr_data_old<- mate_guard_terr_data_with_na[complete.cases(mate_guard_terr_data_with_na), ] 
-fly_v_perch_terr_data_old<-fly_v_perch_terr_data_with_na[complete.cases(fly_v_perch_terr_data_with_na), ] 
+fly_v_perch_terr_data_old<-fly_v_perch_terr_data_with_na[complete.cases(fly_v_perch_terr_data_with_na), ]
+court_terr_data_old<-court_terr_data_with_na[complete.cases(court_terr_data_with_na), ]
 ovi_terr_data_old<-ovi_terr_data_with_na[complete.cases(ovi_terr_data_with_na), ] 
+
 
 
 #fitting the pagel (1994) model
@@ -203,6 +218,47 @@ ggplot(fly_v_perch_terr_data, aes(x = sp_binary_terr, fill = sp_fly_v_perch)) +
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 12)) +
   scale_y_continuous(breaks = breaks_fly)
+
+#pagel 94 model for courtship and territoriality
+#identify species to drop
+chk_court<-name.check(tree, court_terr_data_old, data.names=as.character(court_terr_data_old$sn))
+summary(chk_court)
+tree_court <- drop.tip(tree, chk_court$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+court_species_to_drop<-chk_court$data_not_tree
+court_terr_data_old_dropped<-court_terr_data_old[!(court_terr_data_old$sn %in% court_species_to_drop),] #dropped data_not_tree species from dataset
+name.check(tree_court, court_terr_data_old_dropped, data.names=as.character(court_terr_data_old_dropped$sn))
+#these have to be in the right format:
+row_names_court <- court_terr_data_old_dropped$sn
+court_terr_data<-data.frame(sp_binary_terr = ifelse(court_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
+                                  sp_courtship = ifelse(court_terr_data_old_dropped$sp_courtship == 1, "yes", "no"))
+rownames(court_terr_data) <- row_names_court
+
+#run pagel 94 model
+terr_mode_pagel_court<-setNames(court_terr_data[,1],
+                                      rownames(court_terr_data))
+court_pagel_court<-setNames(court_terr_data[,2],
+                                     rownames(court_terr_data))
+court_fit<-fitPagel(tree_court, terr_mode_pagel_court, court_pagel_court)
+court_fit
+#independent model has lower AIC and p-value is insignificant. 
+#plot this
+plot(court_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
+
+#plot this
+max_obs_court <- nrow(court_terr_data)
+breaks_court<- seq(0, max_obs_court, by = 10)
+ggplot(court_terr_data, aes(x = sp_binary_terr, fill = sp_courtship)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
+  labs(x = "Territorial", y = "Number of species", fill = "Courtship") +
+  scale_fill_manual(values = c("yes" = "lightblue", "no" = "darkorange")) +
+  theme_minimal() +
+  theme(panel.grid=element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 12)) +
+  scale_y_continuous(breaks = breaks_court)
 
 # Pagel 94 model for oviposition (endophytic vs exophytic) and territoriality
 # Identify species to drop from ovi_terr_data
