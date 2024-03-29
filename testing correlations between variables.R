@@ -372,38 +372,51 @@ ggplot(lo_len_terr_data, aes(x = sp_binary_terr, fill = sp_lo_len)) +
         axis.title = element_text(size = 12))
 
 #temporary vs permanent oviposition sites
-filtered_temp_perm <- subset(my_data, Temporary.vs.permanent.oviposition.site %in% c("Temporary", "Permanent"))
-temp_perm_var<-ftable(filtered_temp_perm$Formatted_species, filtered_temp_perm$Temporary.vs.permanent.oviposition.site)
-prop_temp_perm<-round(temp_perm_var[,2]/(temp_perm_var[,1]+temp_perm_var[,2]),2) #this is the proportion that is lotic
-#the 2 at the end rounds to 2 decimal 
-#set a 75% threshold = 3:1 threshold
-sp_temp_perm<-ifelse(prop_temp_perm >= 0.75, 1, ifelse(prop_temp_perm <=0.25, 0, NA))
-sn<-attr(temp_perm_var, "row.vars")[[1]]
-binary_temp_perm<-data.frame(sn, sp_temp_perm, stringsAsFactors = TRUE)
-#Yikes - only 9 species 
-#so, 1 = temporary, 0 = permanent
+#I use only data from Renner et al., 2020 to maintain consistency in categorization and observation opportunity
+temp_v_perm_table<-ftable(my_data$Formatted_species, my_data$Temporary.vs.permanent.oviposition.site)
 
+prop_generalist<-round(temp_v_perm_table[,2]/(temp_v_perm_table[,3]+temp_v_perm_table[,4]+temp_v_perm_table[,2]), 2)
+prop_permanent<-round(temp_v_perm_table[,3]/(temp_v_perm_table[,3]+temp_v_perm_table[,4]+temp_v_perm_table[,2]), 2)
+prop_temporary<-round(temp_v_perm_table[,4]/(temp_v_perm_table[,3]+temp_v_perm_table[,4]+temp_v_perm_table[,2]), 2)
+prop_oviposition_temp_perm_gen<-data.frame(prop_generalist=prop_generalist,
+                                           prop_permanent=prop_permanent,
+                                           prop_temporary=prop_temporary)
+prop_temp_perm_df<-data.frame(prop_generalist=ifelse(prop_generalist>0.75, 1, NA),
+                              prop_permanent=ifelse(prop_permanent>0.75, 1, NA),
+                              prop_temporary=ifelse(prop_temporary>0.75, 1, NA))
 
-temp_perm_terr_data_with_na<-merge(binary_terr_df, binary_temp_perm, by = "sn", all = TRUE)
-#now remove NAs
-temp_perm_terr_data_old<- temp_perm_terr_data_with_na[complete.cases(temp_perm_terr_data_with_na), ] 
+sn<-attr(temp_v_perm_table, "row.vars")[[1]]
+temp_v_perm_data_na<-data.frame(sn, prop_temp_perm_df)
+temp_v_perm_data<-temp_v_perm_data_na %>%
+  filter(!is.na(prop_generalist | !is.na(prop_permanent) | !is.na(prop_temporary)))
+oviposition_site_cat<-temp_v_perm_data %>%
+  mutate(oviposition_cat = case_when(
+    prop_generalist==1 ~"generalist",
+    prop_permanent==1 ~"permanent",
+    TRUE ~"temporary" #default to temporary if not generalist or permanent
+  ))
+oviposition_site_cat<-oviposition_site_cat %>%
+  select(sn, oviposition_cat)
 
-#fitting the pagel (1994) model
-#temporary vs permanent and territoriality
-# Identify species to drop from temp_perm_terr_data_old
-chk_temp_perm<-name.check(tree, temp_perm_terr_data_old, data.names=as.character(temp_perm_terr_data_old$sn))
-summary(chk_temp_perm)
-tree_temp_perm <- drop.tip(tree, chk_temp_perm$tree_not_data)#dropped tree_not_data species
-#identify species to drop from data
-temp_perm_species_to_drop<-chk_temp_perm$data_not_tree
-temp_perm_terr_data_old_dropped<-temp_perm_terr_data_old[!(temp_perm_terr_data_old$sn %in% temp_perm_species_to_drop),] #dropped data_not_tree species from dataset
-name.check(tree_temp_perm, temp_perm_terr_data_old_dropped, data.names=as.character(temp_perm_terr_data_old_dropped$sn))
-#these have to be in the right format
-row_names_temp_perm <- temp_perm_terr_data_old_dropped$sn
-temp_perm_terr_data<-data.frame(sp_binary_terr = ifelse(temp_perm_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
-                             sp_temp_perm = ifelse(temp_perm_terr_data_old_dropped$sp_temp_perm == 1, "temporary", "permanent"))
-rownames(temp_perm_terr_data) <- row_names_temp_perm
-#only 10 species are covered! - not worth running this. 
+#make dataset
+data_oviposition_site_old<-merge(binary_terr_df, oviposition_site_cat, by="sn", all=TRUE)
+colnames(data_oviposition_site_old)<-c("Species", "Territorial", "Oviposition_cat")
+data_oviposition_site_old<-data_oviposition_site_old[complete.cases(data_oviposition_site_old), ]
+
+#species to drop
+chk_ovi_site<-name.check(tree, data_oviposition_site_old, data.names=as.character(data_oviposition_site_old$Species))
+summary(chk_ovi_site)
+tree_ovi_site<-drop.tip(tree, chk_ovi_site$tree_not_data)
+#drop species from data
+ovi_site_sp_to_drop<-chk_ovi_site$data_not_tree
+data_oviposition_site<-na.omit(data_oviposition_site_old[!(data_oviposition_site_old$Species %in% ovi_site_sp_to_drop),])
+rownames(data_oviposition_site)<-data_oviposition_site$Species
+name.check(tree_ovi_site, data_oviposition_site, data.names= as.character(data_oviposition_site$Species))
+#sadly, this is only 13 observations
+#and it is entirely territorial species so can't do a regression test
+#test
+#mod_ovi_site<-phyloglm(Territorial~Oviposition_cat, data=data_oviposition_site, phy=tree_ovi_site, boot=1000, method='logistic_MPLE', btol=10)
+
 
 
 #Finally, we can test the size of the water body used as breeding habitat
@@ -473,29 +486,19 @@ terr_df_len<-data.frame(
 #make dataset
 data_lentic_size_territoriality_old <- merge(terr_df_len, size_data_ordered, by = "sn", all = TRUE)
 colnames(data_lentic_size_territoriality_old) <- c("Species", "Prop_territorial", "Lentic_size")
-data_lentic_size_territoriality_old<- data_lentic_size_territoriality_old[complete.cases(data_lentic_size_territoriality_old), ] 
-#identify species to drop
-chk_lentic_size<-name.check(tree, data_lentic_size_territoriality_old, data.names=as.character(data_lentic_size_territoriality_old$Species))
-summary(chk_lentic_size)
-tree_lentic_size<-drop.tip(tree, chk_lentic_size$tree_not_data) #dropped tree_not_data species
-#identify species to drop from data
-lentic_size_species_to_drop<-chk_lentic_size$data_not_tree
-data_lentic_size_territoriality <- na.omit(data_lentic_size_territoriality_old[!(data_lentic_size_territoriality_old$Species %in% lentic_size_species_to_drop),]) #dropped data_not_tree species
-rownames(data_lentic_size_territoriality)<-data_lentic_size_territoriality$Species
-name.check(tree_lentic_size, data_lentic_size_territoriality, data.names = as.character(data_lentic_size_territoriality$Species))
+data_lentic_size_territoriality<- data_lentic_size_territoriality_old[complete.cases(data_lentic_size_territoriality_old), ] 
 
 
 ggplot(data_lentic_size_territoriality, aes(x = Prop_territorial, fill = Lentic_size)) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = after_stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
-  labs(x = "Territorial", y = "Count", fill = "Lentic size") +
+  labs(x = "Territorial", y = "Number of species", fill = "Lentic size") +
   scale_fill_manual(values = c("small" ="dark blue", "medium" = "darkorange", "large" = "darkred")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
-
 
 
 
@@ -561,23 +564,12 @@ terr_df_lot<-data.frame(
 #make dataset
 data_lotic_size_territoriality_old <- merge(terr_df_lot, lotic_size_ordered, by = "sn", all = TRUE)
 colnames(data_lotic_size_territoriality_old) <- c("Species", "Prop_territorial", "lotic_size")
-data_lotic_size_territoriality_old<- data_lotic_size_territoriality_old[complete.cases(data_lotic_size_territoriality_old), ] 
-#identify species to drop
-chk_lotic_size<-name.check(tree, data_lotic_size_territoriality_old, data.names=as.character(data_lotic_size_territoriality_old$Species))
-summary(chk_lotic_size)
-tree_lotic_size<-drop.tip(tree, chk_lotic_size$tree_not_data) #dropped tree_not_data species
-#identify species to drop from data
-lotic_size_species_to_drop<-chk_lotic_size$data_not_tree
-data_lotic_size_territoriality <- na.omit(data_lotic_size_territoriality_old[!(data_lotic_size_territoriality_old$Species %in% lotic_size_species_to_drop),]) #dropped data_not_tree species
-rownames(data_lotic_size_territoriality)<-data_lotic_size_territoriality$Species
-name.check(tree_lotic_size, data_lotic_size_territoriality, data.names = as.character(data_lotic_size_territoriality$Species))
-
-
+data_lotic_size_territoriality<- data_lotic_size_territoriality_old[complete.cases(data_lotic_size_territoriality_old), ] 
 
 ggplot(data_lotic_size_territoriality, aes(x = factor(Prop_territorial), fill = lotic_size)) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
-  labs(x = "Territorial", y = "Count", fill = "Lotic size") +
+  labs(x = "Territorial", y = "Number of species", fill = "Lotic size") +
   scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
   scale_fill_manual(values = c("stream" ="darkblue", "both" = "darkorange", "river" = "darkred")) +
   theme_minimal() +
