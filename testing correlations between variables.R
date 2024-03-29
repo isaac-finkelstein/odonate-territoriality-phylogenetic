@@ -159,7 +159,7 @@ mate_guard_fit
 #plot this
 plot(mate_guard_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
 
-#plot this -- how many instances of territorial/contect, territorial/non-contect etc. 
+#plot this -- how many instances of territorial/contact, territorial/non-contact etc. 
 max_obs <- nrow(mate_guard_terr_data)
 breaks <- seq(0, max_obs, by = 10)
 ggplot(mate_guard_terr_data, aes(x = sp_binary_terr, fill = sp_binary_mate_guard)) +
@@ -722,5 +722,62 @@ ggplot(data_big_new, aes(x = factor(territorial), fill = oviposition)) +
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12))
+
+
+
+#Testing if abundance predicts territoriality
+#Using data from De Resende et al., 2021 for abundance data
+abundance_with_na<-my_data$Abundance
+sn<-my_data$Formatted_species
+abundance <- na.omit(abundance_with_na)
+abundance_df <- data.frame(sn = sn[!is.na(abundance_with_na)], Abundance = abundance)
+
+
+#make dataset
+data_abundance_terr_old<-merge(binary_terr_df, abundance_df, by = "sn", all=TRUE)
+colnames(data_abundance_terr_old)<- c("Species", "Territorial", "Abundance")
+data_abundance_terr_old<-data_abundance_terr_old[complete.cases(data_abundance_terr_old), ]
+
+
+#identify species to drop
+chk_abun<-name.check(tree, data_abundance_terr_old, data.names=as.character(data_abundance_terr_old$Species))
+summary(chk_abun)
+tree_abundance<-drop.tip(tree, chk_abun$tree_not_data)
+#identify species to drop from data
+abund_species_to_drop<-chk_abun$data_not_tree
+data_abundance_terr<-data_abundance_terr_old[!(data_abundance_terr_old$Species %in% abund_species_to_drop), ]
+rownames(data_abundance_terr)<-data_abundance_terr$Species
+name.check(tree_abundance, data_abundance_terr, data.names=as.character(data_abundance_terr$Species))
+#sadly, this only leaves 20 species
+
+#Test if abundance predicts territoriality
+mod_abund<-phyloglm(Territorial~Abundance, data=data_abundance_terr, phy=tree_abundance, boot=1000, method= 'logistic_MPLE', btol=10)
+summary(mod_abund)
+
+#plot this
+#plot this
+#unfortunately I have to rework the dataset so that territoriality is coded as "territorial"/"non-territorial", instead of 0/1.
+#there is probably a faster way to do this but I just make the dataset again. 
+terr_df_len<-data.frame(
+  sn=binary_terr_df$sn,
+  binary_terr_df = ifelse(binary_terr_df$sp_binary_terr == 1, "territorial", "non-territorial"),
+  stringsAsFactors = TRUE)
+#make dataset
+abundance_terr_with_na <- merge(terr_df_len, abundance_df, by = "sn", all = TRUE)
+colnames(abundance_terr) <- c("Species", "Territorial", "Abundance")
+abundance_terr<- abundance_terr_with_na[complete.cases(abundance_terr_with_na), ]
+
+colnames(abundance_terr) <- c("sn", "Territorial", "Abundance")
+
+ggplot(abundance_terr, aes(x = Territorial, y = Abundance, fill = Territorial)) +
+  geom_boxplot() +
+  labs(x = "Territorial", y = "Abundance") +
+  scale_fill_manual(values = c("blue", "red")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank()) +
+  scale_y_continuous(breaks = seq(0, max(abundance_terr$Abundance), by = 25))
+#means are very close, but territorial species seem a bit more inclined to be more abundance
+#could also be that they tend to be easier to spot?
+
 
 
