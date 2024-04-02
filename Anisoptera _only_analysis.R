@@ -8,7 +8,7 @@ library(geiger)
 library(dplyr)
 library(corHMM)
 
-my_data<- read.csv("data/data_v4.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
+my_data<- read.csv("data/data_v5.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
 #For some reason, they use both terms. But since they mean the same thing, I changed them all to "Contact"
 #I also emailed to ask, but did not get a response. 
 load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
@@ -52,7 +52,7 @@ terr_mode<-setNames(odonate_terr_data_factor$prop_terr, odonate_terr_data_factor
 #just anisoptera -- node 411 
 #EVERYTIME I UPDATE THE DATASET, THE NODE NUMBER WILL CHANGE!! SO HAVE TO UPDATE THESE EVERYTIME!
 #collapseTree(odonate_tree)  #-- use this to find the node numbers
-anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 566)$tip.label)
+anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 571)$tip.label)
 anisoptera_tree<-drop.tip(odonate_tree, anisoptera_tree_extract)
 plot(anisoptera_tree, type="fan", cex=0.5, ftype="i") 
 
@@ -149,9 +149,10 @@ nodelabels(node=1:anis_tree$Nnode+Ntip(anis_tree),
            pie=anis_fit_ARD_again$lik.anc, piecol = cols, cex=0.3)
 tiplabels(pie=to.matrix(anis_terr_mode, sort(unique(anis_terr_mode))), piecol=cols, cex=0.3)
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
-#why does it look differnet from when I plotted marginal ancestral state reconstruction?
+#why does it look different from when I plotted marginal ancestral state reconstruction?
 #I think it's because I used Ancestral Character Estimation using the function ace from package Ape
 #whereas before I estimate ancestral state using corHMM
 #the corHMM uses a markov model
 #Idk why these would be different ugghhh
 #or maybe it's just because there's less data when I only use anisoptera?
+
