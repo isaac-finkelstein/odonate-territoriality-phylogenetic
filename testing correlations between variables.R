@@ -189,8 +189,8 @@ fly_v_perch_terr_data_old_dropped<-fly_v_perch_terr_data_old[!(fly_v_perch_terr_
 name.check(tree_fly_v_perch, fly_v_perch_terr_data_old_dropped, data.names=as.character(fly_v_perch_terr_data_old_dropped$sn))
 #these have to be in the right format:
 row_names_fly_v_perch <- fly_v_perch_terr_data_old_dropped$sn
-fly_v_perch_terr_data<-data.frame(sp_binary_terr = ifelse(fly_v_perch_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
-                                  sp_fly_v_perch = ifelse(fly_v_perch_terr_data_old_dropped$sp_fly_v_perch == 1, "percher", "flier"))
+fly_v_perch_terr_data<-data.frame(sp_binary_terr = ifelse(fly_v_perch_terr_data_old_dropped$sp_binary_terr == 1, "Territorial", "Non-territorial"),
+                                  sp_fly_v_perch = ifelse(fly_v_perch_terr_data_old_dropped$sp_fly_v_perch == 1, "Percher", "Flier"))
 rownames(fly_v_perch_terr_data) <- row_names_fly_v_perch
 
 #run pagel 94 model
@@ -206,12 +206,12 @@ plot(fly_v_perch_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rat
 
 #plot this
 max_obs_fly <- nrow(fly_v_perch_terr_data)
-breaks_fly <- seq(0, max_obs_fly, by = 10)
+breaks_fly <- seq(0, max_obs_fly, by = 20)
 ggplot(fly_v_perch_terr_data, aes(x = sp_binary_terr, fill = sp_fly_v_perch)) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Number of species", fill = "Flier or percher") +
-  scale_fill_manual(values = c("flier" = "lightblue", "percher" = "darkorange")) +
+  scale_fill_manual(values = c("Flier" = "lightblue", "Percher" = "darkorange")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
@@ -230,8 +230,8 @@ court_terr_data_old_dropped<-court_terr_data_old[!(court_terr_data_old$sn %in% c
 name.check(tree_court, court_terr_data_old_dropped, data.names=as.character(court_terr_data_old_dropped$sn))
 #these have to be in the right format:
 row_names_court <- court_terr_data_old_dropped$sn
-court_terr_data<-data.frame(sp_binary_terr = ifelse(court_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
-                                  sp_courtship = ifelse(court_terr_data_old_dropped$sp_courtship == 1, "yes", "no"))
+court_terr_data<-data.frame(sp_binary_terr = ifelse(court_terr_data_old_dropped$sp_binary_terr == 1, "Territorial", "Non-territorial"),
+                                  sp_courtship = ifelse(court_terr_data_old_dropped$sp_courtship == 1, "Yes", "No"))
 rownames(court_terr_data) <- row_names_court
 
 #run pagel 94 model
@@ -247,12 +247,12 @@ plot(court_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7
 
 #plot this
 max_obs_court <- nrow(court_terr_data)
-breaks_court<- seq(0, max_obs_court, by = 10)
+breaks_court<- seq(0, max_obs_court, by = 5)
 ggplot(court_terr_data, aes(x = sp_binary_terr, fill = sp_courtship)) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Number of species", fill = "Courtship") +
-  scale_fill_manual(values = c("yes" = "lightblue", "no" = "darkorange")) +
+  scale_fill_manual(values = c("Yes" = "lightblue", "No" = "darkorange")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
@@ -271,8 +271,8 @@ ovi_terr_data_old_dropped<-ovi_terr_data_old[!(ovi_terr_data_old$sn %in% ovi_spe
 name.check(tree_ovi,ovi_terr_data_old_dropped, data.names=as.character(ovi_terr_data_old_dropped$sn))
 #these have to be in the right format:
 row_names_ovi_terr <- ovi_terr_data_old_dropped$sn
-ovi_terr_data<-data.frame(sp_binary_terr = ifelse(ovi_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
-                          sp_ovi = ifelse(ovi_terr_data_old_dropped$sp_ovi == 1, "exophytic", "endophytic"))
+ovi_terr_data<-data.frame(sp_binary_terr = ifelse(ovi_terr_data_old_dropped$sp_binary_terr == 1, "Territorial", "Non-territorial"),
+                          sp_ovi = ifelse(ovi_terr_data_old_dropped$sp_ovi == 1, "Exophytic", "Endophytic"))
 rownames(ovi_terr_data) <- row_names_ovi_terr
 
 #run pagel 94 model
@@ -294,7 +294,7 @@ ggplot(ovi_terr_data, aes(x = sp_binary_terr, fill = sp_ovi)) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Number of species", fill = "Oviposition") +
-  scale_fill_manual(values = c("endophytic" = "lightblue", "exophytic" = "darkorange")) +
+  scale_fill_manual(values = c("Endophytic" = "lightblue", "Exophytic" = "darkorange")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
@@ -344,8 +344,8 @@ lo_len_terr_data_old_dropped<-lo_len_terr_data_old[!(lo_len_terr_data_old$sn %in
 name.check(tree_lo_len, lo_len_terr_data_old_dropped, data.names=as.character(lo_len_terr_data_old_dropped$sn))
 #these have to be in the right format
 row_names_lo_len <- lo_len_terr_data_old_dropped$sn
-lo_len_terr_data<-data.frame(sp_binary_terr = ifelse(lo_len_terr_data_old_dropped$sp_binary_terr == 1, "territorial", "non-territorial"),
-                                 sp_lo_len = ifelse(lo_len_terr_data_old_dropped$sp_lo_len == 1, "lotic", "lentic"))
+lo_len_terr_data<-data.frame(sp_binary_terr = ifelse(lo_len_terr_data_old_dropped$sp_binary_terr == 1, "Territorial", "Non-territorial"),
+                                 sp_lo_len = ifelse(lo_len_terr_data_old_dropped$sp_lo_len == 1, "Lotic", "Lentic"))
 rownames(lo_len_terr_data) <- row_names_lo_len
 
 #run pagel 94 model
@@ -360,16 +360,19 @@ lo_len_fit
 plot(lo_len_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
 
 #plot this
+max_obs_lo_len <- nrow(lo_len_terr_data)
+breaks_lo_len <- seq(0, max_obs_lo_len, by = 20)
 ggplot(lo_len_terr_data, aes(x = sp_binary_terr, fill = sp_lo_len)) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
-  labs(x = "Territorial", y = "Count", fill = "Lotic vs lentic") +
-  scale_fill_manual(values = c("lotic" = "lightblue", "lentic" = "darkorange")) +
+  labs(x = "Territorial", y = "Number of species", fill = "Lotic vs lentic") +
+  scale_fill_manual(values = c("Lotic" = "lightblue", "Lentic" = "darkorange")) +
   theme_minimal() +
   theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 12),
-        axis.title = element_text(size = 12))
+        axis.title = element_text(size = 12)) +
+  scale_y_continuous(breaks = breaks_lo_len)
 
 #temporary vs permanent oviposition sites
 #I use only data from Renner et al., 2020 to maintain consistency in categorization and observation opportunity
@@ -669,9 +672,9 @@ mate_guard_no_data<-mate_guard_no_data_na %>%
   filter(!is.na(prop_no) | !is.na(prop_contact_no) | !is.na(prop_non_contact_no))
 mate_guarding_three_cat<-mate_guard_no_data %>%
   mutate(Mate_guarding_cat = case_when(
-    prop_no==1 ~"no",
-  prop_contact_no == 1 ~"contact",
-  TRUE ~"non-contact" #default to non-contact if neither contact or no
+    prop_no==1 ~"No",
+  prop_contact_no == 1 ~"Contact",
+  TRUE ~"Non-contact" #default to non-contact if neither contact or no
   ))
 mate_guarding_three_cat<-mate_guarding_three_cat %>%
   select(sn, Mate_guarding_cat)
@@ -690,16 +693,33 @@ data_mate_guard_no_terr<-na.omit(data_mate_guard_no_terr_old[!(data_mate_guard_n
 rownames(data_mate_guard_no_terr)<-data_mate_guard_no_terr$Species
 name.check(tree_mate_guard_no, data_mate_guard_no_terr, data.names = as.character(data_mate_guard_no_terr$Species))
 
-#test if mate guarding with 3 categoreis (includes "no") predicts territoriality
+#test if mate guarding with 3 categories (includes "no") predicts territoriality
 mod_mate_guard<-phyloglm(Prop_territorial~Mate_guarding_cat, data=data_mate_guard_no_terr, phy=tree_mate_guard_no, boot=1000, method='logistic_MPLE', btol=10)
 summary(mod_mate_guard)
 
 #plot this
-data_mate_guard_no_terr$Mate_guarding_cat <- factor(data_mate_guard_no_terr$Mate_guarding_cat, 
-                                                    levels = c("no", "contact", "non-contact"))
-ggplot(data_mate_guard_no_terr, aes(x = factor(Prop_territorial), fill = Mate_guarding_cat)) +
+custom_levels <- c("No", "Contact", "Non-contact")
+ggplot(data_mate_guard_no_terr, aes(x = factor(Prop_territorial), fill = factor(Mate_guarding_cat, levels = custom_levels))) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
+  labs(x = "Territorial", y = "Number of species", fill = "Mate guarding") +
+  scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
+  scale_fill_manual(values = c("No" = "darkblue", "Contact" = "darkorange", "Non-contact" = "darkred")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 12))
+
+# Calculate counts of observations for each level of "Mate_guarding_cat"
+count_data <- data_mate_guard_no_terr %>%
+  group_by(Mate_guarding_cat) %>%
+  summarise(count = n())
+
+# Plot
+ggplot(data_mate_guard_no_terr, aes(x = factor(Prop_territorial), fill = Mate_guarding_cat)) +
+  geom_bar(position = "dodge") +
+  geom_text(data = count_data, aes(label = count), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Number of species", fill = "Mate guarding") +
   scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
   scale_fill_manual(values = c("no" ="darkblue", "contact" = "darkorange", "non-contact" = "darkred")) +
@@ -708,6 +728,7 @@ ggplot(data_mate_guard_no_terr, aes(x = factor(Prop_territorial), fill = Mate_gu
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
+
 
 #Doing a regression of all my variables
 #Make a single dataframe
@@ -812,7 +833,7 @@ summary(mod_abund)
 #there is probably a faster way to do this but I just make the dataset again. 
 terr_df_len<-data.frame(
   sn=binary_terr_df$sn,
-  binary_terr_df = ifelse(binary_terr_df$sp_binary_terr == 1, "territorial", "non-territorial"),
+  binary_terr_df = ifelse(binary_terr_df$sp_binary_terr == 1, "Territorial (n=60)", "Non-territorial (n=35)"),
   stringsAsFactors = TRUE)
 #make dataset
 abundance_terr_with_na <- merge(terr_df_len, abundance_df, by = "sn", all = TRUE)
@@ -828,6 +849,7 @@ ggplot(abundance_terr, aes(x = Territorial, y = Abundance, fill = Territorial)) 
   theme_minimal() +
   theme(panel.grid = element_blank()) +
   scale_y_continuous(breaks = seq(0, max(abundance_terr$Abundance), by = 25))
+
 #means are very close, but territorial species seem a bit more inclined to be more abundance
 #could also be that they tend to be easier to spot?
 
