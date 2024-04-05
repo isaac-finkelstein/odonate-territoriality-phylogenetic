@@ -50,7 +50,7 @@ binary_terr_df<-data.frame(sn,sp_binary_terr, stringsAsFactors = TRUE)
 #so 1 = territorial, 0 = non-territorial. 
 
 #mate guarding 
-#remove "No" and "Both". I am only interested in comparing the binary variable contact vs non-contact
+#remove "No" and "Both". Below, I include "no" as a third category. this compares mate guarding as a binary variable contact vs non-contact
 #there is only one instance of "both"
 #note that this variable is only for species that exhibit mate guarding 
 my_data$Mate.guarding <- trimws(my_data$Mate.guarding)
