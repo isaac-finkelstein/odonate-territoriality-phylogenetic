@@ -422,44 +422,41 @@ name.check(tree_ovi_site, data_oviposition_site, data.names= as.character(data_o
 
 
 #Let's test if territorial species are more likely to have conservation concerns
-#7 ordered categories: Least concern, Near threatened, Vulnerable, Endangered, Critically endangered, Extinct
+#7 ordered categories: Least concern, Near threatened, Vulnerable, Endangered, Critically Endangered, Extinct
+#unfortunately, this results in very little power. So, I need to combine everything (NT, V, E, CE) vs Least Concern (LC).
 #There is no odonate species that is extinct in the wild
 #remove "Data Deficient" and "No Data"
 redlist_category <- subset(my_data, Redlist.category %in% c("Least Concern", "Near Threatened", "Vulnerable", "Endangered", "Critically Endangered", "Extinct"))
 redlist_cat<-ftable(redlist_category$Formatted_species, redlist_category$Redlist.category)
 
-lc<-round(redlist_cat[,1]/(redlist_cat[,1]+ redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
-nt<-round(redlist_cat[,2]/(redlist_cat[,1]+ redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
-vul<-round(redlist_cat[,3]/(redlist_cat[,1]+ redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
-end<-round(redlist_cat[,4]/(redlist_cat[,1]+ redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
-cr_end<-round(redlist_cat[,5]/(redlist_cat[,1]+ redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
-ext<-round(redlist_cat[,6]/(redlist_cat[,1]+ redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
+#For some reason the order of the columns is ordered alphabetically
+lc<-round(redlist_cat[,4]/(redlist_cat[,1]+redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
+nt<-round(redlist_cat[,5]/(redlist_cat[,1]+redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
+vul<-round(redlist_cat[,6]/(redlist_cat[,1]+redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
+end<-round(redlist_cat[,2]/(redlist_cat[,1]+redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
+cr_end<-round(redlist_cat[,1]/(redlist_cat[,1]+redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
+ext<-round(redlist_cat[,3]/(redlist_cat[,1]+redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
 
+#here I make everything (C for concern) and least concern categories
 redlist_df<-data.frame(
-  lc=ifelse(lc>75,1,NA),
-  nt=ifelse(nt>0.75,1,NA),
-  vul=ifelse(vul>0.75,1,NA),
-  end=ifelse(end>0.75,1,NA),
-  cr_end=ifelse(cr_end>0.75,1,NA),
-  ext=ifelse(ext>0.75,1,NA))
+  lc=ifelse(lc>0.75,1,NA),
+  c=ifelse(nt>0.75,1,NA),
+  c=ifelse(vul>0.75,1,NA),
+  c=ifelse(end>0.75,1,NA),
+  c=ifelse(cr_end>0.75,1,NA),
+  c=ifelse(ext>0.75,1,NA))
 
 sn<-attr(redlist_cat, "row.vars")[[1]]
 redlist_w_na<-data.frame(sn, redlist_df)
 redlist<-redlist_w_na %>%
-  filter(!is.na(lc) | !is.na(nt) | !is.na(vul) | !is.na(end) | !is.na(cr_end) | !is.na(ext))
+  filter(!is.na(lc) | !is.na(c))
 sp_redlist_cat<-redlist %>%
   mutate(redlist_cat_final = case_when(
     lc==1 ~"least concern",
-    nt==1 ~"near threatened",
-    vul==1 ~"vulnerable",
-    end==1 ~"endangered",
-    cr_end==1 ~"critically endangered",
-    ext==1 ~"extinct" #default to extinct if nothing else
-    ))
+    c==1 ~"concern"))
 
 sp_redlist_cat_ordered<-sp_redlist_cat %>%
   select(sn, redlist_cat_final)
-sp_redlist_cat_ordered$redlist_cat_final<-factor(sp_redlist_cat_ordered$redlist_cat_final, ordered=TRUE, levels=c("least concern", "near threatened", "vulnerable", "endangered", "critically endangered", "extinct"))
 
 #make dataset
 data_redlist_terr_old<-merge(binary_terr_df, sp_redlist_cat_ordered, by="sn", all=TRUE)
@@ -483,6 +480,10 @@ mod_redlist<-phyloglm(Territorial~Redlist_category, data= data_redlist_terr, phy
 #getting an error and I can't figure out why
 
 #Finally, we can test the size of the water body used as breeding habitat
+
+# For this I am doing a phylgoenetic anova with 5 categories:
+#lotic+small, lotic+medium, lotic+big, lentic+small, lentic+big
+
 #first Lentic:
 
 #create an ordered categorical variable
