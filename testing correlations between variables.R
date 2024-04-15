@@ -437,7 +437,7 @@ end<-round(redlist_cat[,2]/(redlist_cat[,1]+redlist_cat[,2]+redlist_cat[,3]+ red
 cr_end<-round(redlist_cat[,1]/(redlist_cat[,1]+redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
 ext<-round(redlist_cat[,3]/(redlist_cat[,1]+redlist_cat[,2]+redlist_cat[,3]+ redlist_cat[,4]+ redlist_cat[,5]+redlist_cat[,6]), 2)
 
-#here I make everything (C for concern) and least concern categories
+#here I make (c) concern (all categories except lc) versus (lc) least concern categories
 redlist_df<-data.frame(
   lc=ifelse(lc>0.75,1,NA),
   c=ifelse(nt>0.75,1,NA),
@@ -476,8 +476,23 @@ data_redlist_terr<-data_redlist_terr[complete.cases(data_redlist_terr), ]
 
 
 #these are ordered variables from most to least concern
-mod_redlist<-phyloglm(Territorial~Redlist_category, data= data_redlist_terr, phy=tree_redlist, boot=1000, method='logistic_MPLE')
-#getting an error and I can't figure out why
+mod_redlist<-phyloglm(Territorial~Redlist_category, data= data_redlist_terr, phy=tree_redlist, btol=20, boot=1000, method='logistic_MPLE')
+
+
+#plot
+max_obs_iucn<-nrow(data_redlist_terr)
+breaks<-seq(0, max_obs_iucn, by =5)
+ggplot(data_redlist_terr, aes(x = Territorial, fill = Redlist_category)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
+  labs(x = "Territorial", y = "Number of species", fill = "Redlist category") +
+  scale_fill_manual(values = c("least concern" = "lightblue", "concern" = "darkorange")) +
+  theme_minimal() +
+  theme(panel.grid=element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 12)) +
+  scale_y_continuous(breaks = breaks)
 
 #Finally, we can test the size of the water body used as breeding habitat
 
