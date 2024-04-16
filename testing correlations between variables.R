@@ -566,13 +566,19 @@ lotic_size<-lotic_size_data %>%
     TRUE ~ "river" #default to river if neither prop_stream or prop_both
   ))%>%
   select(-prop_stream, -prop_both, -prop_river)
+#make dataset
+lotic_size_data <- merge(binary_terr_df, lotic_size, by = "sn", all = TRUE)
+colnames(lotic_size_data) <- c("Species", "Prop_Territorial", "Lotic_size")
+lotic_size_data<-lotic_size_data[complete.cases(lotic_size_data), ] 
+
 #lotic_size_ordered<-lotic_size_ordered %>%
 #  select(sn, lotic_size)
 #lotic_size_ordered$lotic_size<- factor(lotic_size_ordered$lotic_size, ordered = TRUE, levels = c("stream", "both", "river")) #make it ordered categorical
 
-combined_data <- full_join(data_lentic_size_territoriality_old, lotic_size, by = c("Species" = "sn"))
-combined_data$lentic_lotic_size <- coalesce(combined_data$Lentic_size, combined_data$lotic_size)
-combined_data <- combined_data[, c("Species", "Prop_Territorial", "lentic_lotic_size")]
+combined_data <- full_join(data_lentic_size_territoriality_old, lotic_size_data, by = "Species")
+combined_data$lentic_lotic_size <- coalesce(combined_data$Lentic_size, combined_data$Lotic_size)
+combined_data$Territorial<-coalesce(combined_data$Prop_Territorial.x, combined_data$Prop_Territorial.y)
+combined_data <- combined_data[, c("Species", "Territorial", "lentic_lotic_size")]
 #remove three species that oviposit in both lentic and lotic locations (these would make new groups but they are not common so just removing)
 ovi_size_data_old <- combined_data %>%
   filter(Species != "Orthetrum_cancellatum" & 
@@ -596,26 +602,31 @@ library(nlme)
 spp<- rownames(ovi_size_data)
 corBM<-corBrownian(phy=tree_ovi_size, form=~spp)
 corBM
-anova<-gls(Prop_Territorial~lentic_lotic_size, data=ovi_size_data, correlation=corBM)
+anova<-gls(Territorial~lentic_lotic_size, data=ovi_size_data, correlation=corBM)
 anova(anova)
-#Did I do this right?
+#Did I do this right? Note that in Revell and Harmon they do not specify "as.factor"
+#so, do I need to specify as.factor?
 
 
 #plot this
 ovi_size_data <- ovi_size_data %>%
-  mutate(Prop_Territorial = ifelse(Prop_Territorial == 1, "Territorial", "Non-territorial"))
+  mutate(Territorial = ifelse(Territorial == 1, "Territorial", "Non-Territorial"))
 
-ggplot(ovi_size_data, aes(x = Prop_Territorial, fill = lentic_lotic_size)) +
+ggplot(ovi_size_data, aes(x = factor(Territorial), fill = factor(lentic_lotic_size))) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = after_stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Number of species", fill = "Oviposition size") +
-  scale_fill_manual(values = c("lentic_small" ="darkblue", "lentic_medium" = "darkorange", "lentic_large" = "darkred", "stream"="lightblue", "both" = "purple", river="turquoise")) +
+  scale_fill_manual(values = c("lentic_small" = "darkblue", "lentic_medium" = "darkorange", "lentic_large" = "darkred", "stream" = "lightblue", "both" = "purple", "river" = "turquoise")) +
+  scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
   theme_minimal() +
-  theme(panel.grid=element_blank(),
+  theme(panel.grid = element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
 
+count_ovi <- ovi_size_data %>%
+  group_by(lentic_lotic_size) %>%
+  summarise(count = n())
 
 #Including a "no" category for mate guarding
 
