@@ -496,11 +496,10 @@ ggplot(data_redlist_terr, aes(x = Territorial, fill = Redlist_category)) +
 
 #Finally, we can test the size of the water body used as breeding habitat
 
-# For this I am doing a phylgoenetic anova with 5 categories:
+# For this I am doing a phylgenetic anova with 5 categories:
 #lotic+small, lotic+medium, lotic+big, lentic+small, lentic+big
 
 #first Lentic:
-
 #create an ordered categorical variable
 #3 categories: small, medium, large
 #specify that these are ordinal
@@ -521,67 +520,24 @@ size_data_with_na<-data.frame(sn,prop_data)
 size_data <- size_data_with_na %>%
   filter(!is.na(prop_large) | !is.na(prop_medium) | !is.na(prop_small))
 
-size_data_ordered <- size_data %>%
+lentic_size_data <- size_data %>%
   mutate(lentic_size = case_when(
-    prop_large == 1 ~ "large",
-    prop_medium == 1 ~ "medium",
-    TRUE ~ "small"  # Default to "small" if neither prop_large nor prop_medium is 1
-  ))
-size_data_ordered <- size_data_ordered %>%
-  select(sn, lentic_size)
-size_data_ordered$lentic_size <- factor(size_data_ordered$lentic_size, ordered = TRUE, levels = c("small", "medium", "large")) # make it an ordered categorical variable
-
-
+    prop_large == 1 ~ "lentic_large",
+    prop_medium == 1 ~ "lentic_medium",
+    TRUE ~ "lentic_small"  # Default to "small" if neither prop_large nor prop_medium is 1
+  ))%>%
+  select(-prop_large, -prop_medium, -prop_small)
+#size_data_ordered <- size_data_ordered %>%
+#  select(sn, lentic_size)
+#size_data_ordered$lentic_size <- factor(size_data_ordered$lentic_size, ordered = TRUE, levels = c("lentic_small", "lentic_medium", "lentic_large")) # make it an ordered categorical variable
 
 #make dataset
-data_lentic_size_territoriality_old <- merge(binary_terr_df, size_data_ordered, by = "sn", all = TRUE)
+data_lentic_size_territoriality_old <- merge(binary_terr_df, lentic_size_data, by = "sn", all = TRUE)
 colnames(data_lentic_size_territoriality_old) <- c("Species", "Prop_Territorial", "Lentic_size")
 data_lentic_size_territoriality_old<- data_lentic_size_territoriality_old[complete.cases(data_lentic_size_territoriality_old), ] 
 
-# Identify species to drop
-chk_lentic_size<-name.check(tree, data_lentic_size_territoriality_old, data.names=as.character(data_lentic_size_territoriality_old$Species))
-summary(chk_lentic_size)
-tree_lentic_size <- drop.tip(tree, chk_lentic_size$tree_not_data)#dropped tree_not_data species
-#identify species to drop from data
-lentic_size_species_to_drop<-chk_lentic_size$data_not_tree
-data_lentic_size_territoriality<-data_lentic_size_territoriality_old[!(data_lentic_size_territoriality_old$Species %in% lentic_size_species_to_drop),] #dropped data_not_tree species from dataset
-rownames(data_lentic_size_territoriality)<-data_lentic_size_territoriality$Species
-name.check(tree_lentic_size, data_lentic_size_territoriality, data.names=as.character(data_lentic_size_territoriality$Species))
 
-
-#test if lentic size predicts territoriality
-mod_lentic_size<-phyloglm(Prop_Territorial~Lentic_size, data = data_lentic_size_territoriality, phy=tree_lentic_size, boot=1000, method = 'logistic_MPLE', btol = 10)
-summary(mod_lentic_size)
-
-
-
-#plot this
-#unfortunately I have to rework the dataset so that territoriality is coded as "territorial"/"non-territorial", instead of 0/1.
-#there is probably a faster way to do this but I just make the dataset again. 
-terr_df_len<-data.frame(
-  sn=binary_terr_df$sn,
-  binary_terr_df = ifelse(binary_terr_df$sp_binary_terr == 1, "territorial", "non-territorial"),
-  stringsAsFactors = TRUE)
-#make dataset
-data_lentic_size_territoriality_old <- merge(terr_df_len, size_data_ordered, by = "sn", all = TRUE)
-colnames(data_lentic_size_territoriality_old) <- c("Species", "Prop_territorial", "Lentic_size")
-data_lentic_size_territoriality<- data_lentic_size_territoriality_old[complete.cases(data_lentic_size_territoriality_old), ] 
-
-
-ggplot(data_lentic_size_territoriality, aes(x = Prop_territorial, fill = Lentic_size)) +
-  geom_bar(position = "dodge") +
-  geom_text(stat = "count", aes(label = after_stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
-  labs(x = "Territorial", y = "Number of species", fill = "Lentic size") +
-  scale_fill_manual(values = c("small" ="dark blue", "medium" = "darkorange", "large" = "darkred")) +
-  theme_minimal() +
-  theme(panel.grid=element_blank(),
-        axis.line = element_line(color = "black", size = 0.5),
-        axis.text = element_text(size = 12),
-        axis.title = element_text(size = 12))
-
-
-
-#test if lotic size predicts territoriality
+#lotic size
 my_data$Description.of.lotic.oviposition..river..stream. <- gsub("Stream, River", "River, Stream", my_data$Description.of.lotic.oviposition..river..stream.)
 #3 categories: Stream, Both (River,Stream), and River
 #also this is ordinal
@@ -603,61 +559,62 @@ lotic_data_with_na<-data.frame(sn,prop_lotic_data)
 lotic_size_data <- lotic_data_with_na %>%
   filter(!is.na(prop_stream) | !is.na(prop_both) | !is.na(prop_river))
 
-lotic_size_ordered<-lotic_size_data %>%
+lotic_size<-lotic_size_data %>%
   mutate(lotic_size = case_when(
     prop_stream == 1 ~"stream",
     prop_both == 1 ~ "both",
     TRUE ~ "river" #default to river if neither prop_stream or prop_both
-  ))
-lotic_size_ordered<-lotic_size_ordered %>%
-  select(sn, lotic_size)
-lotic_size_ordered$lotic_size<- factor(lotic_size_ordered$lotic_size, ordered = TRUE, levels = c("stream", "both", "river")) #make it ordered categorical
+  ))%>%
+  select(-prop_stream, -prop_both, -prop_river)
+#lotic_size_ordered<-lotic_size_ordered %>%
+#  select(sn, lotic_size)
+#lotic_size_ordered$lotic_size<- factor(lotic_size_ordered$lotic_size, ordered = TRUE, levels = c("stream", "both", "river")) #make it ordered categorical
 
-#make dataset
-data_lotic_size_territoriality_old<-merge(binary_terr_df, lotic_size_ordered, by= "sn", all=TRUE)
-colnames(data_lotic_size_territoriality_old)<-c("Species", "Prop_territorial", "lotic_size")
-data_lotic_size_territoriality_old<-data_lotic_size_territoriality_old[complete.cases(data_lotic_size_territoriality_old), ]
+combined_data <- full_join(data_lentic_size_territoriality_old, lotic_size, by = c("Species" = "sn"))
+combined_data$lentic_lotic_size <- coalesce(combined_data$Lentic_size, combined_data$lotic_size)
+combined_data <- combined_data[, c("Species", "Prop_Territorial", "lentic_lotic_size")]
+#remove three species that oviposit in both lentic and lotic locations (these would make new groups but they are not common so just removing)
+ovi_size_data_old <- combined_data %>%
+  filter(Species != "Orthetrum_cancellatum" & 
+           Species != "Cordulia_aenea" & 
+           Species != "Lestes_viridis")
+ovi_size_data_old<-na.omit(ovi_size_data_old)
 
-#identify species to drop
-chk_lotic_size<-name.check(tree, data_lotic_size_territoriality_old, data.names=as.character(data_lotic_size_territoriality_old$Species))
-summary(chk_lotic_size)
-tree_lotic_size<-drop.tip(tree, chk_lotic_size$tree_not_data) #dropped tree_not_data species
+
+#now let's run an phylogenetic anova
+# Identify species to drop
+chk_ovi_size<-name.check(tree, ovi_size_data_old, data.names=as.character(ovi_size_data_old$Species))
+summary(chk_ovi_size)
+tree_ovi_size <- drop.tip(tree, chk_ovi_size$tree_not_data)#dropped tree_not_data species
 #identify species to drop from data
-lotic_size_species_to_drop<-chk_lotic_size$data_not_tree
-data_lotic_size_territoriality <- na.omit(data_lotic_size_territoriality_old[!(data_lotic_size_territoriality_old$Species %in% lotic_size_species_to_drop),]) #dropped data_not_tree species
-rownames(data_lotic_size_territoriality)<-data_lotic_size_territoriality$Species
-name.check(tree_lotic_size, data_lotic_size_territoriality, data.names = as.character(data_lotic_size_territoriality$Species))
+ovi_size_species_to_drop<-chk_ovi_size$data_not_tree
+ovi_size_data<-ovi_size_data_old[!(ovi_size_data_old$Species %in% ovi_size_species_to_drop),] #dropped data_not_tree species from dataset
+rownames(ovi_size_data)<-ovi_size_data$Species
+name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
 
-#test if lotic size predicts territoriality
-mod_lotic_size<-phyloglm(Prop_territorial~lotic_size, data = data_lotic_size_territoriality, phy=tree_lotic_size, boot=1000, method = 'logistic_MPLE', btol = 10)
-summary(mod_lotic_size)
+library(nlme)
+spp<- rownames(ovi_size_data)
+corBM<-corBrownian(phy=tree_ovi_size, form=~spp)
+corBM
+anova<-gls(Prop_Territorial~lentic_lotic_size, data=ovi_size_data, correlation=corBM)
+anova(anova)
+#Did I do this right?
+
 
 #plot this
-#unfortunately I have to rework the dataset so that territoriality is coded as "territorial"/"non-territorial", instead of 0/1.
-#there is probably a faster way to do this but I just make the dataset again. 
+ovi_size_data <- ovi_size_data %>%
+  mutate(Prop_Territorial = ifelse(Prop_Territorial == 1, "Territorial", "Non-territorial"))
 
-terr_df_lot<-data.frame(
-  sn=binary_terr_df$sn,
-  binary_terr_df = ifelse(binary_terr_df$sp_binary_terr == 1, "territorial", "non-territorial"),
-  stringsAsFactors = TRUE)
-#make dataset
-data_lotic_size_territoriality_old <- merge(terr_df_lot, lotic_size_ordered, by = "sn", all = TRUE)
-colnames(data_lotic_size_territoriality_old) <- c("Species", "Prop_territorial", "lotic_size")
-data_lotic_size_territoriality<- data_lotic_size_territoriality_old[complete.cases(data_lotic_size_territoriality_old), ] 
-
-ggplot(data_lotic_size_territoriality, aes(x = factor(Prop_territorial), fill = lotic_size)) +
+ggplot(ovi_size_data, aes(x = Prop_Territorial, fill = lentic_lotic_size)) +
   geom_bar(position = "dodge") +
-  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
-  labs(x = "Territorial", y = "Number of species", fill = "Lotic size") +
-  scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
-  scale_fill_manual(values = c("stream" ="darkblue", "both" = "darkorange", "river" = "darkred")) +
+  geom_text(stat = "count", aes(label = after_stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
+  labs(x = "Territorial", y = "Number of species", fill = "Oviposition size") +
+  scale_fill_manual(values = c("lentic_small" ="darkblue", "lentic_medium" = "darkorange", "lentic_large" = "darkred", "stream"="lightblue", "both" = "purple", river="turquoise")) +
   theme_minimal() +
-  theme(panel.grid = element_blank(),
+  theme(panel.grid=element_blank(),
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
-
-
 
 
 #Including a "no" category for mate guarding
