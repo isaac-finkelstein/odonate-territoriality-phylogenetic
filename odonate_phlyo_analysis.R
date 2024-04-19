@@ -6,6 +6,7 @@ library(phytools)
 library(geiger)
 library(dplyr)
 library(corHMM)
+library(caper)
 
 my_data<- read.csv("data/data_v5.csv")
 
@@ -251,12 +252,15 @@ tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #this is great! still too busy but if I remove the species names it looks okay
 
-
 #http://www.phytools.org/eqg2015/asr.html
 #NOTICE that the results differ a bit. The estimate ancestral state changes between ace and corHMM.
 
+#calculating phylogenetic signal using the D statistic from Fritz + Purvis 2010
+terr_data_factor$names <- terr_data_factor$sn
+terr_data_factor <- terr_data_factor[, -which(names(terr_data_factor) == "sn")]
+signal_terr<-phylo.d(terr_data_factor, binvar=prop_terr_factor)
 
-
+#Using another calculation of phlyogenetic signal
 #calculating delta, a measure of phylogenetic signal
 #from Borges et al., 2019 github
 #https://github.com/mrborges23/delta_statistic
@@ -266,7 +270,7 @@ source("code.R") ## This is taken from mrborges23's github https://github.com/mr
 #DONT UNDERSTAND THIS STEP BUT COPYING FROM THE README FILE.
 odonate_tree$edge.length[odonate_tree$edge.length==0] <-quantile(odonate_tree$edge.length, 0.1)*0.1
 
-#next define the trait vector
+#define the trait vector
 #odonate_tree$tip.label #shows the species order, note it's alphabetical, split into Zygoptera and Anisoptera
 order_in_terr_data <- match(odonate_tree$tip.label, odonate_terr_data$sn) #must be same order as tree
 odonate_terr_data_reordered <- odonate_terr_data[order_in_terr_data, ] #now tree and data are in the same order
