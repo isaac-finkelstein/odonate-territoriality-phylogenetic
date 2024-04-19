@@ -587,7 +587,7 @@ ovi_size_data_old <- combined_data %>%
 ovi_size_data_old<-na.omit(ovi_size_data_old)
 
 
-#now let's run an phylogenetic anova
+
 # Identify species to drop
 chk_ovi_size<-name.check(tree, ovi_size_data_old, data.names=as.character(ovi_size_data_old$Species))
 summary(chk_ovi_size)
@@ -598,6 +598,15 @@ ovi_size_data<-ovi_size_data_old[!(ovi_size_data_old$Species %in% ovi_size_speci
 rownames(ovi_size_data)<-ovi_size_data$Species
 name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
 
+#I need to make territorial =1, non-territorial =0 for the phyloglm function
+ovi_size_data$Territorial <- ifelse(ovi_size_data$Territorial == "Territorial", 1, 0)
+name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
+
+#Running a phylogenetic logistic regression
+ovi_size_log_reg<-phyloglm(Territorial~lentic_lotic_size, data=ovi_size_data, phy=tree_ovi_size, boot=1000, method='logistic_MPLE', btol=10)
+summary(ovi_size_log_reg)
+
+#You can also run a phylogenetic generalized linear model
 library(nlme)
 spp<- rownames(ovi_size_data)
 corBM<-corBrownian(phy=tree_ovi_size, form=~spp)
