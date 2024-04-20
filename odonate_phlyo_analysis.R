@@ -262,6 +262,100 @@ legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty
 #terr_data_factor <- terr_data_factor[, -which(names(terr_data_factor) == "sn")]
 signal_terr<-phylo.d(odonate_terr_data, odonate_tree, names.col=sn, binvar=sp_terr)
 
+#do this for my other traits
+#mate guarding 
+#remove "No" and "Both". Below, I include "no" as a third category. this compares mate guarding as a binary variable contact vs non-contact
+#there is only one instance of "both"
+#note that this variable is only for species that exhibit mate guarding 
+my_data$Mate.guarding <- trimws(my_data$Mate.guarding)
+filtered_mate_guarding <- subset(my_data, Mate.guarding %in% c("Contact", "Non-contact"))
+mate_guard_var<-ftable(filtered_mate_guarding$Formatted_species, filtered_mate_guarding$Mate.guarding)
+prop_mate_guard<-round(mate_guard_var[,1]/(mate_guard_var[,1]+mate_guard_var[,2]),2) #this is the proportion that is contact
+#so 1 = contact, 0 = non-contact. 
+#the 2 at the end rounds to 2 decimal 
+#set a 75% threshold = 3:1 threshold
+sp_binary_mate_guard<-ifelse(prop_mate_guard >= 0.75, 1, ifelse(prop_mate_guard <=0.25, 0, NA))
+sn<-attr(mate_guard_var, "row.vars")[[1]]
+binary_mate_guard_df<-data.frame(sn, sp_binary_mate_guard, stringsAsFactors = TRUE)
+#this worked, I checked manually.
+
+#Flier vs percher
+binary_fly_v_perch<-ftable(my_data$Formatted_species, my_data$Flier.vs.percher)
+prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fly_v_perch[,3]),2) #this is proportion Percher
+#so 1=percher, 0 = flier
+#the 2 at the end rounds to 2 decimal 
+#set a 75% threshold = 3:1 threshold
+sp_fly_v_perch<-ifelse(prop_fly_v_perch >= 0.75, 1, ifelse(prop_fly_v_perch <=0.25, 0, NA))
+sn<-attr(binary_fly_v_perch, "row.vars")[[1]]
+binary_fly_v_perch_df<-data.frame(sn, sp_fly_v_perch, stringsAsFactors=TRUE)
+#this worked, but it includes all species - so there are NAs. 
+
+#courtship
+binary_courtship<-ftable(my_data$Formatted_species, my_data$Courtship)
+prop_court<-round(binary_courtship[,3]/(binary_courtship[,2]+binary_courtship[,3]),2) #this is proportion "Yes"
+#so 1=yes, 0 = no
+#set a 75% threshold = 3:1 threshold
+sp_courtship<-ifelse(prop_court>=0.75,1, ifelse(prop_court<=0.25, 0, NA))
+sn<-attr(binary_courtship, "row.vars")[[1]]
+binary_court_df<-data.frame(sn, sp_courtship, stringsAsFactors=TRUE) #includes NAs
+
+#oviposition (endophytic vs exophytic)
+#I need to make all epiphytic = exophytic - to make it binary. 
+my_data_mutated <- my_data %>%
+  mutate(Oviposition.type..endophytic.vs.exophytic. = ifelse(Oviposition.type..endophytic.vs.exophytic. %in% c("Epiphytic", "Exophytic"), "Exophytic", Oviposition.type..endophytic.vs.exophytic.))
+# Convert the variable to a factor with specified levels
+my_data_mutated$Oviposition.type..endophytic.vs.exophytic. <- factor(
+  my_data_mutated$Oviposition.type..endophytic.vs.exophytic.,
+  levels = c("Endophytic", "Exophytic")
+)
+binary_ovi<-ftable(my_data_mutated$Formatted_species, my_data_mutated$Oviposition.type..endophytic.vs.exophytic.)
+prop_ovi<-round(binary_ovi[,2]/(binary_ovi[,1]+binary_ovi[,2]),2) #This is proportion exophytic
+#so 1=exophytic, 0=endophytic
+#the 2 at the end rounds to 2 decimal 
+#set a 75% threshold = 3:1 threshold
+sp_ovi<-ifelse(prop_ovi >= 0.75, 1, ifelse(prop_ovi <=0.25, 0, NA))
+sn<-attr(binary_ovi, "row.vars")[[1]]
+binary_ovi_df<-data.frame(sn, sp_ovi, stringsAsFactors=TRUE)
+#this worked, but it includes all species - so there are NAs. 
+
+#now prune them to match the tree
+# Identify species to drop from mate_guard_terr_data_old
+chk_mate_guard<-name.check(tree, binary_mate_guard_df, data.names=binary_mate_guard_df$sn)
+tree_mate_guard <- drop.tip(tree, chk_mate_guard$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+mate_guard_species_to_drop<-chk_mate_guard$data_not_tree
+mate_guard<-binary_mate_guard_df[!(binary_mate_guard_df$sn %in% mate_guard_species_to_drop),] #dropped data_not_tree species from dataset
+name.check(tree_mate_guard, mate_guard, data.names=as.character(mate_guard$sn))
+
+chk_fly_v_perch<-name.check(tree, binary_fly_v_perch_df, data.names=as.character(binary_fly_v_perch_df$sn))
+tree_fly_v_perch <- drop.tip(tree, chk_fly_v_perch$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+fly_v_perch_species_to_drop<-chk_fly_v_perch$data_not_tree
+fly_v_perch_data<-binary_fly_v_perch_df[!(binary_fly_v_perch_df$sn %in% fly_v_perch_species_to_drop),] #dropped data_not_tree species from dataset
+name.check(tree_fly_v_perch, fly_v_perch_data, data.names=as.character(fly_v_perch_data$sn))
+
+chk_court<-name.check(tree, binary_court_df, data.names=as.character(binary_court_df$sn))
+tree_court <- drop.tip(tree, chk_court$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+court_species_to_drop<-chk_court$data_not_tree
+court_data<-binary_court_df[!(binary_court_df$sn %in% court_species_to_drop),] #dropped data_not_tree species from dataset
+name.check(tree_court, court_data, data.names=as.character(court_data$sn))
+
+chk_ovi<-name.check(tree, binary_ovi_df, data.names=as.character(binary_ovi_df$sn))
+tree_ovi <- drop.tip(tree, chk_ovi$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+ovi_species_to_drop<-chk_ovi$data_not_tree
+ovi_data<-binary_ovi_df[!(binary_ovi_df$sn %in% ovi_species_to_drop),] #dropped data_not_tree species from dataset
+name.check(tree_ovi,ovi_data, data.names=as.character(ovi_data$sn))
+
+
+
+#Check the phylogenetic signal of these binary traits
+signal_mate_guard<-phylo.d(mate_guard, tree_mate_guard, names.col=sn, binvar=sp_binary_mate_guard)
+signal_fly_v_perch<-phylo.d(fly_v_perch_data, tree_fly_v_perch, names.col=sn, binvar=sp_fly_v_perch)
+signal_courtship<-phylo.d(court_data, tree_court, names.col=sn, binvar=sp_courtship)
+signal_oviposition<-phylo.d(ovi_data, tree_ovi, names.col=sn, binvar = sp_ovi)
+
 #Using another calculation of phlyogenetic signal
 #calculating delta, a measure of phylogenetic signal
 #from Borges et al., 2019 github
