@@ -255,10 +255,12 @@ legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty
 #http://www.phytools.org/eqg2015/asr.html
 #NOTICE that the results differ a bit. The estimate ancestral state changes between ace and corHMM.
 
-#calculating phylogenetic signal using the D statistic from Fritz + Purvis 2010
-terr_data_factor$names <- terr_data_factor$sn
-terr_data_factor <- terr_data_factor[, -which(names(terr_data_factor) == "sn")]
-signal_terr<-phylo.d(terr_data_factor, binvar=prop_terr_factor)
+
+
+#calculating phylogenetic signal using the D statistic from Fritz & Purvis 2010
+#terr_data_factor$names <- terr_data_factor$sn
+#terr_data_factor <- terr_data_factor[, -which(names(terr_data_factor) == "sn")]
+signal_terr<-phylo.d(odonate_terr_data, odonate_tree, names.col=sn, binvar=sp_terr)
 
 #Using another calculation of phlyogenetic signal
 #calculating delta, a measure of phylogenetic signal
