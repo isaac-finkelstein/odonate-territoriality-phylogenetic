@@ -85,7 +85,7 @@ tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 #garbage - just delete this
 
-
+#_________________________________________________________________________________________________
 #choose a character model
 #4 possible models for discreet response
 #equal rates (ER)
@@ -191,7 +191,7 @@ fit_ordered<-fitDiscrete(strength_tree, strength_terr_data_pruned, model=ordered
 
 
 
-
+#______________________________________________________________________________________________________________________________
 #Next: Ancestral state reconstruction - plots are very busy so may want to re-run these for just anisoptera/zygoptera
 #I have to decide if I want to do joint or marginal acenstral state reconstruction
 #marginal is more popular in biology (Revell and Harmon, 2022)
@@ -257,6 +257,7 @@ legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty
 
 
 
+#________________________________________________________________________________________________________
 #calculating phylogenetic signal using the D statistic from Fritz & Purvis 2010
 #terr_data_factor$names <- terr_data_factor$sn
 #terr_data_factor <- terr_data_factor[, -which(names(terr_data_factor) == "sn")]
@@ -349,12 +350,13 @@ ovi_data<-binary_ovi_df[!(binary_ovi_df$sn %in% ovi_species_to_drop),] #dropped 
 name.check(tree_ovi,ovi_data, data.names=as.character(ovi_data$sn))
 
 
-
 #Check the phylogenetic signal of these binary traits
 signal_mate_guard<-phylo.d(mate_guard, tree_mate_guard, names.col=sn, binvar=sp_binary_mate_guard)
 signal_fly_v_perch<-phylo.d(fly_v_perch_data, tree_fly_v_perch, names.col=sn, binvar=sp_fly_v_perch)
 signal_courtship<-phylo.d(court_data, tree_court, names.col=sn, binvar=sp_courtship)
 signal_oviposition<-phylo.d(ovi_data, tree_ovi, names.col=sn, binvar = sp_ovi)
+
+
 
 #Using another calculation of phlyogenetic signal
 #calculating delta, a measure of phylogenetic signal
@@ -372,7 +374,6 @@ order_in_terr_data <- match(odonate_tree$tip.label, odonate_terr_data$sn) #must 
 odonate_terr_data_reordered <- odonate_terr_data[order_in_terr_data, ] #now tree and data are in the same order
 trait_with_na<-odonate_terr_data_reordered$sp_terr #this is a vector of territoriality, with 1= yes, 0 = no, at a 3:1 threshold in my dataset
 trait<- trait_with_na[!is.na(trait_with_na)] #removed NA values 
-#set at 3:1 threshold (75% concordance in the dataset)
 
 #now calculate delta
 deltaA<-delta(trait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
@@ -380,12 +381,12 @@ deltaA<-delta(trait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
 #he uses 0.5, unless I have misunderstood this.
 # WHICH TO USE? -- when I try both, I get basically the same result (but slightly different)
 print(deltaA)
-#I get 8.2995. What does this mean?
+#I get 8.197. What does this mean?
 #Borges et al 2019: "delta can be any positive real number:
 #"the higher the delta-value, the higher the degree of phylogenetic signal between a given trait and the phylogeny"
 #so this means that 0 = no phylogenetic signal? in their example, they had 1 = no phylogenetic signal.
 
-#note that delta should be used with at least 20 species - i have way more so I am good here.
+#note that delta should be used with at least 20 species sample size - I have way more so I am good here.
 
 #finally, we can calculate a p-value for this
 #First, create a vector of random deltas that will be our null hypothesis
