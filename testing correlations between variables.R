@@ -579,7 +579,7 @@ combined_data <- full_join(data_lentic_size_territoriality_old, lotic_size_data,
 combined_data$lentic_lotic_size <- coalesce(combined_data$Lentic_size, combined_data$Lotic_size)
 combined_data$Territorial<-coalesce(combined_data$Prop_Territorial.x, combined_data$Prop_Territorial.y)
 combined_data <- combined_data[, c("Species", "Territorial", "lentic_lotic_size")]
-#remove three species that oviposit in both lentic and lotic locations (these would make new groups but they are not common so just removing)
+#remove three species that oviposit in both lentic and lotic locations
 ovi_size_data_old <- combined_data %>%
   filter(Species != "Orthetrum_cancellatum" & 
            Species != "Cordulia_aenea" & 
@@ -599,7 +599,6 @@ rownames(ovi_size_data)<-ovi_size_data$Species
 name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
 
 #I need to make territorial =1, non-territorial =0 for the phyloglm function
-ovi_size_data$Territorial <- ifelse(ovi_size_data$Territorial == "Territorial", 1, 0)
 name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
 
 #Running a phylogenetic logistic regression
