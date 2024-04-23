@@ -606,6 +606,7 @@ ovi_size_log_reg<-phyloglm(Territorial~lentic_lotic_size, data=ovi_size_data, ph
 summary(ovi_size_log_reg)
 
 #You can also run a phylogenetic generalized linear model
+#You can also run a phylogenetic generalized linear model
 library(nlme)
 spp<- rownames(ovi_size_data)
 corBM<-corBrownian(phy=tree_ovi_size, form=~spp)
