@@ -47,20 +47,6 @@ name.check(odonate_tree, odonate_terr_data, data.names=as.character(odonate_terr
 #let's plot the tree
 plot(odonate_tree, type="fan", cex=0.5, fsize=0.6, ftype="i") #it's very busy because it has 372 tips
 
-
-#EVERYTIME I UPDATE THE DATASET, THE NODE NUMBER WILL CHANGE!! SO HAVE TO UPDATE THESE EVERYTIME!
-#collapseTree(odonate_tree)  #-- use this to find the node numbers
-
-#just anisoptera -- node 411 
-anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 560)$tip.label)
-anisoptera_tree<-drop.tip(odonate_tree, anisoptera_tree_extract)
-plot(anisoptera_tree, type="fan", cex=0.5, ftype="i") 
-
-#just zygoptera -- node 366
-zygoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 371)$tip.label)
-zygoptera_tree<-drop.tip(odonate_tree, zygoptera_tree_extract)
-plot(zygoptera_tree, type="fan", cex=0.5, ftype="i")
-
 #let's plot territoriality on my tree
 #I want to use the factor (binary yes vs no)
 odonate_tree_factor<-drop.tip(tree, chk$tree_not_data) #dropped tree_not_data species
