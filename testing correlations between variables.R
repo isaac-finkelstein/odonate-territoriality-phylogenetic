@@ -5,10 +5,10 @@ library(phangorn)
 library(phytools)
 library(geiger)
 library(dplyr)
-library("phylolm")
+library(phylolm)
 library(ggplot2)
 
-my_data<- read.csv("data/data_v5.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
+my_data<- read.csv("data/data_v6.csv") #this dataset (3rd version) switches "tandem" for "contact" in De Recende's data.
 #For some reason, they use both terms. But since they mean the same thing, I changed them all to "Contact"
 #I also emailed to ask, but did not get a response. 
 
@@ -503,7 +503,9 @@ ggplot(data_redlist_terr, aes(x = Territorial, fill = Redlist_category)) +
 #create an ordered categorical variable
 #3 categories: small, medium, large
 #specify that these are ordinal
-lentic_size_table<- ftable(my_data$Formatted_species, my_data$Lentic.size)
+
+new_lentic_lotic_data <- my_data[my_data$Lotic.vs.lentic..breeding.habitat. != "Both", ] #Remove species that have oviposition sites in both lentic and lotic locations
+lentic_size_table<- ftable(new_lentic_lotic_data$Formatted_species, new_lentic_lotic_data$Lentic.size)
 prop_large<-round(lentic_size_table[,2]/(lentic_size_table[,3]+ lentic_size_table[,4]+ lentic_size_table[,2]),2)
 prop_medium<-round(lentic_size_table[,3]/(lentic_size_table[,2]+ lentic_size_table[,3]+ lentic_size_table[,4]),2)
 prop_small<-round(lentic_size_table[,4]/(lentic_size_table[,2]+ lentic_size_table[,3]+ lentic_size_table[,4]),2)
@@ -538,10 +540,10 @@ data_lentic_size_territoriality_old<- data_lentic_size_territoriality_old[comple
 
 
 #lotic size
-my_data$Description.of.lotic.oviposition..river..stream. <- gsub("Stream, River", "River, Stream", my_data$Description.of.lotic.oviposition..river..stream.)
+new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream. <- gsub("Stream, River", "River, Stream", new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream.)
 #3 categories: Stream, Both (River,Stream), and River
 #also this is ordinal
-lotic_size_table<-ftable(my_data$Formatted_species, my_data$Description.of.lotic.oviposition..river..stream.)
+lotic_size_table<-ftable(new_lentic_lotic_data$Formatted_species, new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream.)
 
 prop_stream<-round(lotic_size_table[,4]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
 prop_both<-round(lotic_size_table[,3]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
@@ -579,22 +581,17 @@ combined_data <- full_join(data_lentic_size_territoriality_old, lotic_size_data,
 combined_data$lentic_lotic_size <- coalesce(combined_data$Lentic_size, combined_data$Lotic_size)
 combined_data$Territorial<-coalesce(combined_data$Prop_Territorial.x, combined_data$Prop_Territorial.y)
 combined_data <- combined_data[, c("Species", "Territorial", "lentic_lotic_size")]
-#remove three species that oviposit in both lentic and lotic locations
-ovi_size_data_old <- combined_data %>%
-  filter(Species != "Orthetrum_cancellatum" & 
-           Species != "Cordulia_aenea" & 
-           Species != "Lestes_viridis")
-ovi_size_data_old<-na.omit(ovi_size_data_old)
+
 
 
 
 # Identify species to drop
-chk_ovi_size<-name.check(tree, ovi_size_data_old, data.names=as.character(ovi_size_data_old$Species))
+chk_ovi_size<-name.check(tree, combined_data, data.names=as.character(combined_data$Species))
 summary(chk_ovi_size)
 tree_ovi_size <- drop.tip(tree, chk_ovi_size$tree_not_data)#dropped tree_not_data species
 #identify species to drop from data
 ovi_size_species_to_drop<-chk_ovi_size$data_not_tree
-ovi_size_data<-ovi_size_data_old[!(ovi_size_data_old$Species %in% ovi_size_species_to_drop),] #dropped data_not_tree species from dataset
+ovi_size_data<-combined_data[!(combined_data$Species %in% ovi_size_species_to_drop),] #dropped data_not_tree species from dataset
 rownames(ovi_size_data)<-ovi_size_data$Species
 name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
 
@@ -605,7 +602,6 @@ name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$S
 ovi_size_log_reg<-phyloglm(Territorial~lentic_lotic_size, data=ovi_size_data, phy=tree_ovi_size, boot=1000, method='logistic_MPLE', btol=10)
 summary(ovi_size_log_reg)
 
-#You can also run a phylogenetic generalized linear model
 #You can also run a phylogenetic generalized linear model
 library(nlme)
 spp<- rownames(ovi_size_data)
@@ -621,7 +617,7 @@ anova(anova)
 ovi_size_data <- ovi_size_data %>%
   mutate(Territorial = ifelse(Territorial == 1, "Territorial", "Non-Territorial"))
 
-ggplot(ovi_size_data, aes(x = factor(Territorial), fill = factor(lentic_lotic_size))) +
+ggplot(ovi_size_data, aes(x = factor(Territorial), fill = factor(lentic_lotic_size, levels = c("lentic_small", "lentic_medium", "lentic_large", "stream", "both", "river" )))) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = after_stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Number of species", fill = "Oviposition size") +
