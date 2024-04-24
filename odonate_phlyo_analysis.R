@@ -8,7 +8,7 @@ library(dplyr)
 library(corHMM)
 library(caper)
 
-my_data<- read.csv("data/data_v5.csv")
+my_data<- read.csv("data/data_v6.csv")
 
 load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
 #str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label -- to check the structure of the tree
