@@ -569,16 +569,39 @@ lotic_size<-lotic_size_data %>%
   ))%>%
   select(-prop_stream, -prop_both, -prop_river)
 #make dataset
-lotic_size_data <- merge(binary_terr_df, lotic_size, by = "sn", all = TRUE)
-colnames(lotic_size_data) <- c("Species", "Prop_Territorial", "Lotic_size")
-lotic_size_data<-lotic_size_data[complete.cases(lotic_size_data), ] 
+lotic_size_terr_data <- merge(binary_terr_df, lotic_size, by = "sn", all = TRUE)
+colnames(lotic_size_terr_data) <- c("Species", "Prop_Territorial", "Lotic_size")
+lotic_size_terr_data<-lotic_size_terr_data[complete.cases(lotic_size_terr_data), ] 
 
 #lotic_size_ordered<-lotic_size_ordered %>%
 #  select(sn, lotic_size)
 #lotic_size_ordered$lotic_size<- factor(lotic_size_ordered$lotic_size, ordered = TRUE, levels = c("stream", "both", "river")) #make it ordered categorical
 
-combined_data <- full_join(data_lentic_size_territoriality_old, lotic_size_data, by = "Species")
-combined_data$lentic_lotic_size <- coalesce(combined_data$Lentic_size, combined_data$Lotic_size)
+#finally, I want to add species that were described as ovipositing in both lentic and lotic habitats e.g. ponds, lakes and streams
+#These, I am considering "generalists"
+
+#choose only the data from the Paulson field guides:
+paulson_data <- my_data %>%
+  filter(grepl("\\(Paulson, 2012\\)|\\(Paulson, 2009\\)", Reference))
+
+generalist_data_table<-ftable(paulson_data$Formatted_species, paulson_data$Lotic.vs.lentic..breeding.habitat.)
+prop_generalist<-round(generalist_data_table[,2]/(generalist_data_table[,2]), 2)
+sp_generalist<-ifelse(prop_generalist>0.99, 1, ifelse(prop_generalist<0.98, 0, NA))
+sn<-attr(generalist_data_table, "row.vars")[[1]]
+sp_generalist_with_na<- data.frame(sn,sp_generalist)
+sp_generalist<- sp_generalist_with_na[complete.cases(sp_generalist_with_na), ]
+generalist_terr_data<-merge(binary_terr_df, sp_generalist, by = "sn", all=TRUE)
+colnames(generalist_terr_data) <- c("Species", "Prop_Territorial", "Generalist")
+generalist_terr_data<- generalist_terr_data[complete.cases(generalist_terr_data), ]
+generalist_terr_data<generalist_terr_data %>%
+  mutate(Generalist = case_when(
+    generalist==1 ~"generalist"
+  ))
+
+#note that I do not have my generalist_terr_data in the right format to combine it. 
+
+combined_data <- full_join(data_lentic_size_territoriality_old, lotic_size_terr_data, generalist_terr_data, by = "Species")
+combined_data$lentic_lotic_size <- coalesce(combined_data$Lentic_size, combined_data$Lotic_size, combined_data$Generalist)
 combined_data$Territorial<-coalesce(combined_data$Prop_Territorial.x, combined_data$Prop_Territorial.y)
 combined_data <- combined_data[, c("Species", "Territorial", "lentic_lotic_size")]
 
