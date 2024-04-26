@@ -587,25 +587,37 @@ paulson_data <- my_data %>%
 generalist_data_table<-ftable(paulson_data$Formatted_species, paulson_data$Lotic.vs.lentic..breeding.habitat.)
 prop_generalist<-round(generalist_data_table[,2]/(generalist_data_table[,2]), 2)
 sp_generalist<-ifelse(prop_generalist>0.99, 1, ifelse(prop_generalist<0.98, 0, NA))
-sn<-attr(generalist_data_table, "row.vars")[[1]]
+sn<-attr(generalist_data_table,"row.vars")[[1]]
 sp_generalist_with_na<- data.frame(sn,sp_generalist)
 sp_generalist<- sp_generalist_with_na[complete.cases(sp_generalist_with_na), ]
+
+
 generalist_terr_data<-merge(binary_terr_df, sp_generalist, by = "sn", all=TRUE)
 colnames(generalist_terr_data) <- c("Species", "Prop_Territorial", "Generalist")
 generalist_terr_data<- generalist_terr_data[complete.cases(generalist_terr_data), ]
-generalist_terr_data<generalist_terr_data %>%
+generalist_terr_data<-generalist_terr_data %>%
   mutate(Generalist = case_when(
-    generalist==1 ~"generalist"
+    Generalist== 1 ~"generalist",
+    TRUE ~ as.character (Generalist)
   ))
 
-#note that I do not have my generalist_terr_data in the right format to combine it. 
+#combine generalist and lotic_size_terr_data
+gen_lot_data<- bind_rows(
+  generalist_terr_data %>%
+    mutate(Generalist_lotic_size=Generalist),
+  lotic_size_terr_data %>%
+    mutate(Generalist_lotic_size = Lotic_size)
+)
+#remove unnecessary columns
+gen_lot_data<-gen_lot_data[, -c(3,5)]
 
-combined_data <- full_join(data_lentic_size_territoriality_old, lotic_size_terr_data, generalist_terr_data, by = "Species")
+
+combined_data <- full_join(data_lentic_size_territoriality_old, gen_lot_data, by = "Species")
 combined_data$lentic_lotic_size <- coalesce(combined_data$Lentic_size, combined_data$Lotic_size, combined_data$Generalist)
 combined_data$Territorial<-coalesce(combined_data$Prop_Territorial.x, combined_data$Prop_Territorial.y)
 combined_data <- combined_data[, c("Species", "Territorial", "lentic_lotic_size")]
-
-
+#remove rows that have conflicting information between Paulson 2009 and Paulson 2012
+combined_data <- combined_data[!combined_data$Species %in% c('Argia_apicalis', 'Argia_hinei', 'Enallagma_antennatum', 'Enallagma_exsulans', 'Epitheca_princeps'), ]
 
 
 # Identify species to drop
@@ -617,6 +629,7 @@ ovi_size_species_to_drop<-chk_ovi_size$data_not_tree
 ovi_size_data<-combined_data[!(combined_data$Species %in% ovi_size_species_to_drop),] #dropped data_not_tree species from dataset
 rownames(ovi_size_data)<-ovi_size_data$Species
 name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
+
 
 #I need to make territorial =1, non-territorial =0 for the phyloglm function
 name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
@@ -640,11 +653,11 @@ anova(anova)
 ovi_size_data <- ovi_size_data %>%
   mutate(Territorial = ifelse(Territorial == 1, "Territorial", "Non-Territorial"))
 
-ggplot(ovi_size_data, aes(x = factor(Territorial), fill = factor(lentic_lotic_size, levels = c("lentic_small", "lentic_medium", "lentic_large", "stream", "both", "river" )))) +
+ggplot(ovi_size_data, aes(x = factor(Territorial), fill = factor(lentic_lotic_size, levels = c("lentic_small", "lentic_medium", "lentic_large", "stream", "both", "river", "generalist" )))) +
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = after_stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Number of species", fill = "Oviposition size") +
-  scale_fill_manual(values = c("lentic_small" = "darkblue", "lentic_medium" = "darkorange", "lentic_large" = "darkred", "stream" = "lightblue", "both" = "purple", "river" = "turquoise")) +
+  scale_fill_manual(values = c("lentic_small" = "darkblue", "lentic_medium" = "darkorange", "lentic_large" = "darkred", "stream" = "lightblue", "both" = "purple", "river" = "turquoise", "generalist" = "darkgrey")) +
   scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
   theme_minimal() +
   theme(panel.grid = element_blank(),
