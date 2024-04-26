@@ -657,7 +657,8 @@ ggplot(ovi_size_data, aes(x = factor(Territorial), fill = factor(lentic_lotic_si
   geom_bar(position = "dodge") +
   geom_text(stat = "count", aes(label = after_stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
   labs(x = "Territorial", y = "Number of species", fill = "Oviposition size") +
-  scale_fill_manual(values = c("lentic_small" = "darkblue", "lentic_medium" = "darkorange", "lentic_large" = "darkred", "stream" = "lightblue", "both" = "purple", "river" = "turquoise", "generalist" = "darkgrey")) +
+  scale_fill_manual(values = c("lentic_small" = "darkblue", "lentic_medium" = "darkorange", "lentic_large" = "darkred", "stream" = "lightblue", "both" = "purple", "river" = "turquoise", "generalist" = "darkgrey"),
+                    labels = c("lentic_small" = "Small Lentic", "lentic_medium" = "Medium Lentic", "lentic_large" = "Large Lentic", "stream" = "Stream", "both" = "Stream and River", "river" = "River", "generalist" = "Generalist")) +
   scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
   theme_minimal() +
   theme(panel.grid = element_blank(),
