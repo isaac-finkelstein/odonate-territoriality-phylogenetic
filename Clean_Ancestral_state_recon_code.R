@@ -360,7 +360,7 @@ sn<-attr(generalist_data_table,"row.vars")[[1]]
 sp_generalist_with_na<- data.frame(sn,sp_generalist)
 sp_generalist<- sp_generalist_with_na[complete.cases(sp_generalist_with_na), ]
 
-colnames(sp_generalist)[colnames(sp_generalist) == "sp_generalist"] <- "Generalist"
+colnames(sp_generalist)[colnames(sp_generalist) == "sp_generalist"] <- "generalist"
 sp_generalist$generalist[sp_generalist$generalist == 1] <- "generalist"
 
 #combine these
@@ -371,7 +371,11 @@ lotic <- lotic_size %>%
 lentic <- lentic_size %>%
   rename(habitat_size = lentic_size)
 
-combined_data <- bind_rows(generalist, lotic, lentic)
+combined_data <- bind_rows(
+  generalist[, c("sn", "habitat_size")],  # Select columns by index
+  lotic[, c("sn", "habitat_size")],
+  lentic[, c("sn", "habitat_size")]
+)
 
 #find conflicts
 common_sn_generalist_lentic <- lentic_size %>%
@@ -381,3 +385,46 @@ common_sn_generalist_lotic <- lotic_size %>%
 common_sn_lentic_lotic <- lotic_size %>%
   inner_join(lentic_size, by = "sn")
 #remove conflicts:
+common_sn <- unique(c(common_sn_generalist_lentic$sn, 
+                      common_sn_generalist_lotic$sn, 
+                      common_sn_lentic_lotic$sn))
+combined_data <- combined_data[!combined_data$sn %in% common_sn, ]
+
+
+#data needs to be numbers
+combined_data$habitat_size[combined_data$habitat_size == "generalist"] <- 0
+combined_data$habitat_size[combined_data$habitat_size == "lentic_small"] <- 1
+combined_data$habitat_size[combined_data$habitat_size == "lentic_medium"] <- 2
+combined_data$habitat_size[combined_data$habitat_size == "lentic_large"] <- 3
+combined_data$habitat_size[combined_data$habitat_size == "stream"] <- 4
+combined_data$habitat_size[combined_data$habitat_size == "both"] <- 5
+combined_data$habitat_size[combined_data$habitat_size == "river"] <- 6
+
+
+#prune tree to match data
+chk_hab_size<-name.check(tree, combined_data, data.names=as.character(combined_data$sn))
+summary(chk_hab_size)
+tree_hab_size <- drop.tip(tree, chk_hab_size$tree_not_data)
+#identify species to drop from data
+hab_size_species_to_drop<-chk_hab_size$data_not_tree
+hab_size_data<-combined_data[!(combined_data$sn %in% hab_size_species_to_drop),] #dropped data_not_tree species from dataset
+rownames(hab_size_data)<-hab_size_data$sn
+name.check(tree_hab_size, hab_size_data, data.names=as.character(hab_size_data$sn))
+
+hab_size_data$sn <- as.factor(hab_size_data$sn)
+hab_size_data$habitat_size <- as.numeric(hab_size_data$habitat_size)
+#define the trait vector
+order_hab_size <- match(tree_hab_size$tip.label, hab_size_data$sn) #must be same order as tree
+hab_size_data_reordered <- hab_size_data[order_hab_size, ] #tree and data are in the same order
+hab_trait_with_na<-hab_size_data_reordered$habitat_size
+hab_trait<- hab_trait_with_na[!is.na(hab_trait_with_na)] #removed NA values 
+
+#calculate delta
+deltaB<-delta(hab_trait, tree_hab_size, 0.1, 0.0589, 10000, 10, 100)
+
+random_delta<-rep(NA,100)
+for (i in 1:100){
+  rtrait <- sample(trait)
+  random_delta[i] <- delta(rtrait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
+}
+p_value<-sum(random_delta>deltaB)/length(random_delta)
