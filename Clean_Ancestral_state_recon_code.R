@@ -280,8 +280,104 @@ name.check(odonate_tree, mate_guard_data, data.names=as.character(mate_guard_dat
 mate_guard_data$sn <- droplevels(mate_guard_data$sn) #drop unused levels in the species (sn) column
 order_in_mate_guard <- match(odonate_tree$tip.label, mate_guard_data$sn) #must be same order as tree
 mate_guard_data_reordered <- mate_guard_data[order_in_mate_guard, ] #tree and data are in the same order
-trait_with_na<-mate_guard_data_reordered$sn
+trait_with_na<-mate_guard_data_reordered$prop_mate_guard_df
 trait<- trait_with_na[!is.na(trait_with_na)] #removed NA values 
 
 #calculate delta
-deltaA<-delta(trait, odonate_tree, 0.1, 0.0589, 1000, 10, 100)
+deltaA<-delta(trait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
+
+random_delta<-rep(NA,100)
+for (i in 1:100){
+  rtrait <- sample(trait)
+  random_delta[i] <- delta(rtrait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
+}
+p_value<-sum(random_delta>deltaA)/length(random_delta)
+
+#finally, let's do this for the size of oviposition habitat
+#make 7 categories: lentic small, lentic medium, lentic large, stream, stream and river, river, generalist
+#first the lentic categories
+new_lentic_lotic_data <- my_data[my_data$Lotic.vs.lentic..breeding.habitat. != "Both", ] #Remove species that have oviposition sites in both lentic and lotic locations
+lentic_size_table<- ftable(new_lentic_lotic_data$Formatted_species, new_lentic_lotic_data$Lentic.size)
+prop_large<-round(lentic_size_table[,2]/(lentic_size_table[,3]+ lentic_size_table[,4]+ lentic_size_table[,2]),2)
+prop_medium<-round(lentic_size_table[,3]/(lentic_size_table[,2]+ lentic_size_table[,3]+ lentic_size_table[,4]),2)
+prop_small<-round(lentic_size_table[,4]/(lentic_size_table[,2]+ lentic_size_table[,3]+ lentic_size_table[,4]),2)
+prop_data<-data.frame(prop_large=prop_large,
+                      prop_medium=prop_medium,
+                      prop_small=prop_small)
+prop_data <- data.frame(
+  prop_large = ifelse(prop_large > 0.75, 1, NA),
+  prop_medium = ifelse(prop_medium > 0.75, 1, NA),
+  prop_small = ifelse(prop_small > 0.75, 1, NA)
+)
+sn<- attr(lentic_size_table,"row.vars")[[1]]
+size_data_with_na<-data.frame(sn,prop_data)
+size_data <- size_data_with_na %>%
+  filter(!is.na(prop_large) | !is.na(prop_medium) | !is.na(prop_small))
+
+lentic_size_data <- size_data %>%
+  mutate(lentic_size = case_when(
+    prop_large == 1 ~ "lentic_large",
+    prop_medium == 1 ~ "lentic_medium",
+    TRUE ~ "lentic_small"  # Default to "small" if neither prop_large nor prop_medium is 1
+  ))
+lentic_size <- lentic_size_data[, !(names(lentic_size_data) %in% c("prop_large", "prop_medium", "prop_small"))]
+
+#next lotic categories
+new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream. <- gsub("Stream, River", "River, Stream", new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream.)
+lotic_size_table<-ftable(new_lentic_lotic_data$Formatted_species, new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream.)
+
+prop_stream<-round(lotic_size_table[,4]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_both<-round(lotic_size_table[,3]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_river<-round(lotic_size_table[,2]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_lotic_data<-data.frame(prop_stream=prop_stream,
+                            prop_both=prop_both,
+                            prop_river=prop_river)
+prop_lotic_data<-data.frame(
+  prop_stream=ifelse(prop_stream>0.75,1,NA),
+  prop_both=ifelse(prop_both>0.75,1, NA),
+  prop_river=ifelse(prop_river>0.75,1, NA))
+
+sn<- attr(lotic_size_table,"row.vars")[[1]]
+lotic_data_with_na<-data.frame(sn,prop_lotic_data)
+lotic_size_data <- lotic_data_with_na %>%
+  filter(!is.na(prop_stream) | !is.na(prop_both) | !is.na(prop_river))
+
+lotic_size<-lotic_size_data %>%
+  mutate(lotic_size = case_when(
+    prop_stream == 1 ~"stream",
+    prop_both == 1 ~ "both",
+    TRUE ~ "river" #default to river if neither prop_stream or prop_both
+  ))
+lotic_size <- lotic_size[, !(names(lotic_size) %in% c("prop_stream", "prop_both", "prop_river"))]
+
+#add species described as ovipositing in both lotic and lentic habitats (generalists)
+paulson_data <- my_data %>%
+  filter(grepl("\\(Paulson, 2012\\)|\\(Paulson, 2009\\)", Reference))
+generalist_data_table<-ftable(paulson_data$Formatted_species, paulson_data$Lotic.vs.lentic..breeding.habitat.)
+prop_generalist<-round(generalist_data_table[,2]/(generalist_data_table[,2]), 2)
+sp_generalist<-ifelse(prop_generalist>0.99, 1, ifelse(prop_generalist<0.98, 0, NA))
+sn<-attr(generalist_data_table,"row.vars")[[1]]
+sp_generalist_with_na<- data.frame(sn,sp_generalist)
+sp_generalist<- sp_generalist_with_na[complete.cases(sp_generalist_with_na), ]
+
+colnames(sp_generalist)[colnames(sp_generalist) == "sp_generalist"] <- "Generalist"
+sp_generalist$generalist[sp_generalist$generalist == 1] <- "generalist"
+
+#combine these
+generalist <- sp_generalist %>%
+  rename(habitat_size = generalist)
+lotic <- lotic_size %>%
+  rename(habitat_size = lotic_size)
+lentic <- lentic_size %>%
+  rename(habitat_size = lentic_size)
+
+combined_data <- bind_rows(generalist, lotic, lentic)
+
+#find conflicts
+common_sn_generalist_lentic <- lentic_size %>%
+  inner_join(sp_generalist, by = "sn")
+common_sn_generalist_lotic <- lotic_size %>%
+  inner_join(sp_generalist, by = "sn")
+common_sn_lentic_lotic <- lotic_size %>%
+  inner_join(lentic_size, by = "sn")
+#remove conflicts:
