@@ -318,4 +318,130 @@ concern_count <- sum(data_redlist_terr$Redlist_category == "concern")
 print(least_concern_count)
 print(concern_count)
 #I only end up with 5 instances of "concern". 
-#got to line 500.
+
+
+#test the size of the water body used as breeding habitat
+#6 categories:
+#Generalist, lotic+small, lotic+medium, lotic+big, lentic+small, lentic+big
+
+
+#first the lentic categories
+new_lentic_lotic_data <- my_data[my_data$Lotic.vs.lentic..breeding.habitat. != "Both", ] #Remove species that have oviposition sites in both lentic and lotic locations
+lentic_size_table<- ftable(new_lentic_lotic_data$Formatted_species, new_lentic_lotic_data$Lentic.size)
+prop_large<-round(lentic_size_table[,2]/(lentic_size_table[,3]+ lentic_size_table[,4]+ lentic_size_table[,2]),2)
+prop_medium<-round(lentic_size_table[,3]/(lentic_size_table[,2]+ lentic_size_table[,3]+ lentic_size_table[,4]),2)
+prop_small<-round(lentic_size_table[,4]/(lentic_size_table[,2]+ lentic_size_table[,3]+ lentic_size_table[,4]),2)
+prop_data<-data.frame(prop_large=prop_large,
+                      prop_medium=prop_medium,
+                      prop_small=prop_small)
+prop_data <- data.frame(
+  prop_large = ifelse(prop_large > 0.75, 1, NA),
+  prop_medium = ifelse(prop_medium > 0.75, 1, NA),
+  prop_small = ifelse(prop_small > 0.75, 1, NA)
+)
+sn<- attr(lentic_size_table,"row.vars")[[1]]
+size_data_with_na<-data.frame(sn,prop_data)
+size_data <- size_data_with_na %>%
+  filter(!is.na(prop_large) | !is.na(prop_medium) | !is.na(prop_small))
+
+lentic_size_data <- size_data %>%
+  mutate(lentic_size = case_when(
+    prop_large == 1 ~ "lentic_large",
+    prop_medium == 1 ~ "lentic_medium",
+    TRUE ~ "lentic_small"  # Default to "small" if neither prop_large nor prop_medium is 1
+  ))
+lentic_size <- lentic_size_data[, !(names(lentic_size_data) %in% c("prop_large", "prop_medium", "prop_small"))]
+
+
+#next lotic categories
+new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream. <- gsub("Stream, River", "River, Stream", new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream.)
+lotic_size_table<-ftable(new_lentic_lotic_data$Formatted_species, new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream.)
+
+prop_stream<-round(lotic_size_table[,4]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_both<-round(lotic_size_table[,3]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_river<-round(lotic_size_table[,2]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_lotic_data<-data.frame(prop_stream=prop_stream,
+                            prop_both=prop_both,
+                            prop_river=prop_river)
+prop_lotic_data<-data.frame(
+  prop_stream=ifelse(prop_stream>0.75,1,NA),
+  prop_both=ifelse(prop_both>0.75,1, NA),
+  prop_river=ifelse(prop_river>0.75,1, NA))
+
+sn<- attr(lotic_size_table,"row.vars")[[1]]
+lotic_data_with_na<-data.frame(sn,prop_lotic_data)
+lotic_size_data <- lotic_data_with_na %>%
+  filter(!is.na(prop_stream) | !is.na(prop_both) | !is.na(prop_river))
+
+lotic_size<-lotic_size_data %>%
+  mutate(lotic_size = case_when(
+    prop_stream == 1 ~"stream",
+    prop_both == 1 ~ "both",
+    TRUE ~ "river" #default to river if neither prop_stream or prop_both
+  ))
+lotic_size <- lotic_size[, !(names(lotic_size) %in% c("prop_stream", "prop_both", "prop_river"))]
+
+#add species described as ovipositing in both lotic and lentic habitats (generalists)
+paulson_data <- my_data %>%
+  filter(grepl("\\(Paulson, 2012\\)|\\(Paulson, 2009\\)", Reference))
+generalist_data_table<-ftable(paulson_data$Formatted_species, paulson_data$Lotic.vs.lentic..breeding.habitat.)
+prop_generalist<-round(generalist_data_table[,2]/(generalist_data_table[,2]), 2)
+sp_generalist<-ifelse(prop_generalist>0.99, 1, ifelse(prop_generalist<0.98, 0, NA))
+sn<-attr(generalist_data_table,"row.vars")[[1]]
+sp_generalist_with_na<- data.frame(sn,sp_generalist)
+sp_generalist<- sp_generalist_with_na[complete.cases(sp_generalist_with_na), ]
+
+colnames(sp_generalist)[colnames(sp_generalist) == "sp_generalist"] <- "generalist"
+sp_generalist$generalist[sp_generalist$generalist == 1] <- "generalist"
+
+
+
+#combine these
+
+#make dataset
+data_lentic_size_territoriality_old <- merge(binary_terr_df, lentic_size, by = "sn", all = TRUE)
+colnames(data_lentic_size_territoriality_old) <- c("Species", "Territorial", "Habitat_size")
+data_lentic_size_territoriality_old<- data_lentic_size_territoriality_old[complete.cases(data_lentic_size_territoriality_old), ] 
+
+lotic_size_terr_data <- merge(binary_terr_df, lotic_size, by = "sn", all = TRUE)
+colnames(lotic_size_terr_data) <- c("Species", "Territorial", "Habitat_size")
+lotic_size_terr_data<-lotic_size_terr_data[complete.cases(lotic_size_terr_data), ] 
+
+generalist_terr_data<-merge(binary_terr_df, sp_generalist, by = "sn", all=TRUE)
+colnames(generalist_terr_data) <- c("Species", "Territorial", "Habitat_size")
+generalist_terr_data<- generalist_terr_data[complete.cases(generalist_terr_data), ]
+
+combined_data <- rbind(
+  data_lentic_size_territoriality_old[, c("Species", "Territorial", "Habitat_size")],
+  lotic_size_terr_data[, c("Species", "Territorial", "Habitat_size")],
+  generalist_terr_data[, c("Species", "Territorial", "Habitat_size")]
+)
+
+
+#find conflicts
+common_sn_generalist_lentic <- lentic_size %>%
+  inner_join(sp_generalist, by = "sn")
+common_sn_generalist_lotic <- lotic_size %>%
+  inner_join(sp_generalist, by = "sn")
+common_sn_lentic_lotic <- lotic_size %>%
+  inner_join(lentic_size, by = "sn")
+#remove conflicts:
+common_sn <- unique(c(common_sn_generalist_lentic$sn, 
+                      common_sn_generalist_lotic$sn, 
+                      common_sn_lentic_lotic$sn))
+combined_data <- combined_data[!combined_data$Species %in% common_sn, ]
+
+chk_ovi_size<-name.check(tree, combined_data, data.names=as.character(combined_data$Species))
+summary(chk_ovi_size)
+tree_ovi_size <- drop.tip(tree, chk_ovi_size$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+ovi_size_species_to_drop<-chk_ovi_size$data_not_tree
+ovi_size_data<-combined_data[!(combined_data$Species %in% ovi_size_species_to_drop),] #dropped data_not_tree species from dataset
+rownames(ovi_size_data)<-ovi_size_data$Species
+name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
+
+#phylogenetic logistic regression
+ovi_size_log_reg<-phyloglm(Territorial~Habitat_size, data=ovi_size_data, phy=tree_ovi_size, boot=1000, method='logistic_MPLE')
+summary(ovi_size_log_reg)
+#not working -line 638
+
