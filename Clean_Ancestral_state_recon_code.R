@@ -33,10 +33,6 @@ sn<- attr(terr_table,"row.vars")[[1]]
 terr_data_with_na<- data.frame(sn,sp_terr) #dataframe with territorial (1/0) for each species
 terr_data<- terr_data_with_na[complete.cases(terr_data_with_na), ] #remove NA values 
 
-prop_terr_factor <- factor(ifelse(sp_terr == 1, "yes", "no"))
-terr_data_with_na_factor <- data.frame(sn, prop_terr_factor = prop_terr_factor) # Create a data frame
-terr_data_factor <- terr_data_with_na_factor[complete.cases(terr_data_with_na_factor), ] #Removes NA values
-
 #prune tree to match data
 chk<-name.check(tree, terr_data, data.names=as.character(terr_data$sn))
 summary(chk)
@@ -50,6 +46,17 @@ name.check(odonate_tree, odonate_terr_data, data.names=as.character(odonate_terr
 #plot the tree
 plot(odonate_tree, type="fan", cex=0.5, fsize=0.6, ftype="i")
 str(odonate_tree) #371 species/tips
+
+#making territoriality a factor = yes/no
+prop_terr_factor <- factor(ifelse(sp_terr == 1, "yes", "no"))
+terr_data_with_na_factor <- data.frame(sn, prop_terr_factor = prop_terr_factor) # Create a data frame
+terr_data_factor <- terr_data_with_na_factor[complete.cases(terr_data_with_na_factor), ] #Removes NA values
+odonate_tree_factor<-drop.tip(tree, chk$tree_not_data) #dropped tree_not_data species
+odonate_tree_factor
+species_to_drop <- chk$data_not_tree
+odonate_terr_data_factor <- terr_data_factor[!(terr_data_factor$sn %in% species_to_drop), ] #dropped data_not_tree species from dataset
+name.check(odonate_tree, odonate_terr_data_factor, data.names=as.character(odonate_terr_data_factor$sn))
+terr_mode<-setNames(odonate_terr_data_factor$prop_terr, odonate_terr_data_factor$sn)
 
 
 #Choose a discrete character model (rate-of-transition model)
@@ -122,17 +129,6 @@ plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.3)
-
-#Ancestral state reconstruction using the ace function from the package "ape"
-fit_ARD_again<-ace(odonate_data$terr_mode, odonate_tree, model="ARD", type="discrete", marginal = TRUE)
-round(fit_ARD_again$lik.anc, 3)
-head(fit_ARD_again$lik.anc)
-plotTree(odonate_tree, fsize=0.5, ftype="i")
-nodelabels(node=1:odonate_tree$Nnode+Ntip(odonate_tree),
-           pie=fit_ARD_again$lik.anc, piecol = cols, cex=0.3)
-tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.3)
-legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
-
 
 
 #Calculate phylogenetic signal
