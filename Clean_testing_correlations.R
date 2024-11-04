@@ -567,3 +567,7 @@ data_abundance_terr<-data_abundance_terr_old[!(data_abundance_terr_old$Species %
 rownames(data_abundance_terr)<-data_abundance_terr$Species
 name.check(tree_abundance, data_abundance_terr, data.names=as.character(data_abundance_terr$Species))
 #This only leaves 20 species, and only two of these are non-territorial. 
+
+#Test if abundance predicts territoriality
+mod_abund<-phyloglm(Territorial~Abundance, data=data_abundance_terr, phy=tree_abundance, boot=1000, method= 'logistic_MPLE', btol=10)
+summary(mod_abund)
