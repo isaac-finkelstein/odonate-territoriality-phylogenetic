@@ -543,3 +543,27 @@ ggplot(data_mate_guard_terr, aes(x = factor(Prop_territorial), fill = factor(Mat
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
 
+#Testing if abundance predicts territoriality
+#Using data from De Resende et al., 2021 for abundance data
+abundance_with_na<-my_data$Abundance
+sn<-my_data$Formatted_species
+abundance <- na.omit(abundance_with_na)
+abundance_df <- data.frame(sn = sn[!is.na(abundance_with_na)], Abundance = abundance)
+
+
+#make dataset
+data_abundance_terr_old<-merge(binary_terr_df, abundance_df, by = "sn", all=TRUE)
+colnames(data_abundance_terr_old)<- c("Species", "Territorial", "Abundance")
+data_abundance_terr_old<-data_abundance_terr_old[complete.cases(data_abundance_terr_old), ]
+
+
+#identify species to drop
+chk_abun<-name.check(tree, data_abundance_terr_old, data.names=as.character(data_abundance_terr_old$Species))
+summary(chk_abun)
+tree_abundance<-drop.tip(tree, chk_abun$tree_not_data)
+#identify species to drop from data
+abund_species_to_drop<-chk_abun$data_not_tree
+data_abundance_terr<-data_abundance_terr_old[!(data_abundance_terr_old$Species %in% abund_species_to_drop), ]
+rownames(data_abundance_terr)<-data_abundance_terr$Species
+name.check(tree_abundance, data_abundance_terr, data.names=as.character(data_abundance_terr$Species))
+#This only leaves 20 species, and only two of these are non-territorial. 
