@@ -440,8 +440,102 @@ ovi_size_data<-combined_data[!(combined_data$Species %in% ovi_size_species_to_dr
 rownames(ovi_size_data)<-ovi_size_data$Species
 name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
 
+
+ovi_size_data$Habitat_size <- as.factor(ovi_size_data$Habitat_size)
+#set "generalist" as the reference level for Habitat_size
+ovi_size_data$Habitat_size <- relevel(ovi_size_data$Habitat_size, ref = "generalist")
+
+
 #phylogenetic logistic regression
-ovi_size_log_reg<-phyloglm(Territorial~Habitat_size, data=ovi_size_data, phy=tree_ovi_size, boot=1000, method='logistic_MPLE')
+ovi_size_log_reg<-phyloglm(Territorial~Habitat_size, data=ovi_size_data, phy=tree_ovi_size, boot=1000, method='logistic_MPLE', btol= 30)
 summary(ovi_size_log_reg)
-#not working -line 638
+
+
+#plot
+ovi_size_data <- ovi_size_data %>%
+  mutate(Territorial = ifelse(Territorial == 1, "Territorial", "Non-Territorial"))
+
+ggplot(ovi_size_data, aes(x = factor(Territorial), fill = factor(Habitat_size, levels = c("lentic_small", "lentic_medium", "lentic_large", "stream", "both", "river", "generalist" )))) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = after_stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
+  labs(x = NULL, y = "Number of species", fill = "Oviposition habitat size") +
+  scale_fill_manual(values = c("lentic_small" = "darkblue", "lentic_medium" = "darkorange", "lentic_large" = "darkred", "stream" = "lightblue", "both" = "purple", "river" = "turquoise", "generalist" = "darkgrey"),
+                    labels = c("lentic_small" = "Small Lentic", "lentic_medium" = "Medium Lentic", "lentic_large" = "Large Lentic", "stream" = "Stream", "both" = "Stream and River", "river" = "River", "generalist" = "Generalist")) +
+  scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 12))
+
+count_ovi <- ovi_size_data %>%
+  group_by(Habitat_size) %>%
+  summarise(count = n())
+
+
+
+
+#mate guarding
+my_data$Mate.guarding <- trimws(my_data$Mate.guarding)
+my_data_filtered <- my_data[!(my_data$Mate.guarding == "Both"), ] #There's only 1 "Both" so I'm removing it.
+mate_guarding_table<-ftable(my_data_filtered$Formatted_species, my_data_filtered$Mate.guarding)
+
+prop_no<-round(mate_guarding_table[,3]/(mate_guarding_table[,3]+mate_guarding_table[,4]+mate_guarding_table[,2]), 2)
+prop_contact<-round(mate_guarding_table[,2]/(mate_guarding_table[,3]+mate_guarding_table[,4]+mate_guarding_table[,2]), 2)
+prop_non_contact<-round(mate_guarding_table[,4]/(mate_guarding_table[,3]+mate_guarding_table[,4]+mate_guarding_table[,2]), 2)
+prop_mate_guard_df<-data.frame(prop_no=prop_no,
+                                  prop_contact=prop_contact,
+                                  prop_non_contact=prop_non_contact)
+prop_mate_guard_df<-data.frame(
+  prop_no=ifelse(prop_no>0.75,1,NA),
+  prop_contact=ifelse(prop_contact>0.75,1,NA),
+  prop_non_contact=ifelse(prop_non_contact>0.75, 1, NA))
+#3:1 cutoff
+
+sn<-attr(mate_guarding_table, "row.vars")[[1]]
+mate_guard_data_na<-data.frame(sn, prop_mate_guard_df)
+mate_guard_data<-mate_guard_data_na %>%
+  filter(!is.na(prop_no) | !is.na(prop_contact) | !is.na(prop_non_contact))
+mate_guarding_three_cat<-mate_guard_data %>%
+  mutate(Mate_guarding_cat = case_when(
+    prop_no==1 ~"No",
+    prop_contact == 1 ~"Contact",
+    TRUE ~"Non-contact" #default to non-contact if neither contact or no
+  ))
+mate_guarding_three_cat<-mate_guarding_three_cat %>%
+  select(sn, Mate_guarding_cat)
+#make dataset
+data_mate_guard_terr_old<-merge(binary_terr_df, mate_guarding_three_cat, by="sn", all=TRUE)
+colnames(data_mate_guard_terr_old)<-c("Species", "Prop_territorial", "Mate_guarding_cat")
+data_mate_guard_terr_old<-data_mate_guard_terr_old[complete.cases(data_mate_guard_terr_old), ]
+
+#identify species to drop
+chk_mate_guard<-name.check(tree, data_mate_guard_terr_old, data.names=as.character(data_mate_guard_terr_old$Species))
+summary(chk_mate_guard)
+tree_mate_guard<-drop.tip(tree, chk_mate_guard$tree_not_data) #dropped tree_not_data species
+#identify species to drop from data
+guard_species_to_drop<-chk_mate_guard$data_not_tree
+data_mate_guard_terr<-na.omit(data_mate_guard_terr_old[!(data_mate_guard_terr_old$Species %in% guard_species_to_drop),]) #dropped data_not_tree species
+rownames(data_mate_guard_terr)<-data_mate_guard_terr$Species
+name.check(tree_mate_guard, data_mate_guard_terr, data.names = as.character(data_mate_guard_terr$Species))
+
+data_mate_guard_terr$Mate_guarding_cat <- as.factor(data_mate_guard_terr$Mate_guarding_cat)
+
+#phylogenetic logistic regression
+mod_mate_guard<-phyloglm(Prop_territorial~Mate_guarding_cat, data=data_mate_guard_terr, phy=tree_mate_guard, boot=1000, method='logistic_MPLE', btol=10)
+summary(mod_mate_guard)
+
+#plot
+custom_levels <- c("No", "Contact", "Non-contact")
+ggplot(data_mate_guard_terr, aes(x = factor(Prop_territorial), fill = factor(Mate_guarding_cat, levels = custom_levels))) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
+  labs(x = NULL, y = "Number of species", fill = "Mate guarding") +
+  scale_x_discrete(labels = c("0" = "Non-Territorial", "1" = "Territorial")) +
+  scale_fill_manual(values = c("No" = "darkblue", "Contact" = "darkorange", "Non-contact" = "darkred")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 12))
 
