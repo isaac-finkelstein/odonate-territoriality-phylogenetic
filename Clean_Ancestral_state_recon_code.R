@@ -121,6 +121,41 @@ fit_marginal<- corHMM(odonate_tree, odonate_data, node.states = "marginal",
 fit_marginal
 head(fit_marginal$states) 
 
+#the node for the common ancestor of all odonates = 375, all Anisoptera = 376, all zygoptera = 568
+#plot(odonate_tree, show.node.label = TRUE)  # Plot tree with tip labels
+#nodelabels() 
+
+internal_node_index <- 375 - (length(fit_marginal$phy$tip.label))
+#print estimated state for all odonates
+if (internal_node_index <= nrow(fit_marginal$states) && internal_node_index > 0) {
+  node_states <- fit_marginal$states[internal_node_index, ]
+  print(node_states)
+} else {
+  print("Node index out of bounds for states matrix")
+}
+
+
+anis_internal_node_index <- 376 - (length(fit_marginal$phy$tip.label))
+
+#print estimated state for all Anisoptera
+if (anis_internal_node_index <= nrow(fit_marginal$states) && anis_internal_node_index > 0) {
+  node_states <- fit_marginal$states[anis_internal_node_index, ]
+  print(node_states)
+} else {
+  print("Node index out of bounds for states matrix")
+}
+
+zygo_internal_node_index <- 568 - (length(fit_marginal$phy$tip.label))
+
+#print estimated state for all Zygoptera
+if (zygo_internal_node_index <= nrow(fit_marginal$states) && zygo_internal_node_index > 0) {
+  node_states <- fit_marginal$states[zygo_internal_node_index, ]
+  print(node_states)
+} else {
+  print("Node index out of bounds for states matrix")
+}
+
+
 #plot
 cols<-setNames(c("turquoise", "brown"), levels(terr_mode))
 #plot this
