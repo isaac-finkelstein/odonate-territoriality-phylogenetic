@@ -450,6 +450,8 @@ ovi_size_data$Habitat_size <- relevel(ovi_size_data$Habitat_size, ref = "general
 ovi_size_log_reg<-phyloglm(Territorial~Habitat_size, data=ovi_size_data, phy=tree_ovi_size, boot=1000, method='logistic_MPLE', btol= 30)
 summary(ovi_size_log_reg)
 
+oddrat_ovi <- exp(coef(ovi_size_log_reg))
+
 
 #plot
 ovi_size_data <- ovi_size_data %>%
@@ -522,8 +524,10 @@ name.check(tree_mate_guard, data_mate_guard_terr, data.names = as.character(data
 data_mate_guard_terr$Mate_guarding_cat <- as.factor(data_mate_guard_terr$Mate_guarding_cat)
 
 #phylogenetic logistic regression
-mod_mate_guard<-phyloglm(Prop_territorial~Mate_guarding_cat, data=data_mate_guard_terr, phy=tree_mate_guard, boot=1000, method='logistic_MPLE', btol=10)
-summary(mod_mate_guard)
+mate_guard_reg<-phyloglm(Prop_territorial~Mate_guarding_cat, data=data_mate_guard_terr, phy=tree_mate_guard, boot=1000, method='logistic_MPLE', btol=10)
+summary(mate_guard_reg)
+
+oddrat_mate_guard <- exp(coef(mate_guard_reg))
 
 #plot
 custom_levels <- c("No", "Contact", "Non-contact")
