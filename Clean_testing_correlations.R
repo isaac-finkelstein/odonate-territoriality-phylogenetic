@@ -29,6 +29,8 @@ prop_terr<- round(terr_table[,3]/(terr_table[,2]+ terr_table[,3]),2) #calculates
 #set a 3:1 threshhold = 75% threshold
 sp_terr <- ifelse(prop_terr >= 0.75, 1, ifelse(prop_terr <= 0.25, 0, NA))
 
+#to remove all conflicts between species, change 0.75 to 0.99 and 0.25 to 0.01
+
 sn<- attr(terr_table,"row.vars")[[1]]
 terr_data_with_na<- data.frame(sn,sp_terr) #dataframe with territorial (1/0) for each species
 terr_data<- terr_data_with_na[complete.cases(terr_data_with_na), ] #remove NA values 
@@ -504,8 +506,8 @@ mate_guarding_three_cat<-mate_guard_data %>%
     prop_contact == 1 ~"Contact",
     TRUE ~"Non-contact" #default to non-contact if neither contact or no
   ))
-mate_guarding_three_cat<-mate_guarding_three_cat %>%
-  select(sn, Mate_guarding_cat)
+mate_guarding_three_cat <- mate_guarding_three_cat %>%
+  dplyr::select(sn, Mate_guarding_cat)
 #make dataset
 data_mate_guard_terr_old<-merge(binary_terr_df, mate_guarding_three_cat, by="sn", all=TRUE)
 colnames(data_mate_guard_terr_old)<-c("Species", "Prop_territorial", "Mate_guarding_cat")
