@@ -52,7 +52,9 @@ terr_mode<-setNames(odonate_terr_data_factor$prop_terr, odonate_terr_data_factor
 #just anisoptera -- node 411 
 #EVERYTIME I UPDATE THE DATASET, THE NODE NUMBER WILL CHANGE!! SO HAVE TO UPDATE THESE EVERYTIME!
 #collapseTree(odonate_tree)  #-- use this to find the node numbers
-anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 571)$tip.label)
+#plot(odonate_tree)
+#nodelabels()
+anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 573)$tip.label)
 anisoptera_tree<-drop.tip(odonate_tree, anisoptera_tree_extract)
 plot(anisoptera_tree, type="fan", cex=0.5, ftype="i") 
 
