@@ -183,6 +183,7 @@ prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fl
 sp_fly_v_perch<-ifelse(prop_fly_v_perch >= 0.75, 1, ifelse(prop_fly_v_perch <=0.25, 0, NA))
 sn<-attr(binary_fly_v_perch, "row.vars")[[1]]
 binary_fly_v_perch_df<-data.frame(sn, sp_fly_v_perch, stringsAsFactors=TRUE) #includes NA
+binary_fly_v_perch_df<- binary_fly_v_perch_df[complete.cases(binary_fly_v_perch_df), ] #remove NA values 
 
 #courtship
 binary_courtship<-ftable(my_data$Formatted_species, my_data$Courtship)
@@ -192,7 +193,7 @@ prop_court<-round(binary_courtship[,3]/(binary_courtship[,2]+binary_courtship[,3
 sp_courtship<-ifelse(prop_court>=0.75,1, ifelse(prop_court<=0.25, 0, NA))
 sn<-attr(binary_courtship, "row.vars")[[1]]
 binary_court_df<-data.frame(sn, sp_courtship, stringsAsFactors=TRUE) #includes NA
-
+binary_court_df<- binary_court_df[complete.cases(binary_court_df), ] #remove NA values 
 
 #oviposition method (endophytic vs exophytic)
 #make all epiphytic = exophytic - to make it binary. 
@@ -210,6 +211,7 @@ prop_ovi<-round(binary_ovi[,2]/(binary_ovi[,1]+binary_ovi[,2]),2) #This is propo
 sp_ovi<-ifelse(prop_ovi >= 0.75, 1, ifelse(prop_ovi <=0.25, 0, NA))
 sn<-attr(binary_ovi, "row.vars")[[1]]
 binary_ovi_df<-data.frame(sn, sp_ovi, stringsAsFactors=TRUE) #includes NA
+binary_ovi_df<- binary_ovi_df[complete.cases(binary_ovi_df), ] #remove NA values 
 
 #oviposition habitat (lotic/lentic)
 filtered_lo_len <- subset(my_data, Lotic.vs.lentic..breeding.habitat. %in% c("Lotic", "Lentic"))
@@ -219,6 +221,7 @@ prop_lo_len<-round(lo_len_var[,2]/(lo_len_var[,1]+lo_len_var[,2]),2) #this is th
 sp_lo_len<-ifelse(prop_lo_len >= 0.75, 1, ifelse(prop_lo_len <=0.25, 0, NA))
 sn<-attr(lo_len_var, "row.vars")[[1]]
 binary_lo_len<-data.frame(sn, sp_lo_len, stringsAsFactors = TRUE) #includes NA
+binary_lo_len<- binary_lo_len[complete.cases(binary_lo_len), ] #remove NA values 
 
 
 #prune binary variables to match the tree
