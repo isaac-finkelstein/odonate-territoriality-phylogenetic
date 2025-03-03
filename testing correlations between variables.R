@@ -105,14 +105,26 @@ binary_ovi_df<-data.frame(sn, sp_ovi, stringsAsFactors=TRUE)
 #this worked, but it includes all species - so there are NAs. 
 
 
+#lotic vs lentic
+filtered_lo_len <- subset(my_data, Lotic.vs.lentic..breeding.habitat. %in% c("Lotic", "Lentic"))
+lo_len_var<-ftable(filtered_lo_len$Formatted_species, filtered_lo_len$Lotic.vs.lentic..breeding.habitat.)
+prop_lo_len<-round(lo_len_var[,2]/(lo_len_var[,1]+lo_len_var[,2]),2) #this is the proportion that is lotic
+#the 2 at the end rounds to 2 decimal 
+#set a 75% threshold = 3:1 threshold
+sp_lo_len<-ifelse(prop_lo_len >= 0.75, 1, ifelse(prop_lo_len <=0.25, 0, NA))
+sn<-attr(lo_len_var, "row.vars")[[1]]
+binary_lo_len<-data.frame(sn, sp_lo_len, stringsAsFactors = TRUE)
+#so, 1 = lotic, 0 = lentic
+
 #now I stitch these together in a single dataframe
 binary_data <- merge(binary_terr_df, binary_mate_guard_df, by = "sn", all = TRUE)
 binary_data <- merge(binary_data, binary_fly_v_perch_df, by = "sn", all = TRUE)
 binary_data<-merge(binary_data, binary_court_df, by="sn", all=TRUE)
 binary_data <- merge(binary_data, binary_ovi_df, by = "sn", all = TRUE)
+binary_data <- merge(binary_data, binary_lo_len, by = "sn", all = TRUE)
 
 
-colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Mate_Guard", "Prop_Flier_vs_Percher", "Prop_Oviposition", "Prop_Courtship")
+colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Mate_Guard", "Prop_Flier_vs_Percher", "Prop_Oviposition", "Prop_Courtship", "Prop_lo_len")
 #This worked! I checked manually.
 
 #one more step: I need to remove NA values, but if I do that to the entire dataframe, I will have no rows left
@@ -528,10 +540,11 @@ lentic_size_data <- size_data %>%
     prop_medium == 1 ~ "lentic_medium",
     TRUE ~ "lentic_small"  # Default to "small" if neither prop_large nor prop_medium is 1
   ))%>%
-  select(-prop_large, -prop_medium, -prop_small)
+  dplyr::select(-prop_large, -prop_medium, -prop_small)
 #size_data_ordered <- size_data_ordered %>%
 #  select(sn, lentic_size)
 #size_data_ordered$lentic_size <- factor(size_data_ordered$lentic_size, ordered = TRUE, levels = c("lentic_small", "lentic_medium", "lentic_large")) # make it an ordered categorical variable
+
 
 #make dataset
 data_lentic_size_territoriality_old <- merge(binary_terr_df, lentic_size_data, by = "sn", all = TRUE)
@@ -567,7 +580,7 @@ lotic_size<-lotic_size_data %>%
     prop_both == 1 ~ "both",
     TRUE ~ "river" #default to river if neither prop_stream or prop_both
   ))%>%
-  select(-prop_stream, -prop_both, -prop_river)
+  dplyr::select(-prop_stream, -prop_both, -prop_river)
 #make dataset
 lotic_size_terr_data <- merge(binary_terr_df, lotic_size, by = "sn", all = TRUE)
 colnames(lotic_size_terr_data) <- c("Species", "Prop_Territorial", "Lotic_size")
@@ -630,6 +643,9 @@ ovi_size_data<-combined_data[!(combined_data$Species %in% ovi_size_species_to_dr
 rownames(ovi_size_data)<-ovi_size_data$Species
 name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
 
+#For the dataframe with all the trait data, I remove the territorial column
+ovi_size_trait_data<- ovi_size_data %>%
+  dplyr::select(-Territorial)
 
 #I need to make territorial =1, non-territorial =0 for the phyloglm function
 name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
@@ -703,7 +719,7 @@ mate_guarding_three_cat<-mate_guard_no_data %>%
   TRUE ~"Non-contact" #default to non-contact if neither contact or no
   ))
 mate_guarding_three_cat<-mate_guarding_three_cat %>%
-  select(sn, Mate_guarding_cat)
+  dplyr::select(sn, Mate_guarding_cat)
 #make dataset
 data_mate_guard_no_terr_old<-merge(binary_terr_df, mate_guarding_three_cat, by="sn", all=TRUE)
 colnames(data_mate_guard_no_terr_old)<-c("Species", "Prop_territorial", "Mate_guarding_cat")
@@ -718,6 +734,10 @@ guard_no_species_to_drop<-chk_mate_guard_no$data_not_tree
 data_mate_guard_no_terr<-na.omit(data_mate_guard_no_terr_old[!(data_mate_guard_no_terr_old$Species %in% guard_no_species_to_drop),]) #dropped data_not_tree species
 rownames(data_mate_guard_no_terr)<-data_mate_guard_no_terr$Species
 name.check(tree_mate_guard_no, data_mate_guard_no_terr, data.names = as.character(data_mate_guard_no_terr$Species))
+
+#For the dataframe with all the trait data, I remove the territorial column
+trait_data_mate_guard<- data_mate_guard_no_terr %>%
+  dplyr::select(-Prop_territorial)
 
 #test if mate guarding with 3 categories (includes "no") predicts territoriality
 mod_mate_guard<-phyloglm(Prop_territorial~Mate_guarding_cat, data=data_mate_guard_no_terr, phy=tree_mate_guard_no, boot=1000, method='logistic_MPLE', btol=10)
@@ -881,3 +901,9 @@ ggplot(abundance_terr, aes(x = Territorial, y = Abundance, fill = Territorial)) 
 
 
 
+
+#Making the dataset with all the traits
+trait_data<-merge(binary_data, ovi_size_trait_data, by = "Species", all=TRUE)
+trait_data<-merge(trait_data, trait_data_mate_guard, by = "Species", all=TRUE)
+str(trait_data)
+str(binary_data)
