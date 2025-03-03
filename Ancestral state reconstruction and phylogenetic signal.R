@@ -7,6 +7,7 @@ library(geiger)
 library(dplyr)
 library(corHMM)
 library(caper)
+library(tidyr)
 
 my_data<- read.csv("data/data_v6.csv")
 
@@ -212,14 +213,147 @@ head(fit_marginal$states)
 
 cols<-setNames(c("turquoise", "brown"), levels(terr_mode))
 #plot this
-plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
+figure1<-plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
                     colors=list(cols), header=FALSE, fsize=0.45)
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.3)
+
 #likely ancestral state = territorial!
 #if I can figure out how to remove species labels, it might be interesting to present the whole odonate tree for ASR
 #because you can see that zygoptera and Anisoptera have different ancestral states!
+
+
+
+#Adding trait data to this figure
+#I created the trait_data dataframe in "Testing correlations between variables" file - go there (at the very end)
+
+#trying to just make the matrix, no phylogeny
+trait_data <- trait_data %>%
+  mutate(Species = as.character(Species))
+trait_data <- trait_data %>%
+  mutate(across(c(Prop_Territorial, Prop_Mate_Guard, Prop_Flier_vs_Percher, 
+                  Prop_Oviposition, Prop_Courtship, Mate_guarding_cat, 
+                  lentic_lotic_size, Prop_lo_len), as.character))
+trait_data_long <- trait_data %>%
+  pivot_longer(cols = c(Prop_Territorial, Prop_Mate_Guard, Prop_Flier_vs_Percher, Prop_Oviposition, Prop_Courtship, Mate_guarding_cat, lentic_lotic_size, Prop_lo_len),
+               names_to = "Trait",
+               values_to = "Value") %>%
+  mutate(Value = as.character(Value))
+
+# it needs to be in the same order as the figure
+species_order_from_fig1 <- odonate_tree$tip.label
+
+# remove any Species that do not appear in the figure
+trait_data_long <- trait_data_long %>%
+  filter(Species %in% species_order_from_fig1)
+
+# convert Species column to a factor with levels matching the tree order
+trait_data_long$Species <- factor(trait_data_long$Species, levels = species_order_from_fig1)
+
+#It needs to appear in the same order as the figure 1
+# Extract the correct plotting order
+tip_order <- odonate_tree$tip.label[odonate_tree$edge[odonate_tree$edge[,2] <= length(odonate_tree$tip.label), 2]]
+
+#check order
+print(tip_order) #This is the order for figure 1, with the last species at the top of the figure and the first species at the bottom of the figure
+
+
+#match order
+trait_data_long$Species <- factor(trait_data_long$Species, levels = tip_order)
+
+
+#Plot heatmap
+
+#predictor traits
+trait_data_filtered <- trait_data_long %>%
+  filter(Trait %in% c("lentic_lotic_size", "Mate_guarding_cat", "Prop_Flier_vs_Percher", "Prop_Oviposition", "Prop_Courtship", "Prop_lo_len")) 
+
+# Convert NA values to a string ("NA") for ggplot to recognize them
+trait_data_filtered <- trait_data_filtered %>%
+  mutate(Value = ifelse(is.na(Value), "NA", Value))  # Convert NA to string
+
+
+trait_data_filtered <- trait_data_filtered %>%
+  mutate(Value = ifelse(grepl("^.*_", Value), Value, paste(Trait, Value, sep = "_")))
+
+trait_data_filtered <- trait_data_filtered %>%
+  mutate(Value = ifelse(Trait == "lentic_lotic_size" & !grepl("^lentic_lotic_size_", Value), 
+                        paste("lentic_lotic_size", Value, sep = "_"), 
+                        Value))
+
+#order of presenting the traits
+trait_order <- c("Prop_Flier_vs_Percher", "Prop_Courtship", "Prop_Oviposition", 
+                 "Prop_lo_len", "Mate_guarding_cat", "lentic_lotic_size")
+trait_data_filtered$Trait <- factor(trait_data_filtered$Trait, levels = trait_order)
+
+lentic_colors <- c(
+  "lentic_lotic_size_lentic_medium" = "darkred",
+  "lentic_lotic_size_lentic_large" = "darkorange",
+  "lentic_lotic_size_lentic_small" = "darkgreen",
+  "lentic_lotic_size_stream" = "blue",
+  "lentic_lotic_size_river" = "lightblue",
+  "lentic_lotic_size_generalist" = "black",
+  "lentic_lotic_size_both" = "aquamarine2"
+)
+
+
+guarding_colors <- c(
+  "Mate_guarding_cat_No" = "cyan3",  
+  "Mate_guarding_cat_Contact" = "firebrick1",
+  "Mate_guarding_cat_Non-contact" = "mediumblue"
+)
+
+# Colours for Flier vs Percher
+flying_colors <- c(
+  "Prop_Flier_vs_Percher_0" = "pink",  # Flier
+  "Prop_Flier_vs_Percher_1" = "purple" # Percher
+)
+
+# Colours for Oviposition
+ovi_colors <- c(
+  "Prop_Oviposition_0" = "gray34",  # Endophytic
+  "Prop_Oviposition_1" = "coral4"    # Exophytic
+)
+
+# Colours for Courtship
+court_colors <- c(
+  "Prop_Courtship_0" = "darkslateblue",  # No
+  "Prop_Courtship_1" = "khaki3"    # Yes
+)
+
+# Colours for lotic vs lentic
+lo_len_colors <- c(
+  "Prop_lo_len_0" = "seagreen",  # lentic
+  "Prop_lo_len_1" = "coral"    # lotic
+)
+
+# Combine color schemes
+all_trait_colors <- c(lentic_colors, guarding_colors, flying_colors, ovi_colors, court_colors, lo_len_colors, "NA" = "white")  # Assign white for missing values
+
+#plot
+ggplot(trait_data_filtered, aes(x = Trait, y = Species, fill = Value)) +
+  geom_tile(color = "white") +  
+  scale_fill_manual(values = all_trait_colors, na.value = "white") +
+  scale_x_discrete(labels = c(
+    "Prop_Flier_vs_Percher" = "Active behaviour",
+    "Prop_Courtship" = "Courtship",
+    "Prop_Oviposition" = "Oviposition method",
+    "Prop_lo_len" = "Oviposition habitat type",
+    "Mate_guarding_cat" = "Mate guarding",
+    "lentic_lotic_size" = "Oviposition habitat size"
+  )) + 
+  theme_minimal() +
+  labs(title = "Predictor trait Heatmap",
+       x = "Trait",
+       y = "Species",
+       fill = "Trait Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+        axis.text.y = element_text(size = 6))
+
+
+
+
 
 #try using the ace function from the package "ape"
 fit_ARD_again<-ace(terr_mode, odonate_tree, model="ARD", type="discrete", marginal = TRUE)
