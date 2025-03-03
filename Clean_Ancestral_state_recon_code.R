@@ -8,6 +8,8 @@ library(geiger)
 library(dplyr)
 library(corHMM)
 library(caper)
+library(tidyr)
+library(ggplot2)
 
 my_data<- read.csv("data/data_vfinal.csv")
 
@@ -164,6 +166,369 @@ plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.3)
+
+
+#Adding trait data to this figure
+
+#Make a dataset of all my trait data
+#territoriality
+binary_terr<-ftable(my_data$Formatted_species, my_data$Territorial)
+prop_binary_terr<-round(binary_terr[,3]/(binary_terr[,2]+ binary_terr[,3]),2)
+#set a 75% threshold = 3:1 threshold
+sp_binary_terr<-ifelse(prop_binary_terr >= 0.75, 1, ifelse(prop_binary_terr <=0.25, 0, NA))
+sn<-attr(binary_terr, "row.vars")[[1]]
+binary_terr_df<-data.frame(sn,sp_binary_terr, stringsAsFactors = TRUE)
+
+#active behaviour
+binary_fly_v_perch<-ftable(my_data$Formatted_species, my_data$Flier.vs.percher)
+prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fly_v_perch[,3]),2) #this is proportion Percher
+#1=percher, 0 = flier
+#set a 75% threshold = 3:1 threshold
+sp_fly_v_perch<-ifelse(prop_fly_v_perch >= 0.75, 1, ifelse(prop_fly_v_perch <=0.25, 0, NA))
+sn<-attr(binary_fly_v_perch, "row.vars")[[1]]
+binary_fly_v_perch_df<-data.frame(sn, sp_fly_v_perch, stringsAsFactors=TRUE)
+
+#courtship
+binary_courtship<-ftable(my_data$Formatted_species, my_data$Courtship)
+prop_court<-round(binary_courtship[,3]/(binary_courtship[,2]+binary_courtship[,3]),2) #this is proportion "Yes"
+# 1=yes, 0 = no
+#set a 75% threshold = 3:1 threshold
+sp_courtship<-ifelse(prop_court>=0.75,1, ifelse(prop_court<=0.25, 0, NA))
+sn<-attr(binary_courtship, "row.vars")[[1]]
+binary_court_df<-data.frame(sn, sp_courtship, stringsAsFactors=TRUE)
+
+#oviposition method (endophytic vs exophytic)
+#I need to make all epiphytic = exophytic - to make it binary. 
+my_data_mutated <- my_data %>%
+  mutate(Oviposition.type..endophytic.vs.exophytic. = ifelse(Oviposition.type..endophytic.vs.exophytic. %in% c("Epiphytic", "Exophytic"), "Exophytic", Oviposition.type..endophytic.vs.exophytic.))
+#Convert the variable to a factor with specified levels
+my_data_mutated$Oviposition.type..endophytic.vs.exophytic. <- factor(
+  my_data_mutated$Oviposition.type..endophytic.vs.exophytic.,
+  levels = c("Endophytic", "Exophytic")
+)
+binary_ovi<-ftable(my_data_mutated$Formatted_species, my_data_mutated$Oviposition.type..endophytic.vs.exophytic.)
+prop_ovi<-round(binary_ovi[,2]/(binary_ovi[,1]+binary_ovi[,2]),2) #This is proportion exophytic
+#1=exophytic, 0=endophytic
+#set a 75% threshold = 3:1 threshold
+sp_ovi<-ifelse(prop_ovi >= 0.75, 1, ifelse(prop_ovi <=0.25, 0, NA))
+sn<-attr(binary_ovi, "row.vars")[[1]]
+binary_ovi_df<-data.frame(sn, sp_ovi, stringsAsFactors=TRUE)
+
+#oviposition habitat (lotic vs lentic)
+filtered_lo_len <- subset(my_data, Lotic.vs.lentic..breeding.habitat. %in% c("Lotic", "Lentic"))
+lo_len_var<-ftable(filtered_lo_len$Formatted_species, filtered_lo_len$Lotic.vs.lentic..breeding.habitat.)
+prop_lo_len<-round(lo_len_var[,2]/(lo_len_var[,1]+lo_len_var[,2]),2) #this is the proportion that is lotic
+#set a 75% threshold = 3:1 threshold
+sp_lo_len<-ifelse(prop_lo_len >= 0.75, 1, ifelse(prop_lo_len <=0.25, 0, NA))
+sn<-attr(lo_len_var, "row.vars")[[1]]
+binary_lo_len<-data.frame(sn, sp_lo_len, stringsAsFactors = TRUE)
+#1 = lotic, 0 = lentic
+
+#now stitch these together in a single dataframe
+binary_data <- merge(binary_terr_df, binary_fly_v_perch_df, by = "sn", all = TRUE)
+binary_data<-merge(binary_data, binary_court_df, by="sn", all=TRUE)
+binary_data <- merge(binary_data, binary_ovi_df, by = "sn", all = TRUE)
+binary_data <- merge(binary_data, binary_lo_len, by = "sn", all = TRUE)
+
+
+colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Flier_vs_Percher", "Prop_Courtship", "Prop_Oviposition", "Prop_lo_len")
+
+
+#add the size of the water body used as breeding habitat
+#6 categories:
+#Generalist, lotic+small, lotic+medium, lotic+big, lentic+small, lentic+big
+
+#first the lentic categories
+new_lentic_lotic_data <- my_data[my_data$Lotic.vs.lentic..breeding.habitat. != "Both", ] #Remove species that have oviposition sites in both lentic and lotic locations
+lentic_size_table<- ftable(new_lentic_lotic_data$Formatted_species, new_lentic_lotic_data$Lentic.size)
+prop_large<-round(lentic_size_table[,2]/(lentic_size_table[,3]+ lentic_size_table[,4]+ lentic_size_table[,2]),2)
+prop_medium<-round(lentic_size_table[,3]/(lentic_size_table[,2]+ lentic_size_table[,3]+ lentic_size_table[,4]),2)
+prop_small<-round(lentic_size_table[,4]/(lentic_size_table[,2]+ lentic_size_table[,3]+ lentic_size_table[,4]),2)
+prop_data<-data.frame(prop_large=prop_large,
+                      prop_medium=prop_medium,
+                      prop_small=prop_small)
+prop_data <- data.frame(
+  prop_large = ifelse(prop_large > 0.75, 1, NA),
+  prop_medium = ifelse(prop_medium > 0.75, 1, NA),
+  prop_small = ifelse(prop_small > 0.75, 1, NA)
+)
+sn<- attr(lentic_size_table,"row.vars")[[1]]
+size_data_with_na<-data.frame(sn,prop_data)
+size_data <- size_data_with_na %>%
+  filter(!is.na(prop_large) | !is.na(prop_medium) | !is.na(prop_small))
+
+lentic_size_data <- size_data %>%
+  mutate(lentic_size = case_when(
+    prop_large == 1 ~ "lentic_large",
+    prop_medium == 1 ~ "lentic_medium",
+    TRUE ~ "lentic_small"  # Default to "small" if neither prop_large nor prop_medium is 1
+  ))
+lentic_size <- lentic_size_data[, !(names(lentic_size_data) %in% c("prop_large", "prop_medium", "prop_small"))]
+
+
+#next lotic categories
+new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream. <- gsub("Stream, River", "River, Stream", new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream.)
+lotic_size_table<-ftable(new_lentic_lotic_data$Formatted_species, new_lentic_lotic_data$Description.of.lotic.oviposition..river..stream.)
+
+prop_stream<-round(lotic_size_table[,4]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_both<-round(lotic_size_table[,3]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_river<-round(lotic_size_table[,2]/(lotic_size_table[,3]+lotic_size_table[,4]+ lotic_size_table[,2]), 2)
+prop_lotic_data<-data.frame(prop_stream=prop_stream,
+                            prop_both=prop_both,
+                            prop_river=prop_river)
+prop_lotic_data<-data.frame(
+  prop_stream=ifelse(prop_stream>0.75,1,NA),
+  prop_both=ifelse(prop_both>0.75,1, NA),
+  prop_river=ifelse(prop_river>0.75,1, NA))
+
+sn<- attr(lotic_size_table,"row.vars")[[1]]
+lotic_data_with_na<-data.frame(sn,prop_lotic_data)
+lotic_size_data <- lotic_data_with_na %>%
+  filter(!is.na(prop_stream) | !is.na(prop_both) | !is.na(prop_river))
+
+lotic_size<-lotic_size_data %>%
+  mutate(lotic_size = case_when(
+    prop_stream == 1 ~"stream",
+    prop_both == 1 ~ "both",
+    TRUE ~ "river" #default to river if neither prop_stream or prop_both
+  ))
+lotic_size <- lotic_size[, !(names(lotic_size) %in% c("prop_stream", "prop_both", "prop_river"))]
+
+#add species described as ovipositing in both lotic and lentic habitats (generalists)
+paulson_data <- my_data %>%
+  filter(grepl("\\(Paulson, 2012\\)|\\(Paulson, 2009\\)", Reference))
+generalist_data_table<-ftable(paulson_data$Formatted_species, paulson_data$Lotic.vs.lentic..breeding.habitat.)
+prop_generalist<-round(generalist_data_table[,2]/(generalist_data_table[,2]), 2)
+sp_generalist<-ifelse(prop_generalist>0.99, 1, ifelse(prop_generalist<0.98, 0, NA))
+sn<-attr(generalist_data_table,"row.vars")[[1]]
+sp_generalist_with_na<- data.frame(sn,sp_generalist)
+sp_generalist<- sp_generalist_with_na[complete.cases(sp_generalist_with_na), ]
+
+colnames(sp_generalist)[colnames(sp_generalist) == "sp_generalist"] <- "generalist"
+sp_generalist$generalist[sp_generalist$generalist == 1] <- "generalist"
+
+#combine these
+
+#make dataset
+data_lentic_size_territoriality_old <- merge(binary_terr_df, lentic_size, by = "sn", all = TRUE)
+colnames(data_lentic_size_territoriality_old) <- c("Species", "Territorial", "Habitat_size")
+data_lentic_size_territoriality_old<- data_lentic_size_territoriality_old[complete.cases(data_lentic_size_territoriality_old), ] 
+
+lotic_size_terr_data <- merge(binary_terr_df, lotic_size, by = "sn", all = TRUE)
+colnames(lotic_size_terr_data) <- c("Species", "Territorial", "Habitat_size")
+lotic_size_terr_data<-lotic_size_terr_data[complete.cases(lotic_size_terr_data), ] 
+
+generalist_terr_data<-merge(binary_terr_df, sp_generalist, by = "sn", all=TRUE)
+colnames(generalist_terr_data) <- c("Species", "Territorial", "Habitat_size")
+generalist_terr_data<- generalist_terr_data[complete.cases(generalist_terr_data), ]
+
+combined_data <- rbind(
+  data_lentic_size_territoriality_old[, c("Species", "Territorial", "Habitat_size")],
+  lotic_size_terr_data[, c("Species", "Territorial", "Habitat_size")],
+  generalist_terr_data[, c("Species", "Territorial", "Habitat_size")]
+)
+#find conflicts
+common_sn_generalist_lentic <- lentic_size %>%
+  inner_join(sp_generalist, by = "sn")
+common_sn_generalist_lotic <- lotic_size %>%
+  inner_join(sp_generalist, by = "sn")
+common_sn_lentic_lotic <- lotic_size %>%
+  inner_join(lentic_size, by = "sn")
+#remove conflicts:
+common_sn <- unique(c(common_sn_generalist_lentic$sn, 
+                      common_sn_generalist_lotic$sn, 
+                      common_sn_lentic_lotic$sn))
+combined_data <- combined_data[!combined_data$Species %in% common_sn, ]
+
+chk_ovi_size<-name.check(tree, combined_data, data.names=as.character(combined_data$Species))
+summary(chk_ovi_size)
+tree_ovi_size <- drop.tip(tree, chk_ovi_size$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+ovi_size_species_to_drop<-chk_ovi_size$data_not_tree
+ovi_size_data<-combined_data[!(combined_data$Species %in% ovi_size_species_to_drop),] #dropped data_not_tree species from dataset
+rownames(ovi_size_data)<-ovi_size_data$Species
+name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$Species))
+
+ovi_size_data$Habitat_size <- as.factor(ovi_size_data$Habitat_size)
+
+
+#mate guarding
+my_data$Mate.guarding <- trimws(my_data$Mate.guarding)
+my_data_filtered <- my_data[!(my_data$Mate.guarding == "Both"), ] #There's only 1 "Both" so I'm removing it.
+mate_guarding_table<-ftable(my_data_filtered$Formatted_species, my_data_filtered$Mate.guarding)
+
+prop_no<-round(mate_guarding_table[,3]/(mate_guarding_table[,3]+mate_guarding_table[,4]+mate_guarding_table[,2]), 2)
+prop_contact<-round(mate_guarding_table[,2]/(mate_guarding_table[,3]+mate_guarding_table[,4]+mate_guarding_table[,2]), 2)
+prop_non_contact<-round(mate_guarding_table[,4]/(mate_guarding_table[,3]+mate_guarding_table[,4]+mate_guarding_table[,2]), 2)
+prop_mate_guard_df<-data.frame(prop_no=prop_no,
+                               prop_contact=prop_contact,
+                               prop_non_contact=prop_non_contact)
+prop_mate_guard_df<-data.frame(
+  prop_no=ifelse(prop_no>0.75,1,NA),
+  prop_contact=ifelse(prop_contact>0.75,1,NA),
+  prop_non_contact=ifelse(prop_non_contact>0.75, 1, NA))
+#3:1 cutoff
+
+sn<-attr(mate_guarding_table, "row.vars")[[1]]
+mate_guard_data_na<-data.frame(sn, prop_mate_guard_df)
+mate_guard_data<-mate_guard_data_na %>%
+  filter(!is.na(prop_no) | !is.na(prop_contact) | !is.na(prop_non_contact))
+mate_guarding_three_cat<-mate_guard_data %>%
+  mutate(Mate_guarding_cat = case_when(
+    prop_no==1 ~"No",
+    prop_contact == 1 ~"Contact",
+    TRUE ~"Non-contact" #default to non-contact if neither contact or no
+  ))
+mate_guarding_three_cat <- mate_guarding_three_cat %>%
+  dplyr::select(sn, Mate_guarding_cat)
+#make dataset
+data_mate_guard_terr_old<-merge(binary_terr_df, mate_guarding_three_cat, by="sn", all=TRUE)
+colnames(data_mate_guard_terr_old)<-c("Species", "Prop_territorial", "Mate_guarding_cat")
+data_mate_guard_terr_old<-data_mate_guard_terr_old[complete.cases(data_mate_guard_terr_old), ]
+
+#identify species to drop
+chk_mate_guard<-name.check(tree, data_mate_guard_terr_old, data.names=as.character(data_mate_guard_terr_old$Species))
+summary(chk_mate_guard)
+tree_mate_guard<-drop.tip(tree, chk_mate_guard$tree_not_data) #dropped tree_not_data species
+#identify species to drop from data
+guard_species_to_drop<-chk_mate_guard$data_not_tree
+data_mate_guard_terr<-na.omit(data_mate_guard_terr_old[!(data_mate_guard_terr_old$Species %in% guard_species_to_drop),]) #dropped data_not_tree species
+rownames(data_mate_guard_terr)<-data_mate_guard_terr$Species
+name.check(tree_mate_guard, data_mate_guard_terr, data.names = as.character(data_mate_guard_terr$Species))
+
+data_mate_guard_terr$Mate_guarding_cat <- as.factor(data_mate_guard_terr$Mate_guarding_cat)
+
+
+#Making a dataset with all the traits
+trait_data<-merge(binary_data, ovi_size_data, by = "Species", all=TRUE)
+trait_data<-merge(trait_data, data_mate_guard_terr, by = "Species", all=TRUE)
+str(trait_data)
+str(binary_data)
+
+
+#Make a matrix of trait data
+trait_data <- trait_data %>%
+  mutate(Species = as.character(Species))
+trait_data <- trait_data %>%
+  mutate(across(c(Prop_Territorial, Prop_Flier_vs_Percher, 
+                  Prop_Courtship, Prop_Oviposition, Prop_lo_len, Habitat_size,
+                  Mate_guarding_cat), as.character))
+trait_data_long <- trait_data %>%
+  pivot_longer(cols = c(Prop_Territorial, Prop_Flier_vs_Percher, Prop_Courtship, Prop_Oviposition,Prop_lo_len, Habitat_size, Mate_guarding_cat),
+               names_to = "Trait",
+               values_to = "Value") %>%
+  mutate(Value = as.character(Value))
+
+# it needs to be in the same order as the figure
+species_order_from_fig1 <- odonate_tree$tip.label
+
+# remove any Species that do not appear in the figure
+trait_data_long <- trait_data_long %>%
+  filter(Species %in% species_order_from_fig1)
+
+# convert Species column to a factor with levels matching the tree order
+trait_data_long$Species <- factor(trait_data_long$Species, levels = species_order_from_fig1)
+
+#It needs to appear in the same order as the figure 1
+# Extract the correct plotting order
+tip_order <- odonate_tree$tip.label[odonate_tree$edge[odonate_tree$edge[,2] <= length(odonate_tree$tip.label), 2]]
+
+#check order
+print(tip_order) #This is the order for figure 1, with the last species at the top of the figure and the first species at the bottom of the figure
+
+
+#match order
+trait_data_long$Species <- factor(trait_data_long$Species, levels = tip_order)
+
+
+#Plot heatmap
+
+#predictor traits
+trait_data_filtered <- trait_data_long %>%
+  filter(Trait %in% c("lentic_lotic_size", "Mate_guarding_cat", "Prop_Flier_vs_Percher", "Prop_Oviposition", "Prop_Courtship", "Prop_lo_len")) 
+
+# Convert NA values to a string ("NA") for ggplot to recognize them
+trait_data_filtered <- trait_data_filtered %>%
+  mutate(Value = ifelse(is.na(Value), "NA", Value))  # Convert NA to string
+
+
+trait_data_filtered <- trait_data_filtered %>%
+  mutate(Value = ifelse(grepl("^.*_", Value), Value, paste(Trait, Value, sep = "_")))
+
+trait_data_filtered <- trait_data_filtered %>%
+  mutate(Value = ifelse(Trait == "Habitat_size" & !grepl("^Habitat_size_", Value), 
+                        paste("Habitat_size", Value, sep = "_"), 
+                        Value))
+
+#order of presenting the traits
+trait_order <- c("Prop_Flier_vs_Percher", "Prop_Oviposition", 
+                 "Prop_lo_len", "Prop_Courtship", "Mate_guarding_cat", "Habitat_size")
+trait_data_filtered$Trait <- factor(trait_data_filtered$Trait, levels = trait_order)
+
+lentic_colors <- c(
+  "Habitat_size_lentic_medium" = "darkred",
+  "Habitat_size_lentic_large" = "darkorange",
+  "Habitat_size_lentic_small" = "darkgreen",
+  "Habitat_size_stream" = "blue",
+  "Habitat_size_river" = "lightblue",
+  "Habitat_size_generalist" = "black",
+  "Habitat_size_both" = "aquamarine2"
+)
+
+
+guarding_colors <- c(
+  "Mate_guarding_cat_No" = "cyan3",  
+  "Mate_guarding_cat_Contact" = "firebrick1",
+  "Mate_guarding_cat_Non-contact" = "mediumblue"
+)
+
+# Colours for Flier vs Percher
+flying_colors <- c(
+  "Prop_Flier_vs_Percher_0" = "pink",  # Flier
+  "Prop_Flier_vs_Percher_1" = "purple" # Percher
+)
+
+# Colours for Oviposition
+ovi_colors <- c(
+  "Prop_Oviposition_0" = "gray34",  # Endophytic
+  "Prop_Oviposition_1" = "coral4"    # Exophytic
+)
+
+# Colours for Courtship
+court_colors <- c(
+  "Prop_Courtship_0" = "darkslateblue",  # No
+  "Prop_Courtship_1" = "khaki3"    # Yes
+)
+
+# Colours for lotic vs lentic
+lo_len_colors <- c(
+  "Prop_lo_len_0" = "seagreen",  # lentic
+  "Prop_lo_len_1" = "coral"    # lotic
+)
+
+# Combine color schemes
+all_trait_colors <- c(lentic_colors, guarding_colors, flying_colors, ovi_colors, court_colors, lo_len_colors, "NA" = "white")  # Assign white for missing values
+
+#plot
+ggplot(trait_data_filtered, aes(x = Trait, y = Species, fill = Value)) +
+  geom_tile(color = "white") +  
+  scale_fill_manual(values = all_trait_colors, na.value = "white") +
+  scale_x_discrete(labels = c(
+    "Prop_Flier_vs_Percher" = "Active behaviour",
+    "Prop_Courtship" = "Courtship",
+    "Prop_Oviposition" = "Oviposition method",
+    "Prop_lo_len" = "Oviposition habitat type",
+    "Mate_guarding_cat" = "Mate guarding",
+    "Habitat_size" = "Oviposition habitat size"
+  )) + 
+  theme_minimal() +
+  labs(title = "Predictor trait Heatmap",
+       x = "Trait",
+       y = "Species",
+       fill = "Trait Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+        axis.text.y = element_text(size = 6))
+
 
 
 #Calculate phylogenetic signal
