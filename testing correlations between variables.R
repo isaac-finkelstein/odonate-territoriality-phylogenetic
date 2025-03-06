@@ -821,6 +821,39 @@ ggplot(data_mate_guard_no_terr, aes(x = factor(Prop_territorial), fill = Mate_gu
         axis.title = element_text(size = 12))
 
 
+
+#for supplementary material
+#post hoc all-pairwise comparison test
+summary(mod_mate_guard)
+
+coefs_mate_guard <- summary(mod_mate_guard)$coefficients
+estimates_mate_guard <- coefs_mate_guard[, "Estimate"]
+se_mate_guard <- coefs_mate_guard[, "StdErr"]
+
+post_hoc_test <- function(beta1, se1, beta2, se2) {
+  z_value <- (beta1 - beta2) / sqrt(se1^2 + se2^2)
+  p_value <- 2 * (1 - pnorm(abs(z_value)))  # Two-tailed
+  return(c(z_value, p_value))
+}
+
+#all pairwise comparisons
+pairwise_results_mate_guard <- combn(names(estimates_mate_guard), 2, function(pair) {
+  beta1 <- estimates_mate_guard[pair[1]]
+  se1 <- se_mate_guard[pair[1]]
+  beta2 <- estimates_mate_guard[pair[2]]
+  se2 <- se_mate_guard[pair[2]]
+  res <- post_hoc_test(beta1, se1, beta2, se2)
+  data.frame(Comparison = paste(pair[1], "vs", pair[2]),
+             Z = res[1], P = res[2])
+}, simplify = FALSE)
+
+
+post_hoc_table_mate_guard <- do.call(rbind, pairwise_results_mate_guard)
+
+#show this in a table
+print(post_hoc_table_mate_guard)
+
+
 #Doing a regression of all my variables
 #Make a single dataframe
 big_data <- merge(binary_terr_df, mate_guarding_three_cat, by = "sn", all = TRUE)
