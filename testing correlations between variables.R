@@ -124,7 +124,7 @@ binary_data <- merge(binary_data, binary_ovi_df, by = "sn", all = TRUE)
 binary_data <- merge(binary_data, binary_lo_len, by = "sn", all = TRUE)
 
 
-colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Mate_Guard", "Prop_Flier_vs_Percher", "Prop_Oviposition", "Prop_Courtship", "Prop_lo_len")
+colnames(binary_data) <- c("Species", "Prop_Territorial", "Prop_Mate_Guard", "Prop_Flier_vs_Percher", "Prop_Courtship", "Prop_Oviposition", "Prop_lo_len")
 #This worked! I checked manually.
 
 #one more step: I need to remove NA values, but if I do that to the entire dataframe, I will have no rows left
@@ -654,6 +654,51 @@ name.check(tree_ovi_size, ovi_size_data, data.names=as.character(ovi_size_data$S
 ovi_size_log_reg<-phyloglm(Territorial~lentic_lotic_size, data=ovi_size_data, phy=tree_ovi_size, boot=1000, method='logistic_MPLE', btol=10)
 summary(ovi_size_log_reg)
 
+#for supplementary material
+#post hoc all-pairwise comparison test
+summary(ovi_size_log_reg)$coefficients
+
+#manually calculate
+betaboth<- 0.309223 #estimate for both
+seboth<- 0.740189 #estimate for both
+
+betalarge<- -0.385060
+selarge<- 0.377901
+
+z_value_both_large<- (betaboth-betalarge)/sqrt(seboth^2 +selarge^2)
+p_value_both_large <- 2*(1 - pnorm(abs(z_value_both_large)))
+z_value_both_large
+p_value_both_large
+
+
+#let's do this for all pairwise comparisons
+post_hoc_test <- function(beta1, se1, beta2, se2) {
+  z_value <- (beta1 - beta2) / sqrt(se1^2 + se2^2)
+  p_value <- 2 * (1 - pnorm(abs(z_value)))  # Two-tailed
+  return(c(z_value, p_value))
+}
+
+
+coefs <- summary(ovi_size_log_reg)$coefficients
+estimates <- coefs[, "Estimate"]
+se <- coefs[, "StdErr"]
+
+#all pairwise comparisons
+pairwise_results <- combn(names(estimates), 2, function(pair) {
+  beta1 <- estimates[pair[1]]
+  se1 <- se[pair[1]]
+  beta2 <- estimates[pair[2]]
+  se2 <- se[pair[2]]
+  res <- post_hoc_test(beta1, se1, beta2, se2)
+  data.frame(Comparison = paste(pair[1], "vs", pair[2]),
+             Z = res[1], P = res[2])
+}, simplify = FALSE)
+
+#put these in a table
+post_hoc_table <- do.call(rbind, pairwise_results)
+print(post_hoc_table)
+
+
 #You can also run a phylogenetic generalized linear model
 library(nlme)
 spp<- rownames(ovi_size_data)
@@ -907,3 +952,6 @@ trait_data<-merge(binary_data, ovi_size_trait_data, by = "Species", all=TRUE)
 trait_data<-merge(trait_data, trait_data_mate_guard, by = "Species", all=TRUE)
 str(trait_data)
 str(binary_data)
+
+
+
