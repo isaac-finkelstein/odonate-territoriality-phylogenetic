@@ -520,6 +520,14 @@ pairwise_results <- combn(names(estimates), 2, function(pair) {
 post_hoc_table <- do.call(rbind, pairwise_results)
 print(post_hoc_table)
 
+#implement FDR correction
+p_values <- post_hoc_table$P
+p_values_fdr <- p.adjust(p_values, method = "BH")
+#add to table
+post_hoc_table$FDR_P <- p_values_fdr
+
+print(post_hoc_table)
+
 
 
 
@@ -621,6 +629,13 @@ post_hoc_table_mate_guard <- do.call(rbind, pairwise_results_mate_guard)
 #show this in a table
 print(post_hoc_table_mate_guard)
 
+#implement FDR correction
+p_values_mate_guard <- post_hoc_table_mate_guard$P
+p_values_mate_guard_fdr <- p.adjust(p_values_mate_guard, method = "BH")
+#add to table
+post_hoc_table_mate_guard$FDR_P <- p_values_mate_guard_fdr
+
+print(post_hoc_table_mate_guard)
 
 
 #Testing if abundance predicts territoriality
