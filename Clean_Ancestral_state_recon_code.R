@@ -84,6 +84,21 @@ data.frame(model=c("ER", "ARD", "no -> yes", "yes->no"),
            AIC=aic_model,delta.AIC=aic_model-min(aic_model))   
 #the all-rates-different model has the lowest AIC
 
+#graph it
+rates <- fit_ard$rates  # get transition rates
+print(rates)
+
+max_rate <- max(rates, na.rm = TRUE)
+scaled_lwd <- rates / max_rate * 3
+
+legend_rates <- pretty(range(rates, na.rm=TRUE), n=3)
+legend_lwd <- legend_rates / max_rate * 3
+
+plot(fit_ard, show.zeros=FALSE, mar=rep(0,4), signif=5, lwd=scaled_lwd)
+legend("topright", legend=sprintf("%.3f", legend_rates), 
+       lwd=legend_lwd, col="black", title="Transition Rate")
+#the line thickness is flipped, and I can't figure out why. 
+
 #estimate q (the transition rate)
 #Q is the expected number of transition given a particular amount of time 
 print(fit_er)
