@@ -476,6 +476,50 @@ count_ovi <- ovi_size_data %>%
   group_by(Habitat_size) %>%
   summarise(count = n())
 
+#for supplementary material
+#post hoc all-pairwise comparison test
+summary(ovi_size_log_reg)$coefficients
+
+#manually calculate
+beta_both<- 0.309223 #estimate for both
+se_both<- 0.740189 #estimate for both
+
+beta_large<- -0.385060
+se_large<- 0.377901
+
+z_value_both_large<- (beta_both-beta_large)/sqrt(se_both^2 +se_large^2)
+p_value_both_large <- 2*(1 - pnorm(abs(z_value_both_large)))
+z_value_both_large
+p_value_both_large
+
+
+#let's do this for all pairwise comparisons
+post_hoc_test <- function(beta1, se1, beta2, se2) {
+  z_value <- (beta1 - beta2) / sqrt(se1^2 + se2^2)
+  p_value <- 2 * (1 - pnorm(abs(z_value)))  # Two-tailed
+  return(c(z_value, p_value))
+}
+
+
+coefs <- summary(ovi_size_log_reg)$coefficients
+estimates <- coefs[, "Estimate"]
+se <- coefs[, "StdErr"]
+
+#all pairwise comparisons
+pairwise_results <- combn(names(estimates), 2, function(pair) {
+  beta1 <- estimates[pair[1]]
+  se1 <- se[pair[1]]
+  beta2 <- estimates[pair[2]]
+  se2 <- se[pair[2]]
+  res <- post_hoc_test(beta1, se1, beta2, se2)
+  data.frame(Comparison = paste(pair[1], "vs", pair[2]),
+             Z = res[1], P = res[2])
+}, simplify = FALSE)
+
+#put these in a table
+post_hoc_table <- do.call(rbind, pairwise_results)
+print(post_hoc_table)
+
 
 
 
@@ -544,6 +588,40 @@ ggplot(data_mate_guard_terr, aes(x = factor(Prop_territorial), fill = factor(Mat
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
+
+
+#for supplementary material
+#post hoc all-pairwise comparison test
+summary(mate_guard_reg)
+
+coefs_mate_guard <- summary(mate_guard_reg)$coefficients
+estimates_mate_guard <- coefs_mate_guard[, "Estimate"]
+se_mate_guard <- coefs_mate_guard[, "StdErr"]
+
+post_hoc_test <- function(beta1, se1, beta2, se2) {
+  z_value <- (beta1 - beta2) / sqrt(se1^2 + se2^2)
+  p_value <- 2 * (1 - pnorm(abs(z_value)))  # Two-tailed
+  return(c(z_value, p_value))
+}
+
+#all pairwise comparisons
+pairwise_results_mate_guard <- combn(names(estimates_mate_guard), 2, function(pair) {
+  beta1 <- estimates_mate_guard[pair[1]]
+  se1 <- se_mate_guard[pair[1]]
+  beta2 <- estimates_mate_guard[pair[2]]
+  se2 <- se_mate_guard[pair[2]]
+  res <- post_hoc_test(beta1, se1, beta2, se2)
+  data.frame(Comparison = paste(pair[1], "vs", pair[2]),
+             Z = res[1], P = res[2])
+}, simplify = FALSE)
+
+
+post_hoc_table_mate_guard <- do.call(rbind, pairwise_results_mate_guard)
+
+#show this in a table
+print(post_hoc_table_mate_guard)
+
+
 
 #Testing if abundance predicts territoriality
 #Using data from De Resende et al., 2021 for abundance data
