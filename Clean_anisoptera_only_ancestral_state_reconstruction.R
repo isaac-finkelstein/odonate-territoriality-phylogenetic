@@ -66,6 +66,23 @@ name.check(anis_tree, anis_terr_data, data.names=as.character(anis_terr_data$sn)
 
 anis_terr_mode <- setNames(anis_terr_data$sp_terr, anis_terr_data$sn)
 
+anis_fit_ard<-fitMk(anis_tree, anis_terr_mode, model = "ARD")
+
+#graph it
+anis_rates <- anis_fit_ard$rates  # get transition rates
+print(anis_rates)
+
+anis_max_rate <- max(anis_rates, na.rm = TRUE)
+anis_scaled_lwd <- anis_rates / anis_max_rate * 3
+
+anis_legend_rates <- pretty(range(anis_rates, na.rm=TRUE), n=3)
+anis_legend_lwd <- anis_legend_rates / anis_max_rate * 3
+
+plot(anis_fit_ard, show.zeros=FALSE, mar=rep(0,4), signif=5, lwd=anis_scaled_lwd)
+legend("topright", legend=sprintf("%.3f", anis_legend_rates), 
+       lwd=anis_legend_lwd, col="black", title="Transition Rate")
+#the line thickness is flipped, and I can't figure out why. 
+
 
 #marginal ancestral state reconstruction
 fit_marginal_anis<- corHMM(anis_tree, anis_terr_data, node.states = "marginal",
