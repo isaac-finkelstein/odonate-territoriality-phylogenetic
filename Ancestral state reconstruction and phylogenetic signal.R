@@ -103,8 +103,20 @@ print(fit_01)
 print(fit_10)
 
 #graph it:
-plot(fit_ard, show.zeros=FALSE, mar=rep(0,4), signif=5)
-plot(fit_er)
+rates <- fit_ard$rates  # get transition rates
+print(rates)
+
+max_rate <- max(rates, na.rm = TRUE)
+scaled_lwd <- rates / max_rate * 3
+
+
+legend_rates <- pretty(range(rates, na.rm=TRUE), n=4)
+legend_lwd <- legend_rates / max_rate * 3
+
+plot(fit_ard, show.zeros=FALSE, mar=rep(0,4), signif=5, lwd=scaled_lwd)
+
+legend("topright", legend=sprintf("%.4f", legend_rates), 
+       lwd=legend_lwd, col="black", title="Transition Rate")
 #the ARD (all rates different) model, which had the lowest AIC -- shows that it is
 #easier/more common to go No -> Yes than to go Yes -> No
 
@@ -283,8 +295,8 @@ trait_data_filtered <- trait_data_filtered %>%
                         Value))
 
 #order of presenting the traits
-trait_order <- c("Prop_Flier_vs_Percher", "Prop_Courtship", "Prop_Oviposition", 
-                 "Prop_lo_len", "Mate_guarding_cat", "lentic_lotic_size")
+trait_order <- c("Prop_Flier_vs_Percher", "Prop_Oviposition", 
+                 "Prop_lo_len", "Prop_Courtship", "Mate_guarding_cat", "lentic_lotic_size")
 trait_data_filtered$Trait <- factor(trait_data_filtered$Trait, levels = trait_order)
 
 lentic_colors <- c(
