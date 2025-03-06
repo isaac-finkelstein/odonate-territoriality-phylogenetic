@@ -641,6 +641,8 @@ signal_courtship<-phylo.d(court_data, tree_court, names.col=sn, binvar=sp_courts
 signal_oviposition<-phylo.d(ovi_data, tree_ovi, names.col=sn, binvar = sp_ovi)
 signal_lo_len<-phylo.d(lo_len_data, tree_lo_len, names.col = sn, binvar = sp_lo_len)
 
+
+
 #phylogenetic signal for non-binary traits
 #calculating delta, a measure of phylogenetic signal
 
@@ -705,7 +707,7 @@ for (i in 1:100){
   rtrait <- sample(trait)
   random_delta[i] <- delta(rtrait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
 }
-p_value<-sum(random_delta>deltaA)/length(random_delta)
+p_value_mate_guard<-sum(random_delta>deltaA)/length(random_delta)
 
 #finally, let's do this for the size of oviposition habitat
 #make 7 categories: lentic small, lentic medium, lentic large, stream, stream and river, river, generalist
@@ -841,4 +843,52 @@ for (i in 1:100){
   rtrait <- sample(trait)
   random_delta[i] <- delta(rtrait, odonate_tree, 0.1, 0.0589, 10000, 10, 100)
 }
-p_value<-sum(random_delta>deltaB)/length(random_delta)
+p_value_hab_size<-sum(random_delta>deltaB)/length(random_delta)
+
+
+#applying FDR correction
+
+#binary trait p-values
+p_values_random <- c(
+  signal_terr$Pval1, 
+  signal_fly_v_perch$Pval1, 
+  signal_courtship$Pval1, 
+  signal_oviposition$Pval1, 
+  signal_lo_len$Pval1
+)
+
+p_values_brownian <- c(
+  signal_terr$Pval0, 
+  signal_fly_v_perch$Pval0, 
+  signal_courtship$Pval0, 
+  signal_oviposition$Pval0, 
+  signal_lo_len$Pval0
+)
+
+
+
+#non-binary trait p-values
+p_values_delta <- c(
+  p_value_hab_size,
+  p_value_mate_guard
+)
+
+
+all_p_values <- c(p_values_random, p_values_brownian, p_values_delta)
+
+all_p_values_fdr <- p.adjust(all_p_values, method = "BH")
+
+trait_names<- c("Territoriality", "Active behaviour", "Courtship", 
+                "Oviposition method", "Oviposition habitat type (lotic/lentic)", 
+                "Territoriality (Brownian)", "Active behaviour (Brownian)", "Courtship (Brownian)", 
+                "Oviposition method (Brownian)", "Oviposition habitat type (Brownian)", 
+                "Habitat Size", "Mate Guarding")
+
+phylo_signal_results <- data.frame(
+  Trait = trait_names,
+  Raw_P = all_p_values,
+  FDR_P = all_p_values_fdr
+)
+
+print(phylo_signal_results)
+
