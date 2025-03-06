@@ -66,6 +66,22 @@ name.check(zygo_tree, zygo_terr_data, data.names=as.character(zygo_terr_data$sn)
 
 zygo_terr_mode <- setNames(zygo_terr_data$sp_terr, zygo_terr_data$sn)
 
+zygo_fit_ard<-fitMk(zygo_tree, zygo_terr_mode, model = "ARD")
+
+#graph it
+zygo_rates <- zygo_fit_ard$rates  # get transition rates
+print(zygo_rates)
+
+zygo_max_rate <- max(zygo_rates, na.rm = TRUE)
+zygo_scaled_lwd <- zygo_rates / zygo_max_rate * 3
+
+zygo_legend_rates <- pretty(range(zygo_rates, na.rm=TRUE), n=3)
+zygo_legend_lwd <- zygo_legend_rates / zygo_max_rate * 3
+
+plot(zygo_fit_ard, show.zeros=TRUE, mar=rep(0,4), signif=5, lwd=zygo_scaled_lwd,  lty=1)
+legend("topright", legend=sprintf("%.3f", zygo_legend_rates), 
+       lwd=zygo_legend_lwd, col="black", title="Transition Rate")
+
 
 #marginal ancestral state reconstruction
 fit_marginal_zygo<- corHMM(zygo_tree, zygo_terr_data, node.states = "marginal",
