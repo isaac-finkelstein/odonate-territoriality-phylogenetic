@@ -13,12 +13,12 @@ library(ggplot2)
 
 my_data<- read.csv("data/data_vfinal.csv")
 
-load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
+#load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
 #str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label #check the structure of the tree
 
 #tree from Rocha-Ortega et al., 2020
 #same structure as Waller and Svensson 2017 but has different species coverage.
-#tree<-read.nexus(file="data/Rocha_ortega_tree.nex")
+tree<-read.nexus(file="data/Rocha_ortega_tree.nex")
 
 #my dataset has data that uses the same original source
 #remove instances where data is recorded more than once and uses the same original source
@@ -550,11 +550,8 @@ ggplot(trait_data_filtered, aes(x = Trait, y = Species, fill = Value)) +
 
 #using the D statistic from Fritz & Purvis 2010
 
-#territoriality
-signal_terr<-phylo.d(odonate_terr_data, odonate_tree, names.col=sn, binvar=sp_terr)
 
-
-#for other binary traits I need to create a dataframe for each trait
+#for binary traits (except territoriality) I need to create a dataframe for each trait
 #active behaviour (flier/percher)
 binary_fly_v_perch<-ftable(my_data$Formatted_species, my_data$Flier.vs.percher)
 prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fly_v_perch[,3]),2) #this is proportion Percher
@@ -605,6 +602,16 @@ binary_lo_len<- binary_lo_len[complete.cases(binary_lo_len), ] #remove NA values
 
 
 #prune binary variables to match the tree
+chk_terr<-name.check(tree, odonate_terr_data, data.names=as.character(odonate_terr_data$sn))
+tree_terr_signal <- drop.tip(tree, chk_terr$tree_not_data)#dropped tree_not_data species
+#identify species to drop from data
+terr_signal_species_to_drop<-chk_terr$data_not_tree
+terr_signal_data<-odonate_terr_data[!(odonate_terr_data$sn %in% terr_signal_species_to_drop),] #dropped data_not_tree species from dataset
+name.check(tree_terr_signal, terr_signal_data, data.names=as.character(terr_signal_data$sn))
+terr_signal_data<- terr_signal_data[complete.cases(terr_signal_data), ] #remove NA values 
+
+
+
 chk_fly_v_perch<-name.check(tree, binary_fly_v_perch_df, data.names=as.character(binary_fly_v_perch_df$sn))
 tree_fly_v_perch <- drop.tip(tree, chk_fly_v_perch$tree_not_data)#dropped tree_not_data species
 #identify species to drop from data
@@ -635,7 +642,7 @@ name.check(tree_lo_len, lo_len_data, data.names=as.character(lo_len_data$sn))
 
 
 #phylogenetic signal of binary traits
-signal_terr<-phylo.d(odonate_terr_data, odonate_tree, names.col=sn, binvar=sp_terr)
+signal_terr<-phylo.d(tree_terr_signal, terr_signal_data, names.col=sn, binvar=sp_terr)
 signal_fly_v_perch<-phylo.d(fly_v_perch_data, tree_fly_v_perch, names.col=sn, binvar=sp_fly_v_perch)
 signal_courtship<-phylo.d(court_data, tree_court, names.col=sn, binvar=sp_courtship)
 signal_oviposition<-phylo.d(ovi_data, tree_ovi, names.col=sn, binvar = sp_ovi)
