@@ -13,12 +13,12 @@ library(ggplot2)
 
 my_data<- read.csv("data/data_vfinal.csv")
 
-#load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
+load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
 #str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label #check the structure of the tree
 
 #tree from Rocha-Ortega et al., 2020
 #same structure as Waller and Svensson 2017 but has different species coverage.
-tree<-read.nexus(file="data/Rocha_ortega_tree.nex")
+#tree<-read.nexus(file="data/Rocha_ortega_tree.nex")
 
 #my dataset has data that uses the same original source
 #remove instances where data is recorded more than once and uses the same original source
