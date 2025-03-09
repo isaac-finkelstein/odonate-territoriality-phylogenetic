@@ -11,12 +11,12 @@ library(ggplot2)
 
 my_data<- read.csv("data/data_vfinal.csv")
 
-load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
+#load(file="data/Odo.tree.Waller.Svensson.2017.rda") #odonate tree extracated from Waller and Svensson 2017
 #str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label #check the structure of the tree
 
 #tree from Rocha-Ortega et al., 2020
 #same structure as Waller and Svensson 2017 but has different species coverage.
-#tree<-read.nexus(file="data/Rocha_ortega_tree.nex")
+tree<-read.nexus(file="data/Rocha_ortega_tree.nex")
 
 #my dataset has data that uses the same original source
 #remove instances where data is recorded more than once and uses the same original source
@@ -596,6 +596,64 @@ ggplot(data_mate_guard_terr, aes(x = factor(Prop_territorial), fill = factor(Mat
         axis.line = element_line(color = "black", size = 0.5),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 12))
+
+
+
+#FDR correction for all testing for correlated variables (Pagel94 test and phylogenetic logistic regression)
+p_values_pagel94 <- c(
+  fly_v_perch_fit$P,
+  ovi_fit$P,
+  lo_len_fit$P,         
+  court_fit$P
+)
+
+mate_guard_p_values <- summary(mate_guard_reg)$coefficients[, "p.value"]
+
+ovi_size_p_values <- summary(ovi_size_log_reg)$coefficients[, "p.value"]
+
+
+#table
+trait_pairs_pagel94 <- c(
+  "Active behaviour vs Territoriality",
+  "Oviposition method vs Territoriality", 
+  "Oviposition habitat vs Territoriality",  
+  "Courtship vs Territoriality"  
+  
+)
+
+trait_pairs_ovi_size <- c(
+  "Intercept (Habitat Size Model)",
+  "Territoriality ~ Habitat Size (Both)",
+  "Territoriality ~ Habitat Size (Lentic Large)",
+  "Territoriality ~ Habitat Size (Lentic Medium)",
+  "Territoriality ~ Habitat Size (Lentic Small)",
+  "Territoriality ~ Habitat Size (River)",
+  "Territoriality ~ Habitat Size (Stream)"
+)
+
+trait_pairs_mate_guard <- c(
+  "Intercept (Mate Guarding Model)",
+  "Territoriality ~ Mate Guarding (No)",
+  "Territoriality ~ Mate Guarding (Non-contact)"
+)
+
+all_trait_pairs <- c(trait_pairs_pagel94, trait_pairs_ovi_size, trait_pairs_mate_guard)
+all_correlation_p_values <- c(p_values_pagel94, ovi_size_p_values, mate_guard_p_values)
+
+#calculate FDR
+all_correlation_fdr <- p.adjust(all_correlation_p_values, method = "BH")
+
+correlation_results <- data.frame(
+  Trait_Comparison = all_trait_pairs,
+  Raw_P = all_correlation_p_values,
+  FDR_P = all_correlation_fdr
+)
+correlation_results$Raw_P <- round(correlation_results$Raw_P, 4)
+correlation_results$FDR_P <- round(correlation_results$FDR_P, 4)
+
+#print
+print(correlation_results, row.names = FALSE)
+
 
 
 #for supplementary material
