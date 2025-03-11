@@ -395,7 +395,6 @@ terr_mode <- setNames(as.character(terr_mode), names(terr_mode))
 
 odonate_simmaps <- make.simmap(odonate_tree, terr_mode, model="ARD", nsim=100)
 
-# Check a summary of the mappings
 summary(odonate_simmaps)
 
 #________________________________________________________________________________________________________
