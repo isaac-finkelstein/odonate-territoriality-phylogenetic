@@ -546,6 +546,14 @@ ggplot(trait_data_filtered, aes(x = Trait, y = Species, fill = Value)) +
 
 
 
+#using stochastic character mapping to reveal the estimated history frequency of the transitions in the tree (the number of transitions that have occures)
+terr_mode <- setNames(as.character(terr_mode), names(terr_mode))
+
+odonate_simmaps <- make.simmap(odonate_tree, terr_mode, model="ARD", nsim=100)
+
+summary(odonate_simmaps)
+
+
 #Calculate phylogenetic signal
 
 #using the D statistic from Fritz & Purvis 2010
