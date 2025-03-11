@@ -236,7 +236,6 @@ tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.
 #because you can see that zygoptera and Anisoptera have different ancestral states!
 
 
-
 #Adding trait data to this figure
 #I created the trait_data dataframe in "Testing correlations between variables" file - go there (at the very end)
 
@@ -388,6 +387,16 @@ legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty
 #NOTICE that the results differ a bit. The estimate ancestral state changes between ace and corHMM.
 
 
+
+
+
+#using stochastic character mapping to reveal the estimated history frequency of the transitions in the tree (the number of transitions that have occures)
+terr_mode <- setNames(as.character(terr_mode), names(terr_mode))
+
+odonate_simmaps <- make.simmap(odonate_tree, terr_mode, model="ARD", nsim=100)
+
+# Check a summary of the mappings
+summary(odonate_simmaps)
 
 #________________________________________________________________________________________________________
 #calculating phylogenetic signal using the D statistic from Fritz & Purvis 2010
