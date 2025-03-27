@@ -452,7 +452,22 @@ ovi_size_data$Habitat_size <- relevel(ovi_size_data$Habitat_size, ref = "general
 ovi_size_log_reg<-phyloglm(Territorial~Habitat_size, data=ovi_size_data, phy=tree_ovi_size, boot=1000, method='logistic_MPLE', btol= 30)
 summary(ovi_size_log_reg)
 
+#calculate odds ratios
 oddrat_ovi <- exp(coef(ovi_size_log_reg))
+
+coefs <- summary(ovi_size_log_reg)$coefficients
+
+odds_ratios <- exp(coefs[, "Estimate"])         
+lower_CI <- exp(coefs[, "lowerbootCI"]) 
+upper_CI <- exp(coefs[, "upperbootCI"]) 
+
+OR_table <- data.frame(
+  Variable = rownames(coefs),
+  Odds_Ratio = odds_ratios,
+  Lower_95_CI = lower_CI,
+  Upper_95_CI = upper_CI
+)
+
 
 
 #plot
@@ -581,7 +596,21 @@ data_mate_guard_terr$Mate_guarding_cat <- as.factor(data_mate_guard_terr$Mate_gu
 mate_guard_reg<-phyloglm(Prop_territorial~Mate_guarding_cat, data=data_mate_guard_terr, phy=tree_mate_guard, boot=1000, method='logistic_MPLE', btol=10)
 summary(mate_guard_reg)
 
+#calculate odds ratios
 oddrat_mate_guard <- exp(coef(mate_guard_reg))
+
+coefs_mate_guard <- summary(mate_guard_reg)$coefficients
+
+odds_ratios_mate_guard <- exp(coefs_mate_guard[, "Estimate"])         
+lower_CI_mate_guard <- exp(coefs_mate_guard[, "lowerbootCI"])  # Exponentiate lower bound
+upper_CI_mate_guard <- exp(coefs_mate_guard[, "upperbootCI"])  # Exponentiate upper bound
+
+OR_table_mate_guard <- data.frame(
+  Variable = rownames(coefs_mate_guard),
+  Odds_Ratio = odds_ratios_mate_guard,
+  Lower_95_CI = lower_CI_mate_guard,
+  Upper_95_CI = upper_CI_mate_guard
+)
 
 #plot
 custom_levels <- c("No", "Contact", "Non-contact")
