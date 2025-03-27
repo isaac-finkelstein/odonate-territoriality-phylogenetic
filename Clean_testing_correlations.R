@@ -753,3 +753,14 @@ name.check(tree_abundance, data_abundance_terr, data.names=as.character(data_abu
 #Test if abundance predicts territoriality
 mod_abund<-phyloglm(Territorial~Abundance, data=data_abundance_terr, phy=tree_abundance, boot=1000, method= 'logistic_MPLE', btol=10)
 summary(mod_abund)
+
+
+
+
+#Chi-square test of independence for each pairwise combination of my predictor variables
+merged_data <- merge(ovi_size_data, data_mate_guard_terr, by = "Species")
+table_habitat_mate <- table(merged_data$Habitat_size, merged_data$Mate_guarding_cat)
+#chi-square test
+chisq.test(table_habitat_mate) #sample sizes too small
+#use fisher's exact test for small sample sizes
+fisher.test(table_habitat_mate)
