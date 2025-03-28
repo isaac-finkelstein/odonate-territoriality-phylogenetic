@@ -906,5 +906,44 @@ chisq.test(table_active_beh_court)
 fisher.test(table_active_beh_court)
 
 
-#then do FDR corrections!
+#FDR correction
+pvals<- c(
+  fisher.test(table_ovi_size_mate_guard)$p.value,
+  fisher.test(table_ovi_size_court)$p.value,
+  fisher.test(table_ovi_size_fly_perch)$p.value,
+  fisher.test(table_ovi_size_endo_ecto)$p.value,
+  fisher.test(table_ovi_size_lo_len)$p.value,
+  fisher.test(table_mate_guard_fly_perch)$p.value,
+  fisher.test(table_mate_guard_court)$p.value,
+  fisher.test(table_mate_guard_endo_ecto)$p.value,
+  fisher.test(table_mate_guard_lo_len)$p.value,
+  fisher.test(table_lo_len_active_beh)$p.value,
+  fisher.test(table_lo_len_court)$p.value,
+  fisher.test(table_lo_len_ovi)$p.value,
+  fisher.test(table_ovi_active_beh)$p.value,
+  fisher.test(table_ovi_court)$p.value
+)
+
+pvals_fdr <- p.adjust(pvals, method = "BH")
+
+data.frame(
+  Test = c(
+    "OviSize x MateGuard",
+    "OviSize x Courtship",
+    "OviSize x ActiveBeh",
+    "OviSize x OviMethod",
+    "OviSize x LoticLentic",
+    "MateGuard x ActiveBeh",
+    "MateGuard x Courtship",
+    "MateGuard x OviMethod",
+    "MateGuard x LoticLentic",
+    "LoticLentic x ActiveBeh",
+    "LoticLentic x Courtship",
+    "LoticLentic x OviMethod",
+    "OviMethod x ActiveBeh",
+    "OviMethod x Courtship"
+  ),
+  Raw_P = pvals,
+  FDR_P = pvals_fdr
+)
 
