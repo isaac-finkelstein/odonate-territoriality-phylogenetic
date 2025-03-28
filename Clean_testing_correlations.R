@@ -757,10 +757,154 @@ summary(mod_abund)
 
 
 
-#Chi-square test of independence for each pairwise combination of my predictor variables
+#Fisher's test of independence for each pairwise combination of my predictor variables
+
+#oviposition size and mate guarding
 merged_data <- merge(ovi_size_data, data_mate_guard_terr, by = "Species")
-table_habitat_mate <- table(merged_data$Habitat_size, merged_data$Mate_guarding_cat)
+table_ovi_size_mate_guard <- table(merged_data$Habitat_size, merged_data$Mate_guarding_cat)
 #chi-square test
-chisq.test(table_habitat_mate) #sample sizes too small
+chisq.test(table_ovi_size_mate_guard) #sample sizes too small
 #use fisher's exact test for small sample sizes
-fisher.test(table_habitat_mate)
+fisher.test(table_ovi_size_mate_guard) #when the contingency table is greater than 2x2, the only output is a p-value
+
+
+#oviposition size and courtship
+matching_species_ovi_size_court <- intersect(names(court_pagel_court), ovi_size_data$Species)
+courtship_filtered_ovi_size <- court_pagel_court[matching_species_ovi_size_court]
+ovi_size_filtered_court <- ovi_size_data$Habitat_size[ovi_size_data$Species %in% matching_species_ovi_size_court]
+table_ovi_size_court <- table(ovi_size_filtered_court, courtship_filtered_ovi_size)
+
+chisq.test(table_ovi_size_court)
+fisher.test(table_ovi_size_court)
+
+
+#oviposition and active behaviour
+matching_species_ovi_size_active_beh <- intersect(names(fly_mode_pagel_fly_v_perch), ovi_size_data$Species)
+active_behavior_filtered_ovi_size <- fly_mode_pagel_fly_v_perch[matching_species_ovi_size_active_beh]
+ovi_size_filtered_active_beh <- ovi_size_data$Habitat_size[ovi_size_data$Species %in% matching_species_ovi_size_active_beh ]
+table_ovi_size_fly_perch <- table(ovi_size_filtered_active_beh, active_behavior_filtered_ovi_size)
+
+chisq.test(table_ovi_size_fly_perch)
+fisher.test(table_ovi_size_fly_perch)
+
+#oviposition size and oviposition method
+matching_species_ovi_size_endo_ecto <- intersect(names(ovi_mode_pagel_ovi), ovi_size_data$Species)
+endo_ecto_filtered_ovi_size <- ovi_mode_pagel_ovi[matching_species_ovi_size_endo_ecto]
+ovi_size_filtered_endo_ecto <- ovi_size_data$Habitat_size[ovi_size_data$Species %in% matching_species_ovi_size_endo_ecto]
+table_ovi_size_endo_ecto <- table(ovi_size_filtered_endo_ecto, endo_ecto_filtered_ovi_size)
+
+chisq.test(table_ovi_size_endo_ecto)
+fisher.test(table_ovi_size_endo_ecto)
+
+
+#oviposition size and lotic/lentic
+matching_species_ovi_size_lo_len <- intersect(names(lo_len_pagel_lo_len), ovi_size_data$Species)
+lo_len_filtered_ovi_size <- lo_len_pagel_lo_len[matching_species_ovi_size_lo_len]
+ovi_size_filtered_lo_len <- ovi_size_data$Habitat_size[ovi_size_data$Species %in% matching_species_ovi_size_lo_len ]
+table_ovi_size_lo_len<- table(ovi_size_filtered_lo_len, lo_len_filtered_ovi_size)
+
+chisq.test(table_ovi_size_lo_len)
+fisher.test(table_ovi_size_lo_len)
+
+
+#Mate guarding and active behaviour
+matching_species_mate_guard_active_beh <- intersect(names(fly_mode_pagel_fly_v_perch), data_mate_guard_terr$Species)
+active_behavior_filtered_mate_guard <- fly_mode_pagel_fly_v_perch[matching_species_mate_guard_active_beh]
+mate_guard_filtered_active_beh <- data_mate_guard_terr$Mate_guarding_cat[data_mate_guard_terr$Species %in% matching_species_mate_guard_active_beh ]
+table_mate_guard_fly_perch <- table(mate_guard_filtered_active_beh, active_behavior_filtered_mate_guard)
+
+chisq.test(table_mate_guard_fly_perch)
+fisher.test(table_mate_guard_fly_perch)
+
+
+#Mate guarding and courtship
+matching_species_mate_guard_court <- intersect(names(court_pagel_court), data_mate_guard_terr$Species)
+court_filtered_mate_guard <- court_pagel_court[matching_species_mate_guard_court]
+mate_guard_filtered_court <- data_mate_guard_terr$Mate_guarding_cat[data_mate_guard_terr$Species %in% matching_species_mate_guard_court ]
+table_mate_guard_court <- table(mate_guard_filtered_court, court_filtered_mate_guard)
+
+chisq.test(table_mate_guard_court)
+fisher.test(table_mate_guard_court)
+
+
+#mate guarding and oviposition method
+matching_species_mate_guard_endo_ecto <- intersect(names(ovi_mode_pagel_ovi), data_mate_guard_terr$Species)
+endo_ecto_filtered_mate_guard <- ovi_mode_pagel_ovi[matching_species_mate_guard_endo_ecto]
+mate_guard_filtered_endo_ecto <- data_mate_guard_terr$Mate_guarding_cat[data_mate_guard_terr$Species %in% matching_species_mate_guard_endo_ecto ]
+table_mate_guard_endo_ecto <- table(mate_guard_filtered_endo_ecto, endo_ecto_filtered_mate_guard)
+
+chisq.test(table_mate_guard_endo_ecto)
+fisher.test(table_mate_guard_endo_ecto)
+
+
+#mate guarding and lotic/lentic
+matching_species_mate_guard_lo_len<- intersect(names(lo_len_pagel_lo_len), data_mate_guard_terr$Species)
+lo_len_filtered_mate_guard <- lo_len_pagel_lo_len[matching_species_mate_guard_lo_len]
+mate_guard_filtered_lo_len <- data_mate_guard_terr$Mate_guarding_cat[data_mate_guard_terr$Species %in% matching_species_mate_guard_lo_len ]
+table_mate_guard_lo_len <- table(mate_guard_filtered_lo_len, lo_len_filtered_mate_guard)
+
+chisq.test(table_mate_guard_lo_len)
+fisher.test(table_mate_guard_lo_len)
+
+
+#lotic vs lentic and active behaviour
+matching_species_lo_len_active_beh <- intersect(names(fly_mode_pagel_fly_v_perch), names(lo_len_pagel_lo_len))
+lo_len_filtered_active_beh <- lo_len_pagel_lo_len[matching_species_lo_len_active_beh]
+active_beh_filtered_lo_len <- fly_mode_pagel_fly_v_perch[matching_species_lo_len_active_beh ]
+table_lo_len_active_beh<- table(lo_len_filtered_active_beh, active_beh_filtered_lo_len)
+
+chisq.test(table_lo_len_active_beh)
+fisher.test(table_lo_len_active_beh)
+
+#lotic vs lentic and courtship
+matching_species_lo_len_court <- intersect(names(court_pagel_court), names(lo_len_pagel_lo_len))
+lo_len_filtered_court <- lo_len_pagel_lo_len[matching_species_lo_len_court]
+court_filtered_lo_len <- court_pagel_court[matching_species_lo_len_court ]
+table_lo_len_court<- table(lo_len_filtered_court, court_filtered_lo_len)
+
+chisq.test(table_lo_len_court)
+fisher.test(table_lo_len_court)
+
+
+#lotic vs lentic and ovi method
+matching_species_lo_len_ovi <- intersect(names(ovi_mode_pagel_ovi), names(lo_len_pagel_lo_len))
+lo_len_filtered_ovi <- lo_len_pagel_lo_len[matching_species_lo_len_ovi]
+ovi_filtered_lo_len <- ovi_mode_pagel_ovi[matching_species_lo_len_ovi ]
+table_lo_len_ovi<- table(lo_len_filtered_ovi, ovi_filtered_lo_len)
+
+chisq.test(table_lo_len_ovi)
+fisher.test(table_lo_len_ovi)
+
+
+#ovi method and active behaviour
+
+matching_species_ovi_meth_active_beh <- intersect(names(ovi_mode_pagel_ovi), names(fly_mode_pagel_fly_v_perch))
+active_beh_filtered_ovi <- fly_mode_pagel_fly_v_perch[matching_species_ovi_meth_active_beh]
+ovi_filtered_active_beh <- ovi_mode_pagel_ovi[matching_species_ovi_meth_active_beh ]
+table_ovi_active_beh<- table(active_beh_filtered_ovi, ovi_filtered_active_beh)
+
+chisq.test(table_ovi_active_beh)
+fisher.test(table_ovi_active_beh)
+
+
+#ovi method and courtship
+matching_species_ovi_meth_court <- intersect(names(ovi_mode_pagel_ovi), names(court_pagel_court))
+court_filtered_ovi <- court_pagel_court[matching_species_ovi_meth_court]
+ovi_filtered_court <- ovi_mode_pagel_ovi[matching_species_ovi_meth_court ]
+table_ovi_court<- table(court_filtered_ovi, ovi_filtered_court)
+
+chisq.test(table_ovi_court)
+fisher.test(table_ovi_court)
+
+#courtship + active behaviour
+matching_species_active_beh_court <- intersect(names(fly_mode_pagel_fly_v_perch), names(court_pagel_court))
+court_filtered_active_beh <- court_pagel_court[matching_species_active_beh_court]
+active_beh_filtered_court <- fly_mode_pagel_fly_v_perch[matching_species_active_beh_court ]
+table_active_beh_court<- table(court_filtered_active_beh, active_beh_filtered_court)
+
+chisq.test(table_active_beh_court)
+fisher.test(table_active_beh_court)
+
+
+#then do FDR corrections!
+
