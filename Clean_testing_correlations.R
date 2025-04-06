@@ -628,6 +628,77 @@ ggplot(data_mate_guard_terr, aes(x = factor(Prop_territorial), fill = factor(Mat
 
 
 
+#controlling for collinearity
+control_df<-data.frame(
+  Species = names(fly_mode_pagel_fly_v_perch),
+  active_terr = as.character(fly_mode_pagel_fly_v_perch)
+)
+combined_data_mate_guard_act_beh <- merge(data_mate_guard_terr, control_df, by = "Species", all.x = TRUE)
+
+combined_data_mate_guard_act_beh$Mate_guarding_cat <- as.factor(combined_data_mate_guard_act_beh$Mate_guarding_cat)
+combined_data_mate_guard_act_beh$Active_territoriality <- as.factor(combined_data_mate_guard_act_beh$active_terr)
+combined_data_mate_guard_act_beh_old <- na.omit(combined_data_mate_guard_act_beh)
+
+#filter to match phylogeny
+chk_mate_guard_control<-name.check(tree, combined_data_mate_guard_act_beh_old, data.names=as.character(combined_data_mate_guard_act_beh_old$Species))
+summary(chk_mate_guard_control)
+tree_mate_guard_control<-drop.tip(tree, chk_mate_guard_control$tree_not_data) #dropped tree_not_data species
+#identify species to drop from data
+guard_control_species_to_drop<-chk_mate_guard_control$data_not_tree
+data_mate_guard_control_terr<-na.omit(combined_data_mate_guard_act_beh_old[!(combined_data_mate_guard_act_beh_old$Species %in% guard_control_species_to_drop),]) #dropped data_not_tree species
+rownames(data_mate_guard_control_terr)<-data_mate_guard_control_terr$Species
+name.check(tree_mate_guard_control, data_mate_guard_control_terr, data.names = as.character(data_mate_guard_control_terr$Species))
+
+
+#phylogenetic logistic regression
+#sample size is 105
+mate_guard_control_reg<-phyloglm(Prop_territorial~Mate_guarding_cat + Active_territoriality, data=combined_data_mate_guard_act_beh, phy=tree_mate_guard_control, boot=1000, method='logistic_MPLE', btol=10)
+summary(mate_guard_control_reg)
+
+#odds ratios
+oddrat_mate_guard_control <- exp(coef(mate_guard_control_reg))
+
+coefs_mate_guard_control <- summary(mate_guard_control_reg)$coefficients
+
+odds_ratios_mate_guard_control <- exp(coefs_mate_guard_control[, "Estimate"])         
+lower_CI_mate_guard_control <- exp(coefs_mate_guard_control[, "lowerbootCI"])  # Exponentiate lower bound
+upper_CI_mate_guard_control <- exp(coefs_mate_guard_control[, "upperbootCI"])  # Exponentiate upper bound
+
+OR_table_mate_guard_control <- data.frame(
+  Variable = rownames(coefs_mate_guard_control),
+  Odds_Ratio = odds_ratios_mate_guard_control,
+  Lower_95_CI = lower_CI_mate_guard_control,
+  Upper_95_CI = upper_CI_mate_guard_control
+)
+
+#add in oviposition method as a control
+ovi_mode_df <- data.frame(
+  Species = names(ovi_mode_pagel_ovi),
+  oviposition_method = as.character(ovi_mode_pagel_ovi),
+  stringsAsFactors = FALSE
+)
+combined_data_ovi_mode <- merge(combined_data_mate_guard_act_beh, ovi_mode_df, by = "Species", all.x = TRUE)
+
+combined_data_ovi_mode$oviposition_method <- as.factor(combined_data_ovi_mode$oviposition_method)
+combined_data_ovi_mode_old <- na.omit(combined_data_ovi_mode)
+
+#filter to match phylogeny
+chk_mate_guard_ovi_mode_control<-name.check(tree, combined_data_ovi_mode_old, data.names=as.character(combined_data_ovi_mode_old$Species))
+summary(chk_mate_guard_ovi_mode_control)
+tree_mate_guard_ovi_mode_control<-drop.tip(tree, chk_mate_guard_ovi_mode_control$tree_not_data) #dropped tree_not_data species
+#identify species to drop from data
+guard_ovi_mode_control_species_to_drop<-chk_mate_guard_ovi_mode_control$data_not_tree
+data_mate_guard_ovi_mode_control_terr<-na.omit(combined_data_ovi_mode_old[!(combined_data_ovi_mode_old$Species %in% guard_ovi_mode_control_species_to_drop),]) #dropped data_not_tree species
+rownames(data_mate_guard_ovi_mode_control_terr)<-data_mate_guard_ovi_mode_control_terr$Species
+name.check(tree_mate_guard_ovi_mode_control, data_mate_guard_ovi_mode_control_terr, data.names = as.character(data_mate_guard_ovi_mode_control_terr$Species))
+
+#sample size is 55
+mate_guard_both_controls_reg<-phyloglm(Prop_territorial~Mate_guarding_cat + Active_territoriality + oviposition_method, data=data_mate_guard_ovi_mode_control_terr, phy=tree_mate_guard_ovi_mode_control, boot=1000, method='logistic_MPLE', btol=10)
+summary(mate_guard_both_controls_reg)
+
+#next calculate odds ratios
+
+
 #FDR correction for all testing for correlated variables (Pagel94 test and phylogenetic logistic regression)
 p_values_pagel94 <- c(
   fly_v_perch_fit$P,
@@ -637,17 +708,40 @@ p_values_pagel94 <- c(
 )
 
 mate_guard_p_values <- summary(mate_guard_reg)$coefficients[, "p.value"]
+mate_guard_control_foraging_beh_p <- summary(mate_guard_control_reg)$coefficients[, "p.value"]
+mate_guard_both_controls_p <- summary(mate_guard_both_controls_reg)$coefficients[, "p.value"]
 
 ovi_size_p_values <- summary(ovi_size_log_reg)$coefficients[, "p.value"]
 
 
 #table
 trait_pairs_pagel94 <- c(
-  "Active behaviour vs Territoriality",
+  "Foraging behaviour vs Territoriality",
   "Oviposition method vs Territoriality", 
   "Oviposition habitat vs Territoriality",  
   "Courtship vs Territoriality"  
   
+)
+
+trait_pairs_mate_guard <- c(
+  "Intercept (Mate Guarding Model)",
+  "Territoriality ~ Mate Guarding (No)",
+  "Territoriality ~ Mate Guarding (Non-contact)"
+)
+
+trait_pairs_mate_guard_control <- c(
+  "Intercept (Mate Guarding + Foraging behaviour)",
+  "Mate Guarding (No)",
+  "Mate Guarding (Non-contact)",
+  "Foraging Behaviour (Percher)"
+)
+
+trait_pairs_mate_guard_both <- c(
+  "Intercept (Mate Guarding + Both Controls)",
+  "Mate Guarding (No)",
+  "Mate Guarding (Non-contact)",
+  "Foraging behaviour (Percher)",
+  "Oviposition Method (Exophytic)"
 )
 
 trait_pairs_ovi_size <- c(
@@ -660,14 +754,9 @@ trait_pairs_ovi_size <- c(
   "Territoriality ~ Habitat Size (Stream)"
 )
 
-trait_pairs_mate_guard <- c(
-  "Intercept (Mate Guarding Model)",
-  "Territoriality ~ Mate Guarding (No)",
-  "Territoriality ~ Mate Guarding (Non-contact)"
-)
 
-all_trait_pairs <- c(trait_pairs_pagel94, trait_pairs_ovi_size, trait_pairs_mate_guard)
-all_correlation_p_values <- c(p_values_pagel94, ovi_size_p_values, mate_guard_p_values)
+all_trait_pairs <- c(trait_pairs_pagel94, trait_pairs_mate_guard, trait_pairs_mate_guard_control, trait_pairs_mate_guard_both, trait_pairs_ovi_size)
+all_correlation_p_values <- c(p_values_pagel94, mate_guard_p_values, mate_guard_control_foraging_beh_p, mate_guard_both_controls_p, ovi_size_p_values)
 
 #calculate FDR
 all_correlation_fdr <- p.adjust(all_correlation_p_values, method = "BH")
@@ -682,7 +771,6 @@ correlation_results$FDR_P <- round(correlation_results$FDR_P, 4)
 
 #print
 print(correlation_results, row.names = FALSE)
-
 
 
 #for supplementary material
