@@ -652,7 +652,7 @@ name.check(tree_mate_guard_control, data_mate_guard_control_terr, data.names = a
 
 #phylogenetic logistic regression
 #sample size is 105
-mate_guard_control_reg<-phyloglm(Prop_territorial~Mate_guarding_cat + Active_territoriality, data=combined_data_mate_guard_act_beh, phy=tree_mate_guard_control, boot=1000, method='logistic_MPLE', btol=10)
+mate_guard_control_reg<-phyloglm(Prop_territorial~Mate_guarding_cat + Active_territoriality, data=data_mate_guard_control_terr, phy=tree_mate_guard_control, boot=1000, method='logistic_MPLE', btol=10)
 summary(mate_guard_control_reg)
 
 #odds ratios
@@ -696,7 +696,21 @@ name.check(tree_mate_guard_ovi_mode_control, data_mate_guard_ovi_mode_control_te
 mate_guard_both_controls_reg<-phyloglm(Prop_territorial~Mate_guarding_cat + Active_territoriality + oviposition_method, data=data_mate_guard_ovi_mode_control_terr, phy=tree_mate_guard_ovi_mode_control, boot=1000, method='logistic_MPLE', btol=10)
 summary(mate_guard_both_controls_reg)
 
-#next calculate odds ratios
+#odds ratios
+oddrat_mate_guard_both_controls <- exp(coef(mate_guard_both_controls_reg))
+
+coefs_mate_guard_both_controls <- summary(mate_guard_both_controls_reg)$coefficients
+
+odds_ratios_mate_guard_both_controls <- exp(coefs_mate_guard_both_controls[, "Estimate"])         
+lower_CI_mate_guard_both_controls <- exp(coefs_mate_guard_both_controls[, "lowerbootCI"])  # Exponentiate lower bound
+upper_CI_mate_guard_both_controls <- exp(coefs_mate_guard_both_controls[, "upperbootCI"])  # Exponentiate upper bound
+
+OR_table_mate_guard_both_controls <- data.frame(
+  Variable = rownames(coefs_mate_guard_both_controls),
+  Odds_Ratio = odds_ratios_mate_guard_both_controls,
+  Lower_95_CI = lower_CI_mate_guard_both_controls,
+  Upper_95_CI = upper_CI_mate_guard_both_controls
+)
 
 
 #FDR correction for all testing for correlated variables (Pagel94 test and phylogenetic logistic regression)
@@ -724,20 +738,20 @@ trait_pairs_pagel94 <- c(
 )
 
 trait_pairs_mate_guard <- c(
-  "Intercept (Mate Guarding Model)",
+  "Intercept (contact mate guarding)",
   "Territoriality ~ Mate Guarding (No)",
   "Territoriality ~ Mate Guarding (Non-contact)"
 )
 
 trait_pairs_mate_guard_control <- c(
-  "Intercept (Mate Guarding + Foraging behaviour)",
+  "Intercept (contact mate guarding)",
   "Mate Guarding (No)",
   "Mate Guarding (Non-contact)",
   "Foraging Behaviour (Percher)"
 )
 
 trait_pairs_mate_guard_both <- c(
-  "Intercept (Mate Guarding + Both Controls)",
+  "Intercept (contact mate guarding)",
   "Mate Guarding (No)",
   "Mate Guarding (Non-contact)",
   "Foraging behaviour (Percher)",
@@ -745,7 +759,7 @@ trait_pairs_mate_guard_both <- c(
 )
 
 trait_pairs_ovi_size <- c(
-  "Intercept (Habitat Size Model)",
+  "Intercept (generalist)",
   "Territoriality ~ Habitat Size (Both)",
   "Territoriality ~ Habitat Size (Lentic Large)",
   "Territoriality ~ Habitat Size (Lentic Medium)",
