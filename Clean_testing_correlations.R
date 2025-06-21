@@ -1,5 +1,6 @@
 #cleaner version
 #testing for associations between variables
+#note that I dropped courtship from the manuscript because it had a small sample size which limited any potential inferences.
 
 library(ape)
 library(phangorn)
