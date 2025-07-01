@@ -868,7 +868,7 @@ p_value_hab_size<-sum(random_delta>deltaB)/length(random_delta)
 p_values_random <- c(
   signal_terr$Pval1, 
   signal_fly_v_perch$Pval1, 
-  signal_courtship$Pval1, 
+  #signal_courtship$Pval1, 
   signal_oviposition$Pval1, 
   signal_lo_len$Pval1
 )
@@ -876,7 +876,7 @@ p_values_random <- c(
 p_values_brownian <- c(
   signal_terr$Pval0, 
   signal_fly_v_perch$Pval0, 
-  signal_courtship$Pval0, 
+  #signal_courtship$Pval0, 
   signal_oviposition$Pval0, 
   signal_lo_len$Pval0
 )
@@ -894,9 +894,9 @@ all_p_values <- c(p_values_random, p_values_brownian, p_values_delta)
 
 all_p_values_fdr <- p.adjust(all_p_values, method = "BH")
 
-trait_names<- c("Territoriality", "Active behaviour", "Courtship", 
+trait_names<- c("Territoriality", "Active behaviour", #"Courtship", 
                 "Oviposition method", "Oviposition habitat type (lotic/lentic)", 
-                "Territoriality (Brownian)", "Active behaviour (Brownian)", "Courtship (Brownian)", 
+                "Territoriality (Brownian)", "Active behaviour (Brownian)", #"Courtship (Brownian)", 
                 "Oviposition method (Brownian)", "Oviposition habitat type (Brownian)", 
                 "Habitat Size", "Mate Guarding")
 
