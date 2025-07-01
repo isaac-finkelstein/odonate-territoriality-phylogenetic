@@ -146,6 +146,10 @@ ggplot(fly_v_perch_terr_data, aes(x = sp_binary_terr, fill = sp_fly_v_perch)) +
         axis.title = element_text(size = 12)) +
   scale_y_continuous(breaks = breaks_fly)
 
+#chi square test
+chi_square_table <- table(fly_v_perch_terr_data$sp_binary_terr, fly_v_perch_terr_data$sp_fly_v_perch)
+chisq_test_result <- chisq.test(chi_square_table)
+print(chisq_test_result)
 
 #courtship + territoriality
 chk_court<-name.check(tree, court_terr_data_old, data.names=as.character(court_terr_data_old$sn))
@@ -718,8 +722,8 @@ OR_table_mate_guard_both_controls <- data.frame(
 p_values_pagel94 <- c(
   fly_v_perch_fit$P,
   ovi_fit$P,
-  lo_len_fit$P,         
-  court_fit$P
+  lo_len_fit$P         
+  #court_fit$P
 )
 
 mate_guard_p_values <- summary(mate_guard_reg)$coefficients[, "p.value"]
@@ -733,8 +737,8 @@ ovi_size_p_values <- summary(ovi_size_log_reg)$coefficients[, "p.value"]
 trait_pairs_pagel94 <- c(
   "Foraging behaviour vs Territoriality",
   "Oviposition method vs Territoriality", 
-  "Oviposition habitat vs Territoriality",  
-  "Courtship vs Territoriality"  
+  "Oviposition habitat vs Territoriality"  
+  #"Courtship vs Territoriality"  
   
 )
 
@@ -1012,19 +1016,19 @@ fisher.test(table_active_beh_court)
 #FDR correction
 pvals<- c(
   fisher.test(table_ovi_size_mate_guard)$p.value,
-  fisher.test(table_ovi_size_court)$p.value,
+  #fisher.test(table_ovi_size_court)$p.value,
   fisher.test(table_ovi_size_fly_perch)$p.value,
   fisher.test(table_ovi_size_endo_ecto)$p.value,
   fisher.test(table_ovi_size_lo_len)$p.value,
   fisher.test(table_mate_guard_fly_perch)$p.value,
-  fisher.test(table_mate_guard_court)$p.value,
+  #fisher.test(table_mate_guard_court)$p.value,
   fisher.test(table_mate_guard_endo_ecto)$p.value,
   fisher.test(table_mate_guard_lo_len)$p.value,
   fisher.test(table_lo_len_active_beh)$p.value,
-  fisher.test(table_lo_len_court)$p.value,
+  #fisher.test(table_lo_len_court)$p.value,
   fisher.test(table_lo_len_ovi)$p.value,
-  fisher.test(table_ovi_active_beh)$p.value,
-  fisher.test(table_ovi_court)$p.value
+  fisher.test(table_ovi_active_beh)$p.value
+  #fisher.test(table_ovi_court)$p.value
 )
 
 pvals_fdr <- p.adjust(pvals, method = "BH")
@@ -1032,19 +1036,19 @@ pvals_fdr <- p.adjust(pvals, method = "BH")
 data.frame(
   Test = c(
     "OviSize x MateGuard",
-    "OviSize x Courtship",
+    #"OviSize x Courtship",
     "OviSize x ActiveBeh",
     "OviSize x OviMethod",
     "OviSize x LoticLentic",
     "MateGuard x ActiveBeh",
-    "MateGuard x Courtship",
+    #"MateGuard x Courtship",
     "MateGuard x OviMethod",
     "MateGuard x LoticLentic",
     "LoticLentic x ActiveBeh",
-    "LoticLentic x Courtship",
+    #"LoticLentic x Courtship",
     "LoticLentic x OviMethod",
-    "OviMethod x ActiveBeh",
-    "OviMethod x Courtship"
+    "OviMethod x ActiveBeh"
+    #"OviMethod x Courtship"
   ),
   Raw_P = pvals,
   FDR_P = pvals_fdr
