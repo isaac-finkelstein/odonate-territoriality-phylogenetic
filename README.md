@@ -8,7 +8,7 @@ estimations of the ancestral state of territoriality, and stochastic character m
 File "Clean_testing_correlations.R" has code for associations between binary traits (Pagle94 models) and non-binary traits (phylogenetic logistic regression) 
 and Fisher's exact test for collinearity between predictor variables.
 
-The trait "foraging behaviour" in the manuscript is coded as "fly_v_perch" to reference the categories fliers and perchers. 
+The trait "perching behaviour" in the manuscript is coded as "fly_v_perch" to reference the categories fliers and perchers. 
 
 The final dataset is title "data_vfinal.csv".
 
