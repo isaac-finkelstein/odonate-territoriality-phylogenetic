@@ -46,7 +46,7 @@ sn<-attr(binary_terr, "row.vars")[[1]]
 binary_terr_df<-data.frame(sn,sp_binary_terr, stringsAsFactors = TRUE)
 
 
-#active behaviour
+#perching behaviour
 binary_fly_v_perch<-ftable(my_data$Formatted_species, my_data$Flier.vs.percher)
 prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fly_v_perch[,3]),2) #this is proportion Percher
 #1=percher, 0 = flier
@@ -107,7 +107,7 @@ ovi_terr_data_old<-ovi_terr_data_with_na[complete.cases(ovi_terr_data_with_na), 
 lo_len_terr_data_old<- lo_len_terr_data_with_na[complete.cases(lo_len_terr_data_with_na), ] 
 #fitting the pagel (1994) model
 
-#active behaviour + territoriality
+#perching behaviour + territoriality
 chk_fly_v_perch<-name.check(tree, fly_v_perch_terr_data_old, data.names=as.character(fly_v_perch_terr_data_old$sn))
 summary(chk_fly_v_perch)
 tree_fly_v_perch <- drop.tip(tree, chk_fly_v_perch$tree_not_data)#dropped tree_not_data species
@@ -885,7 +885,7 @@ fisher.test(table_ovi_size_mate_guard) #when the contingency table is greater th
 #fisher.test(table_ovi_size_court)
 
 
-#oviposition and active behaviour
+#oviposition and perching behaviour
 matching_species_ovi_size_active_beh <- intersect(names(fly_mode_pagel_fly_v_perch), ovi_size_data$Species)
 active_behavior_filtered_ovi_size <- fly_mode_pagel_fly_v_perch[matching_species_ovi_size_active_beh]
 ovi_size_filtered_active_beh <- ovi_size_data$Habitat_size[ovi_size_data$Species %in% matching_species_ovi_size_active_beh ]
@@ -914,7 +914,7 @@ chisq.test(table_ovi_size_lo_len)
 fisher.test(table_ovi_size_lo_len)
 
 
-#Mate guarding and active behaviour
+#Mate guarding and perching behaviour
 matching_species_mate_guard_active_beh <- intersect(names(fly_mode_pagel_fly_v_perch), data_mate_guard_terr$Species)
 active_behavior_filtered_mate_guard <- fly_mode_pagel_fly_v_perch[matching_species_mate_guard_active_beh]
 mate_guard_filtered_active_beh <- data_mate_guard_terr$Mate_guarding_cat[data_mate_guard_terr$Species %in% matching_species_mate_guard_active_beh ]
@@ -954,7 +954,7 @@ chisq.test(table_mate_guard_lo_len)
 fisher.test(table_mate_guard_lo_len)
 
 
-#lotic vs lentic and active behaviour
+#lotic vs lentic and perching behaviour
 matching_species_lo_len_active_beh <- intersect(names(fly_mode_pagel_fly_v_perch), names(lo_len_pagel_lo_len))
 lo_len_filtered_active_beh <- lo_len_pagel_lo_len[matching_species_lo_len_active_beh]
 active_beh_filtered_lo_len <- fly_mode_pagel_fly_v_perch[matching_species_lo_len_active_beh ]
@@ -983,7 +983,7 @@ chisq.test(table_lo_len_ovi)
 fisher.test(table_lo_len_ovi)
 
 
-#ovi method and active behaviour
+#ovi method and perching behaviour
 
 matching_species_ovi_meth_active_beh <- intersect(names(ovi_mode_pagel_ovi), names(fly_mode_pagel_fly_v_perch))
 active_beh_filtered_ovi <- fly_mode_pagel_fly_v_perch[matching_species_ovi_meth_active_beh]
@@ -1003,7 +1003,7 @@ fisher.test(table_ovi_active_beh)
 #chisq.test(table_ovi_court)
 #fisher.test(table_ovi_court)
 
-#courtship + active behaviour
+#courtship + perching behaviour
 #matching_species_active_beh_court <- intersect(names(fly_mode_pagel_fly_v_perch), names(court_pagel_court))
 #court_filtered_active_beh <- court_pagel_court[matching_species_active_beh_court]
 #active_beh_filtered_court <- fly_mode_pagel_fly_v_perch[matching_species_active_beh_court ]
