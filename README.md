@@ -10,5 +10,5 @@ and Fisher's exact test for collinearity between predictor variables.
 
 The trait "perching behaviour" in the manuscript is coded as "fly_v_perch" to reference the categories fliers and perchers. 
 
-The final dataset is title "data_vfinal.csv".
+The final dataset is titled "data_vfinal.csv".
 
