@@ -195,7 +195,7 @@ sp_binary_terr<-ifelse(prop_binary_terr >= 0.75, 1, ifelse(prop_binary_terr <=0.
 sn<-attr(binary_terr, "row.vars")[[1]]
 binary_terr_df<-data.frame(sn,sp_binary_terr, stringsAsFactors = TRUE)
 
-#active behaviour
+#perching behaviour
 binary_fly_v_perch<-ftable(my_data$Formatted_species, my_data$Flier.vs.percher)
 prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fly_v_perch[,3]),2) #this is proportion Percher
 #1=percher, 0 = flier
@@ -561,7 +561,7 @@ summary(odonate_simmaps)
 
 
 #for binary traits (except territoriality) I need to create a dataframe for each trait
-#active behaviour (flier/percher)
+#perching behaviour (flier/percher)
 binary_fly_v_perch<-ftable(my_data$Formatted_species, my_data$Flier.vs.percher)
 prop_fly_v_perch<-round(binary_fly_v_perch[,3]/(binary_fly_v_perch[,2]+binary_fly_v_perch[,3]),2) #this is proportion Percher
 #1=percher, 0 = flier
