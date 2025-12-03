@@ -42,8 +42,8 @@ name.check(odonate_tree, odonate_terr_data, data.names=as.character(odonate_terr
 terr_mode<-setNames(odonate_terr_data$sp_terr, odonate_terr_data$sn)
 
 #the node for the common ancestor of all odonates = 434, all Anisoptera = 435, all Zygoptera = 660
-plot(odonate_tree, show.node.label = TRUE)  # Plot tree with tip labels
-nodelabels() 
+#plot(odonate_tree, show.node.label = TRUE)  # Plot tree with tip labels
+#nodelabels() 
 
 anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 435)$tip.label)
 anisoptera_tree<-drop.tip(odonate_tree, anisoptera_tree_extract)
