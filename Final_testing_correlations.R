@@ -812,7 +812,8 @@ OR_table_mate_guard_both_controls <- data.frame(
 #FDR correction for all testing for correlated variables (Pagel94 test and phylogenetic logistic regression)
 p_values_pagel94 <- c(
   fly_v_perch_fit$P,
-  
+  zygo_fly_v_perch_fit$P,
+  anis_fly_v_perch_fit$P,
   ovi_fit$P,
   lo_len_fit$P         
   #court_fit$P
@@ -827,9 +828,11 @@ ovi_size_p_values <- summary(ovi_size_log_reg)$coefficients[, "p.value"]
 
 #table
 trait_pairs_pagel94 <- c(
-  "Foraging behaviour vs Territoriality",
-  "Oviposition method vs Territoriality", 
-  "Oviposition habitat vs Territoriality"  
+  "Foraging behaviour vs territoriality",
+  "Zygoptera foraging behaviour vs territoriality",
+  "Anisoptera foraging behaviour vs territoriality",
+  "Oviposition method vs territoriality", 
+  "Oviposition habitat vs territoriality"  
   #"Courtship vs Territoriality"  
   
 )
