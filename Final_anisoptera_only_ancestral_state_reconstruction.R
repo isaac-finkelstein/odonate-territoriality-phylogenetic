@@ -45,8 +45,7 @@ terr_mode<-setNames(odonate_terr_data$sp_terr, odonate_terr_data$sn)
 #plot(odonate_tree, show.node.label = TRUE)  # Plot tree with tip labels
 #nodelabels() 
 
-anisoptera_tree_extract<-unname(ape::extract.clade(odonate_tree, node = 435)$tip.label)
-anisoptera_tree<-drop.tip(odonate_tree, anisoptera_tree_extract)
+anisoptera_tree <- extract.clade(odonate_tree, node = 435)
 plot(anisoptera_tree, type="fan", cex=0.5, ftype="i") 
 dev.off()
 
@@ -97,3 +96,4 @@ plotTree.datamatrix(anis_tree, as.data.frame(anis_terr_mode),
 legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.3)
 tiplabels(pie = to.matrix(anis_terr_mode, sort(unique(anis_terr_mode))), piecol=cols, cex=0.3)
+
