@@ -150,6 +150,105 @@ chisq_test_result <- chisq.test(chi_square_table)
 print(chisq_test_result)
 
 
+
+#do this seperately for only anisoptera and only zygoptera 
+#plot(tree, show.node.label = TRUE)  # Plot tree with tip labels
+#nodelabels() 
+# do it for only zygoptera
+zygoptera_tree <- extract.clade(tree, node = 664)
+
+
+zygoptera_data <- fly_v_perch_terr_data_old_dropped[
+  fly_v_perch_terr_data_old_dropped$sn %in% zygoptera_tree$tip.label, ]
+
+chk_zygo <- name.check(zygoptera_tree, zygoptera_data, data.names = zygoptera_data$sn)
+summary(chk_zygo)
+zygoptera_tree_pruned <- drop.tip(zygoptera_tree, chk_zygo$tree_not_data)
+name.check(zygoptera_tree_pruned, zygoptera_data, data.names=as.character(zygoptera_data$sn))
+
+
+row_names_zygo <- zygoptera_data$sn
+
+zygoptera_trait_table <- data.frame(
+  terr = ifelse(zygoptera_data$sp_binary_terr == 1, "Territorial", "Non-territorial"),
+  perch = ifelse(zygoptera_data$sp_fly_v_perch == 1, "Percher", "Flier")
+)
+
+rownames(zygoptera_trait_table) <- row_names_zygo
+
+#run pagel 94 model
+terr_zygo_terr_and_active_beh<-setNames(zygoptera_trait_table[,1],
+                                        rownames(zygoptera_trait_table))
+fly_zygo_terr_and_active_beh<-setNames(zygoptera_trait_table[,2],
+                                       rownames(zygoptera_trait_table))
+zygo_fly_v_perch_fit<-fitPagel(zygoptera_tree_pruned, terr_zygo_terr_and_active_beh, fly_zygo_terr_and_active_beh)
+zygo_fly_v_perch_fit
+
+#plot
+plot(zygo_fly_v_perch_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
+
+zygo_max_obs_fly <- nrow(zygoptera_trait_table)
+zygo_breaks_fly <- seq(0, zygo_max_obs_fly, by = 20)
+ggplot(zygoptera_trait_table, aes(x = terr, fill = perch)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
+  labs(x = NULL, y = "Number of species", fill = "Perching behaviour") +
+  scale_fill_manual(values = c("Flier" = "grey55", "Percher" = "grey19")) +
+  theme_minimal() +
+  theme(panel.grid=element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 12)) +
+  scale_y_continuous(breaks = zygo_breaks_fly)
+
+#for anisoptera only
+anisoptera_tree <- extract.clade(tree, node = 438)
+
+
+anisoptera_data <- fly_v_perch_terr_data_old_dropped[
+  fly_v_perch_terr_data_old_dropped$sn %in% anisoptera_tree$tip.label, ]
+
+chk_anis <- name.check(anisoptera_tree, anisoptera_data, data.names = anisoptera_data$sn)
+summary(chk_anis)
+anisoptera_tree_pruned <- drop.tip(anisoptera_tree, chk_anis$tree_not_data)
+name.check(anisoptera_tree_pruned, anisoptera_data, data.names=as.character(anisoptera_data$sn))
+
+
+row_names_anis <- anisoptera_data$sn
+
+anisoptera_trait_table <- data.frame(
+  terr = ifelse(anisoptera_data$sp_binary_terr == 1, "Territorial", "Non-territorial"),
+  perch = ifelse(anisoptera_data$sp_fly_v_perch == 1, "Percher", "Flier")
+)
+
+rownames(anisoptera_trait_table) <- row_names_anis
+
+#run pagel 94 model
+terr_anis_terr_and_active_beh<-setNames(anisoptera_trait_table[,1],
+                                        rownames(anisoptera_trait_table))
+fly_anis_terr_and_active_beh<-setNames(anisoptera_trait_table[,2],
+                                       rownames(anisoptera_trait_table))
+anis_fly_v_perch_fit<-fitPagel(anisoptera_tree_pruned, terr_anis_terr_and_active_beh, fly_anis_terr_and_active_beh)
+anis_fly_v_perch_fit
+
+#plot
+plot(anis_fly_v_perch_fit, signif=2, cex.main=1, cex.sub=0.8, cex.traits=0.7, cex.rates=0.7, lwd=1)
+
+anis_max_obs_fly <- nrow(anisoptera_trait_table)
+anis_breaks_fly <- seq(0, anis_max_obs_fly, by = 20)
+ggplot(anisoptera_trait_table, aes(x = terr, fill = perch)) +
+  geom_bar(position = "dodge") +
+  geom_text(stat = "count", aes(label = stat(count)), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
+  labs(x = NULL, y = "Number of species", fill = "Perching behaviour") +
+  scale_fill_manual(values = c("Flier" = "grey55", "Percher" = "grey19")) +
+  theme_minimal() +
+  theme(panel.grid=element_blank(),
+        axis.line = element_line(color = "black", size = 0.5),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 12)) +
+  scale_y_continuous(breaks = anis_breaks_fly)
+
+
 #courtship + territoriality
 chk_court<-name.check(tree, court_terr_data_old, data.names=as.character(court_terr_data_old$sn))
 summary(chk_court)
@@ -713,6 +812,7 @@ OR_table_mate_guard_both_controls <- data.frame(
 #FDR correction for all testing for correlated variables (Pagel94 test and phylogenetic logistic regression)
 p_values_pagel94 <- c(
   fly_v_perch_fit$P,
+  
   ovi_fit$P,
   lo_len_fit$P         
   #court_fit$P
