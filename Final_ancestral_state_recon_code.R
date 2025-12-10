@@ -59,7 +59,7 @@ name.check(odonate_tree, odonate_terr_data, data.names=as.character(odonate_terr
 
 #plot the tree
 plot(odonate_tree, type="fan", cex=0.5, fsize=0.6, ftype="i")
-str(odonate_tree) #436 species/tips
+str(odonate_tree) #434 species/tips
 
 #making territoriality a factor = yes/no
 prop_terr_factor <- factor(ifelse(sp_terr == 1, "yes", "no"))
