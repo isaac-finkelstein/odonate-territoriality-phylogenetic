@@ -844,18 +844,18 @@ trait_pairs_mate_guard <- c(
 )
 
 trait_pairs_mate_guard_control <- c(
-  "Intercept (contact mate guarding)",
-  "Mate Guarding (No)",
-  "Mate Guarding (Non-contact)",
-  "Foraging Behaviour (Percher)"
+  "Control_Intercept (contact mate guarding)",
+  "Control_Mate Guarding (No)",
+  "Control_Mate Guarding (Non-contact)",
+  "Control_Foraging Behaviour (Percher)"
 )
 
 trait_pairs_mate_guard_both <- c(
-  "Intercept (contact mate guarding)",
-  "Mate Guarding (No)",
-  "Mate Guarding (Non-contact)",
-  "Foraging behaviour (Percher)",
-  "Oviposition Method (Exophytic)"
+  "Both_control_Intercept (contact mate guarding)",
+  "Both_control_Mate Guarding (No)",
+  "Both_control_Mate Guarding (Non-contact)",
+  "Both_control_Foraging behaviour (Percher)",
+  "Both_control_Oviposition Method (Exophytic)"
 )
 
 trait_pairs_ovi_size <- c(
