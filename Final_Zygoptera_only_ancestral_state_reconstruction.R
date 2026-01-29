@@ -97,3 +97,34 @@ nodelabels(pie=fit_marginal_zygo$states, piecol=cols, cex=0.3)
 tiplabels(pie = to.matrix(zygo_terr_mode, sort(unique(zygo_terr_mode))), piecol=cols, cex=0.3)
 
 
+#try again
+zygo_tree_vis <- zygo_tree
+zygo_tree_vis$edge.length <- zygo_tree$edge.length^0.6
+
+cols <- setNames(c("turquoise", "brown"), levels(zygo_terr_mode))
+
+plot(
+  zygo_tree_vis,
+  direction = "rightwards",
+  show.tip.label = FALSE,
+  no.margin = TRUE,
+  edge.width = 1
+)
+
+legend(
+  "topright",
+  legend = levels(zygo_terr_mode),
+  pch = 22,
+  pt.cex = 1.5,
+  pt.bg = cols,
+  bty = "n"
+)
+
+nodelabels(
+  pie = fit_marginal_zygo$states,
+  piecol = cols,
+  cex = 0.35
+)
+
+#N=208
+
