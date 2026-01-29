@@ -97,3 +97,31 @@ legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols
 nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.3)
 tiplabels(pie = to.matrix(anis_terr_mode, sort(unique(anis_terr_mode))), piecol=cols, cex=0.3)
 
+#try again
+anis_tree_vis <- anis_tree
+anis_tree_vis$edge.length <- anis_tree$edge.length^0.6
+
+cols <- setNames(c("turquoise", "brown"), levels(anis_terr_mode))
+
+plot(
+  anis_tree_vis,
+  direction = "rightwards",
+  show.tip.label = FALSE,
+  no.margin = TRUE,
+  edge.width = 1
+)
+
+legend(
+  "topright",
+  legend = levels(anis_terr_mode),
+  pch = 22,
+  pt.cex = 1.5,
+  pt.bg = cols,
+  bty = "n"
+)
+
+nodelabels(
+  pie = fit_marginal_anis$states,
+  piecol = cols,
+  cex = 0.35
+)
