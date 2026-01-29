@@ -195,6 +195,31 @@ legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty
 nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
 tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.3)
 
+#another tree that looks better
+tree2 <- odonate_tree
+
+H <- nodeHeights(tree2)
+Hn <- H / max(H)
+
+H2 <- Hn
+H2[,1] <- Hn[,1]^0.7 + 0.30 * Hn[,1]
+H2[,2] <- Hn[,2]^0.6 + 0.10 * Hn[,2]
+
+tree2$edge.length <- H2[,2] - H2[,1]
+
+plot(
+  tree2,
+  direction = "rightwards",
+  show.tip.label = FALSE,
+  no.margin = TRUE,
+  edge.width = 1
+)
+
+nodelabels(
+  pie = fit_marginal$states,
+  piecol = cols,
+  cex = 0.45
+)
 
 #Make a dataset of all my trait data
 #territoriality
@@ -468,7 +493,7 @@ trait_data_long$Species <- factor(trait_data_long$Species, levels = tip_order)
 #Plot heatmap
 #predictor traits
 trait_data_filtered <- trait_data_long %>%
-  filter(Trait %in% c("lentic_lotic_size", "Mate_guarding_cat", "Prop_Flier_vs_Percher", "Prop_Oviposition", "Prop_Courtship", "Prop_lo_len", "Habitat_size")) 
+  filter(Trait %in% c("Prop_Territorial","lentic_lotic_size", "Mate_guarding_cat", "Prop_Flier_vs_Percher", "Prop_Oviposition", "Prop_Courtship", "Prop_lo_len", "Habitat_size")) 
 
 # Convert NA values to a string ("NA") for ggplot to recognize them
 trait_data_filtered <- trait_data_filtered %>%
@@ -484,7 +509,7 @@ trait_data_filtered <- trait_data_filtered %>%
                         Value))
 
 #order of presenting the traits
-trait_order <- c("Prop_Flier_vs_Percher", "Prop_Oviposition", 
+trait_order <- c("Prop_Territorial", "Prop_Flier_vs_Percher", "Prop_Oviposition", 
                  "Prop_lo_len", "Prop_Courtship", "Mate_guarding_cat", "Habitat_size")
 trait_data_filtered$Trait <- factor(trait_data_filtered$Trait, levels = trait_order)
 
@@ -503,6 +528,12 @@ guarding_colors <- c(
   "Mate_guarding_cat_No" = "cyan3",  
   "Mate_guarding_cat_Contact" = "firebrick1",
   "Mate_guarding_cat_Non-contact" = "mediumblue"
+)
+
+#colours for territorial
+territorial_colours <- c(
+  "Prop_Territorial_0" = "turquoise", #non-territorail
+  "Prop_Territorial_1" = "brown" #territorail
 )
 
 # Colours for Flier vs Percher
@@ -530,7 +561,7 @@ lo_len_colors <- c(
 )
 
 # Combine color schemes
-all_trait_colors <- c(lentic_colors, guarding_colors, flying_colors, ovi_colors, court_colors, lo_len_colors, "NA" = "white")  # Assign white for missing values
+all_trait_colors <- c(lentic_colors, guarding_colors, territorial_colours, flying_colors, ovi_colors, court_colors, lo_len_colors, "NA" = "white")  # Assign white for missing values
 
 #remove courtship because of low sample size
 trait_data_filtered_no_courtship <- trait_data_filtered %>%
@@ -541,6 +572,7 @@ ggplot(trait_data_filtered_no_courtship, aes(x = Trait, y = Species, fill = Valu
   geom_tile(color = "white") +  
   scale_fill_manual(values = all_trait_colors, na.value = "white") +
   scale_x_discrete(labels = c(
+    "Prop_Territorial" = "Territorial",
     "Prop_Flier_vs_Percher" = "Active behaviour",
     #"Prop_Courtship" = "Courtship",
     "Prop_Oviposition" = "Oviposition method",
