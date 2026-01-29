@@ -125,3 +125,5 @@ nodelabels(
   piecol = cols,
   cex = 0.35
 )
+
+#N=226
