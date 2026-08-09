@@ -16,9 +16,9 @@ library(ggplot2)
 
 my_data<- read.csv("data/data_vfinal.csv")
 
-tree <- read.tree("data/iqtree_odonate_output/odonate_tree_final.nex")
+tree <- read.tree("data/iqtree_odonate_output/time_calibrated_tree/odonate_tree_timecalibrated_discrete.nwk")
 str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label #check the structure of the tree
-odonate_tree<-tree[[2]]
+odonate_tree<-tree
 
 #my dataset has data that uses the same original source
 #remove instances where data is recorded more than once and uses the same original source
@@ -589,7 +589,7 @@ ggplot(trait_data_filtered_no_courtship, aes(x = Trait, y = Species, fill = Valu
         axis.text.y = element_text(size = 6))
 
 
-#using stochastic character mapping to reveal the estimated history frequency of the transitions in the tree (the number of transitions that have occures)
+#using stochastic character mapping to reveal the estimated history frequency of the transitions in the tree (the number of transitions that have occured)
 terr_mode <- setNames(as.character(terr_mode), names(terr_mode))
 
 odonate_simmaps <- make.simmap(odonate_tree, terr_mode, model="ARD", nsim=100)
