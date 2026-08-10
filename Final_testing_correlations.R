@@ -13,9 +13,9 @@ library(ggplot2)
 
 my_data<- read.csv("data/data_vfinal.csv")
 
-tree <- read.tree("data/iqtree_odonate_output/odonate_tree_final.nex")
+tree <- read.tree("data/iqtree_odonate_output/time_calibrated_tree/odonate_tree_timecalibrated_discrete.nwk")
 str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label #check the structure of the tree
-tree<-tree[[2]]
+tree<-tree
 
 #my dataset has data that uses the same original source
 #remove instances where data is recorded more than once and uses the same original source
@@ -1056,6 +1056,7 @@ table_lo_len_active_beh<- table(lo_len_filtered_active_beh, active_beh_filtered_
 chisq.test(table_lo_len_active_beh)
 fisher.test(table_lo_len_active_beh)
 
+
 #lotic vs lentic and courtship
 #matching_species_lo_len_court <- intersect(names(court_pagel_court), names(lo_len_pagel_lo_len))
 #lo_len_filtered_court <- lo_len_pagel_lo_len[matching_species_lo_len_court]
@@ -1071,6 +1072,7 @@ matching_species_lo_len_ovi <- intersect(names(ovi_mode_pagel_ovi), names(lo_len
 lo_len_filtered_ovi <- lo_len_pagel_lo_len[matching_species_lo_len_ovi]
 ovi_filtered_lo_len <- ovi_mode_pagel_ovi[matching_species_lo_len_ovi ]
 table_lo_len_ovi<- table(lo_len_filtered_ovi, ovi_filtered_lo_len)
+
 
 chisq.test(table_lo_len_ovi)
 fisher.test(table_lo_len_ovi)
