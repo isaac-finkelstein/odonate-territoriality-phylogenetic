@@ -9,9 +9,9 @@ library(corHMM)
 
 my_data<- read.csv("data/data_vfinal.csv")
 
-tree <- read.tree("data/iqtree_odonate_output/odonate_tree_final.nex")
+tree <- read.tree("data/iqtree_odonate_output/time_calibrated_tree/odonate_tree_timecalibrated_discrete.nwk")
 str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label #check the structure of the tree
-tree<-tree[[2]]
+odonate_tree<-tree
 
 
 #my dataset has data that uses the same original source
@@ -97,6 +97,21 @@ legend("topright", legend=levels(anis_terr_mode), pch=22, pt.cex=1.5, pt.bg=cols
 nodelabels(pie=fit_marginal_anis$states, piecol=cols, cex=0.3)
 tiplabels(pie = to.matrix(anis_terr_mode, sort(unique(anis_terr_mode))), piecol=cols, cex=0.3)
 
+#
+cols <- setNames(c("turquoise", "brown"), levels(terr_mode))
+
+plotTree(
+  anis_tree,
+  ftype = "off",   # no tip labels
+  lwd = 1
+)
+
+nodelabels(
+  pie = fit_marginal$states,
+  piecol = cols,
+  cex = 0.5
+)
+
 #try again
 anis_tree_vis <- anis_tree
 anis_tree_vis$edge.length <- anis_tree$edge.length^0.6
@@ -127,3 +142,4 @@ nodelabels(
 )
 
 #N=226
+
