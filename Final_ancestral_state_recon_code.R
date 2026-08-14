@@ -193,9 +193,32 @@ plotTree.datamatrix(odonate_tree, as.data.frame(terr_mode),
                     colors=list(cols), header=FALSE, fsize=0.45)
 legend("topright", legend=levels(terr_mode), pch=22, pt.cex=1.5, pt.bg=cols, bty="n", cex=0.8)
 nodelabels(pie=fit_marginal$states, piecol=cols, cex=0.3)
-tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.3)
+#tiplabels(pie=to.matrix(terr_mode, sort(unique(terr_mode))), piecol=cols, cex=0.3)
 
 #another tree that looks better
+#cols <- setNames(c("turquoise", "brown"), levels(terr_mode))
+
+#plotTree(
+#  odonate_tree,
+#  ftype = "off",   # no tip labels
+#  lwd = 1
+#)
+
+#nodelabels(
+#  pie = fit_marginal$states,
+#  piecol = cols,
+#  cex = 0.5
+#)
+
+#legend(
+#  "topright",
+#  legend = levels(terr_mode),
+#  pch = 22,
+#  pt.cex = 1.5,
+#  pt.bg = cols,
+#  bty = "n",
+#  cex = 0.8
+#)
 tree2 <- odonate_tree
 
 H <- nodeHeights(tree2)
