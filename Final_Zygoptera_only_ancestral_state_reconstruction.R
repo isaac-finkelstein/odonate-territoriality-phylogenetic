@@ -9,9 +9,9 @@ library(corHMM)
 
 my_data<- read.csv("data/data_vfinal.csv")
 
-tree <- read.tree("data/iqtree_odonate_output/odonate_tree_final.nex")
+tree <- read.tree("data/iqtree_odonate_output/time_calibrated_tree/odonate_tree_timecalibrated_discrete.nwk")
 str(tree) #plot(tree, no.margin=TRUE) #tree$Nnode #tree$tip.label #check the structure of the tree
-tree<-tree[[2]]
+odonate_tree<-tree
 
 #my dataset has data that uses the same original source
 #remove instances where data is recorded more than once and uses the same original source
@@ -98,6 +98,22 @@ tiplabels(pie = to.matrix(zygo_terr_mode, sort(unique(zygo_terr_mode))), piecol=
 
 
 #try again
+
+cols <- setNames(c("turquoise", "brown"), levels(terr_mode))
+
+plotTree(
+  zygo_tree,
+  ftype = "off",   # no tip labels
+  lwd = 1
+)
+
+nodelabels(
+  pie = fit_marginal$states,
+  piecol = cols,
+  cex = 0.5
+)
+
+
 zygo_tree_vis <- zygo_tree
 zygo_tree_vis$edge.length <- zygo_tree$edge.length^0.6
 
